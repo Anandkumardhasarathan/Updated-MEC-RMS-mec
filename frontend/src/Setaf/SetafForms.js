@@ -1,7 +1,8 @@
-import React, { useState} from 'react';
+import React, { useEffect, useState} from 'react';
 import axios from "axios"
 import { useNavigate } from 'react-router-dom';
 import "./SetafAddForm.css"
+import { Academic } from '../connect';
 
 export const Journalfront=()=>{
 
@@ -13,8 +14,7 @@ export const Journalfront=()=>{
         "name_of_author":"",
         "title_of_paper":"",
         "name_of_journal":"",
-        "year_of_publication":"",
-        "month_of_publication":"",
+        "date_of_publication":"",
         "issn_number":"",
         "volume_no":"",
         "issue_no":"",
@@ -23,7 +23,20 @@ export const Journalfront=()=>{
         "link_to_website_of_journal":"",
         "journal_first_page_PDF":""
         })
-    
+
+
+      useEffect(()=>{
+        Acad()
+      },[])
+
+      const [acd,setAcd] = useState([])
+
+      const Acad=async()=>{
+        const temp = await axios.get(`http://localhost:1234/setaf/getAcdyr`)
+        // console.log(temp.data.row)
+        setAcd(temp.data.row)
+      }
+      
       console.log(journal)
       const navigate = useNavigate()
       const [newFileName, setNewFileName] = useState('');
@@ -126,7 +139,7 @@ const call=async()=>{
         })
         const{name,value}=eve.target
         setjournal((old)=>{
-            if(name==="academic_year"||name==="semester"||name==="department"||name==="name_of_author"||name==="title_of_paper"||name==="name_of_journal"||name==="year_of_publication"||name==="month_of_publication"||name==="issn_number"||name==="volume_no"||name==="issue_no"||name==="page_no"||name==="journal_listed_in"||name==="link_to_website_of_journal"||name==="journal_first_page_pdf"){
+            if(name==="academic_year"||name==="semester"||name==="department"||name==="name_of_author"||name==="title_of_paper"||name==="name_of_journal"||name==="date_of_publication"||name==="issn_number"||name==="volume_no"||name==="issue_no"||name==="page_no"||name==="journal_listed_in"||name==="link_to_website_of_journal"||name==="journal_first_page_pdf"){
                 return{
                     ...old,
                     [name]:value
@@ -174,15 +187,19 @@ const call=async()=>{
             <label>Academic Year</label>
             <select name="academic_year" value={journal.academic_year} onChange={infoCollect}>
               <option value="">Select The Academic Year</option>
-              <option value="2022-23">2022-23</option>
-              <option value="2023-24">2023-24</option>
+              {
+    // let t=0;
+                                acd.map((val,key)=>{
+                                    return (<option key={val.acd_yr_id}  value={val.acd_yr_id}>{val.acd_yr}</option>)
+                                })
+                            }          
             </select>
 
             <label>Semester</label>
             <select name='semester' onChange={infoCollect} value={journal.semester}>
                 <option >Select the Semester</option>
-                <option >Odd Sem</option>
-                <option >Even Sem</option>
+                <option >Odd</option>
+                <option >Even</option>
             </select>
 
             <label>Department</label>
@@ -197,11 +214,8 @@ const call=async()=>{
             <label>Name of Journal</label>
             <input type="text" placeholder="Enter the Journal Name" name='name_of_journal' onChange={infoCollect} value={journal.name_of_journal}/>
 
-            <label>Year of Publication</label>
-            <input type="text" placeholder="Enter the Year" name='year_of_publication' onChange={infoCollect} value={journal.year_of_publication}/>
-
-            <label>Month of Publication</label>
-            <input type="text" placeholder="Enter the Month" name='month_of_publication' onChange={infoCollect} value={journal.month_of_publication}/>
+            <label>Date of Publication</label>
+            <input type="date" placeholder="Enter the Date" name='date_of_publication' onChange={infoCollect} value={journal.date_of_publication}/>
 
             <label>ISSN Number</label>
             <input type="text" placeholder="Enter the Number" name='issn_number' onChange={infoCollect} value={journal.issn_number}/>

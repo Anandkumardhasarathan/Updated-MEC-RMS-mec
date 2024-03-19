@@ -31,8 +31,8 @@ server.get('/journallist/:empId',async(req,res)=>{
 
 server.post('/journalnewrecord/:empid',async(req,res)=>{
     const  empid=req.params.empid;
-    const {report_id,emp_id,dept_id,academic_year,semester,department,	name_of_author,	title_of_paper,	name_of_journal,year_of_publication,month_of_publication,issn_number,volume_no,issue_no,page_no,journal_listed_in,link_to_website_of_journal,journal_first_page_PDF}=req.body
-    const sql="insert into data_setaf_journal_publication values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);"
+    const {report_id,emp_id,dept_id,academic_year,semester,department,	name_of_author,	title_of_paper,	name_of_journal,date_of_publication,issn_number,volume_no,issue_no,page_no,journal_listed_in,link_to_website_of_journal,journal_first_page_PDF}=req.body
+    const sql="insert into data_setaf_journal_publication values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);"
     database.query(sql,[report_id,empid,dept_id,
         academic_year,
         semester,
@@ -40,8 +40,7 @@ server.post('/journalnewrecord/:empid',async(req,res)=>{
         name_of_author,	
         title_of_paper,	
         name_of_journal,
-        year_of_publication,
-        month_of_publication,
+        date_of_publication,
         issn_number,
         volume_no,
         issue_no,
@@ -756,6 +755,15 @@ server.post('/filterSetaf/:tableName',async(req,res)=>{
     }
 })
 
-
+server.get('/getAcdyr',async(req,res)=>{
+    let sql= `select * from predefined_academic_year`
+    database.query(sql,(err,row)=>{
+        if(err){
+            console.log(err)
+            return
+        }
+        res.status(200).json({row})
+    })
+})
 
 module.exports = server

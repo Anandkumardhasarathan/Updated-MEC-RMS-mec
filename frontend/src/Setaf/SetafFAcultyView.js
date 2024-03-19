@@ -152,20 +152,14 @@ export const JournalPublication=()=>{
          <table className='table table-striped '>
          <thead>
          <tr>
+         <th >Report Id</th>
          <th >Academic Year</th>
+         
          <th>Semester</th>
-         <th>Department</th>
-         <th>Name of the Author's</th>
+         <th>Name of the Author</th>
          <th>Title of the Paper</th>
          <th>Name of the Journal</th>
-         <th>Year of Publication</th>
-         <th>Month of Publication</th>
-         <th>ISSN Number</th>
-         <th>Volume NO</th>
-         <th>Issue No</th>
-         <th>Page No</th>
-         <th>Journal Listed in</th>
-         <th>Link to Website of the Journal</th>
+         <th>Date of Publication</th>
          <th>Download PDF</th>
          {/* <th>Journal First Page - PDF</th> */}
          </tr>
@@ -174,21 +168,13 @@ export const JournalPublication=()=>{
                         journalRecs.length>0?
                         journalRecs.map((val)=>(
                             <tr>
+                                <td>{val.report_id}</td>
                                 <td>{val.academic_year}</td>
                                 <td>{val.semester}</td>
-                                <td>{val.department}</td>
                                 <td>{val.name_of_author}</td>
                                 <td>{val.title_of_paper}</td>
                                 <td>{val.name_of_journal}</td>
-                                <td>{val.year_of_publication}</td>
-                                <td>{val.month_of_publication}</td>
-                                <td>{val.issn_number}</td>
-                                <td>{val.volume_no}</td>
-                                <td>{val.issue_no}</td>
-                                <td>{val.page_no}</td>
-                                <td>{val.journal_listed_in}</td>
-                                <td>{val.link_to_website_of_journal}</td>
-                                {/* <th>{val.journal_first_page_pdf}</th> */}
+                                <td>{val.date_of_publication}</td>
                                 
                                 <th><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></th>
                             </tr>
