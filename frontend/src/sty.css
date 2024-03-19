@@ -836,3 +836,6 @@ form div{
   left: 60px;
 }
 
+faculty-menu{
+  position: fixed;
+}

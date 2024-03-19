@@ -1798,6 +1798,7 @@ newPdf.text('Principal', 167, 234);
      
           </div>
 
+          <a href="/Setaf">
           <div className="boxx3" style={{ display: 'flex', width: '230px', justifyContent: 'space-around', cursor: 'pointer', padding: '50px', position: 'relative' }}>
         <div className="card-body">
           <div className="row">
@@ -1816,6 +1817,7 @@ newPdf.text('Principal', 167, 234);
         </div>
      
           </div>
+          </a>
          
           <div className="boxx4" style={{ display: 'flex', width: '230px', justifyContent: 'space-around', cursor: 'pointer', padding: '50px', position: 'relative' }}>
         <div className="card-body">

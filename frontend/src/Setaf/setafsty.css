@@ -436,7 +436,7 @@ tr:nth-child(even) {
 button {
   display: inline-block;
   padding: 10px 20px;
-  background-color: rgb(146, 197, 35); /* Background color */
+  background-color: rgb(146, 197, 35); /* background color */
   color: #000000; /* Text color */
   border:5px; /* Remove the default button border */
   border-radius: 5px; /* Rounded corners */
@@ -525,6 +525,3 @@ button {
 .consold-btn{
   padding-top: 200px;      
 }
-
-
-

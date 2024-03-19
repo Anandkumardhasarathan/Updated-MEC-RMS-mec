@@ -4,7 +4,7 @@ export const FacultyMenu = () => {
   const logged = JSON.parse(sessionStorage.getItem("person"));
   return (
     <>
-      <head>
+      <head className="faculty-menu">
         <a href="/">
           <img
             src="https://mec.edu.in/wp-content/uploads/2021/02/main-logo.png"

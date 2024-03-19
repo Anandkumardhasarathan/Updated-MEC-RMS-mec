@@ -1,0 +1,9 @@
+POST http://localhost:1234/setaf/filterSetaf/data_setaf_journal_publication
+Content-Type: application/json
+
+{
+    "acdyr_id":"1,2,3",
+    "sem_id":"2",
+    "dept_id":"",
+    "emp_id":""
+}

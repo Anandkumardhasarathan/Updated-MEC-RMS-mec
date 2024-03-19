@@ -11,7 +11,6 @@ route.post('/filterReportsWithParticular/:head', async (req, res) => {
         const faculty_id = emp_id.split(",");
         const tables_name = sub_id.split(",");
         const resultArray = [];
-        console.log("Hey")
 
         const processQuery = async (sql, params) => {
             return new Promise((resolve, reject) => {

@@ -5,16 +5,16 @@ import './SetafConsolidate.css'
 import 'bootstrap/dist/css/bootstrap.min.css'; // Import Bootstrap CSS
 import jsPDF from "jspdf";
 
-const SetafConsolidation = () => {
+const SetafConsolidationHod = () => {
 
 //////////////pdf generator//////////////////
 const logged=JSON.parse(sessionStorage.getItem("person"))
-const empId=logged.faculty_id;
+const deptId=logged.dept_id;
 
 const generatePDF = async ()=> {
   try{
 
-  const res = await axios.get(`http://localhost:1234/setaf/journallist/${empId}`);
+  const res = await axios.get(`http://localhost:1234/setaf/journallist/hoddashboard/${deptId}`);
     const data = res.data;
   const doc = new jsPDF();
   
@@ -300,6 +300,13 @@ doc.rect(153,269,23,8).stroke.apply()
 doc.rect(176,269,22,8).stroke.apply()
 doc.text('1',162,274)
 
+
+ 
+// doc.roundedRect(180,270,22,8,5,5,'S')
+
+
+
+
   // Generate a data URI for the PDF
   const pdfDataUri = doc.output('datauristring');
 
@@ -315,6 +322,8 @@ catch(e)
 
 
 
+
+
 ////////////////////ui count code///////////////
   const [journ,setJourn]=useState("")
 
@@ -324,11 +333,11 @@ catch(e)
       const url="http://localhost:1234"
 
 const logged=JSON.parse(sessionStorage.getItem("person"))
-const empId=logged.faculty_id;
+const deptId=logged.dept_id;
 
    
 try{
-    res=await axios.get(`${url}/setaf/journallist/${empId}`)
+    res=await axios.get(`${url}/setaf/journallist/hoddashboard/${deptId}`)
     // alert(JSON.stringify(res.data.length))
     setJourn(JSON.stringify(res.data.length))
     console.log(res.data)
@@ -359,7 +368,7 @@ const empId=logged.faculty_id;
 
  
 try{
-  cres=await axios.get(`${url}/setaf/conferencelist/${empId}`)
+  cres=await axios.get(`${url}/conference/conferencelist/${empId}`)
   // alert(JSON.stringify(res.data.length))
   setConf(JSON.stringify(cres.data.length))
   console.log(cres.data)
@@ -635,4 +644,4 @@ catch(e){
   );
 };
 
-export default SetafConsolidation;
+export default SetafConsolidationHod;

@@ -237,7 +237,8 @@ POST http://localhost:1234/journal/journalnewrecord/60EE18
 Content-Type: application/json
 
     {
-            "report_id":"8",
+            "report_id":"21",
+            "dept_id":"4",
             "academic_year":"2023-24",
             "semester":"odd",
             "department":"cse",
@@ -254,3 +255,30 @@ Content-Type: application/json
             "link_to_website_of_journal":"http",
             "journal_first_page_PDF":""
     }
+
+
+###
+GET http://localhost:1234/journal/journalrecs
+
+###
+POST http://localhost:1234/conference/conferencenewrecord/60EE18
+Content-Type: application/json
+
+{
+        "report_id":"5",
+        "dept_id":"4",
+        "academic_year":"2024",	
+        "semester":"odd",	
+        "department":"cse",
+        "name_of_the_authors":"anand",
+        "title_of_the_conference_paper":"ml",
+        "name_of_the_conference":"ml",
+        "place_of_the_conference":"ml",
+        "conference_type":"ml",
+        "date_of_conference":"2023-02-01",
+        "isbn_of_the_conference_proceeding":"124",
+        "conference_certificate_and_proceeding_pdf":""	
+}
+
+###
+GET http://localhost:1234/setaf/conferencerecs

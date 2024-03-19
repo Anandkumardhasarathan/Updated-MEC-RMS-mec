@@ -1,23 +1,41 @@
 import "./setafsty.css"
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import jsPDF from 'jspdf';
 import axios from "axios";
+import { getDocument } from 'pdfjs-dist/webpack';
 import { conferenceRecords, facultyRecords, industryRecords, journalRecords, proposalRecords, seedRecords, tasteRecords, techtalkRecords, workshopRecords } from "./axios"
-// import React, { useEffect, useState } from "react";
-// import { Journal } from "./axios"
 import dateFormat from 'dateformat'
+import Select from "react-select";
+import OutlinedInput from '@mui/material/OutlinedInput';
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import ListItemText from '@mui/material/ListItemText';
+import Checkbox from '@mui/material/Checkbox';
+
+
+
 export const JournalPublication=()=>{
 
     /////////////////pdf view///////////////
 
     const generatePDF = async (report_id)=> {
         try{
-            alert(report_id)
-        const res = await axios.get(`http://localhost:1234/journal/data/${report_id}`);
+            // alert(report_id)
+        const res = await axios.get(`http://localhost:1234/setaf/data/${report_id}`);
         const data = res.data;
         const doc = new jsPDF();
-        // doc.addImage( 'PNG', 10, 7, 25, 25);
-        // doc.addImage( 'PNG', 173, 7, 25, 25);    
+
+        let pdfDocument;
+        try{
+            const pdfUrl = `/Journal_SETAF/${data.journal_first_page_PDF}`;
+            const pdfResponse = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
+            const pdfData = pdfResponse.data;
+    
+         pdfDocument = await getDocument({ data: pdfData }).promise;
+           }catch(e){
+            console.log(e)
+           }  
         doc.setFontSize(18);
         doc.setFont("times", "bold");
         doc.text('MUTHAYAMMAL ENGINEERING COLLEGE',35, 15);
@@ -59,34 +77,32 @@ export const JournalPublication=()=>{
         doc.rect(62, 104, 140, 12).stroke();
         doc.text(`${data.title_of_paper}`, 65, 112);
         
-        // doc.setFont("times", "bold");
-        // doc.rect(12, 116, 50, 12).stroke();
-        // doc.text('Name of Journal', 14, 124);
-        // doc.setFont("times", "");
-        // doc.rect(62, 116, 140, 12).stroke();
-        // doc.text(`${data.month_of_publication}`, 65, 124);
-        
-        // doc.setFont("times", "bold");
-        
-        
-        
-        
-        
-        doc.setFont("times", "bold");
-        doc.rect(12, 116, 190, 105).stroke();
-        doc.text('', 18, 182);
-        
-        
-        
-        
-        doc.text('HOD',168,274)
-    
-       
-    // doc.roundedRect(180,270,22,8,5,5,'S')
-    
-    
-    
-    
+        try{ 
+            // Add pages from the original PDF
+            for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber++) {
+              const page = await pdfDocument.getPage(pageNumber);
+              const pdfWidth = page.view[2];
+              const pdfHeight = page.view[3];
+          
+              const canvas = document.createElement('canvas');
+              const context = canvas.getContext('2d');
+              canvas.width = pdfWidth;
+              canvas.height = pdfHeight;
+          
+              await page.render({ canvasContext: context, viewport: page.getViewport({ scale: 1 }) }).promise;
+          
+              const imageDataUrl = canvas.toDataURL('image/jpeg');
+              try{doc.addPage();
+              doc.addImage(imageDataUrl, 'JPEG', 5, 0, 200, 300);
+              }catch(error){
+                console.error(error);
+              }
+            }
+          }
+          catch(e){
+            console.log(e);
+          }
+
         // Generate a data URI for the PDF
         const pdfDataUri = doc.output('datauristring');
     
@@ -121,14 +137,17 @@ export const JournalPublication=()=>{
        
 
     }
-   
+
+    
     return(
         <>
+       
+
         <div>
          <div class="overallcontent">
          <div class="report-header">
          <h1 class="recent-Articles">Journal Publication</h1>
-           <a className="topic-headings" href="/Setaf/SetafForms/Journalfront"><button style={{top:"27.5px",right:"50px"}} class="views" id="addButton">+ Add</button></a>
+         <a className="topic-headings" href="/Setaf/SetafForms/Journalfront"><button style={{top:"27.5px",right:"50px"}} class="views" id="addButton">+ Add</button></a>
          </div>
          <table className='table table-striped '>
          <thead>
@@ -146,8 +165,8 @@ export const JournalPublication=()=>{
          <th>Issue No</th>
          <th>Page No</th>
          <th>Journal Listed in</th>
-         <th>Link to Website of the JOurnal</th>
-         
+         <th>Link to Website of the Journal</th>
+         <th>Download PDF</th>
          {/* <th>Journal First Page - PDF</th> */}
          </tr>
          
@@ -196,6 +215,73 @@ export const JournalPublication=()=>{
 /////////////////////conference/////////////////////
 
 export const ConferencePublication=()=>{
+    ///////pdf view///////////////
+    
+const generatePDF = async (report_id)=> {
+    try{
+        // alert(report_id)
+    const res = await axios.get(`http://localhost:1234/conference/data/conf/${report_id}`);
+    const data = res.data;
+    const doc = new jsPDF();    
+    doc.setFontSize(18);
+    doc.setFont("times", "bold");
+    doc.text('MUTHAYAMMAL ENGINEERING COLLEGE',35, 15);
+    doc.setFontSize(10);
+    doc.setFont("times", "");
+    doc.text('(An Autonomous Institution)', 80, 20);
+    doc.text('(Approved by AICTE, New Delhi, Accredited by NAAC & Affiliated to Anna University)', 35, 25);
+    doc.text('Rasipuram - 637 408, Namakkal Dist., Tamil Nadu', 65, 30);
+    
+    doc.setFont("times", "bold");
+    
+    doc.setFontSize(15); 
+    doc.rect(12, 48, 32, 11).stroke();
+    doc.text(`${data.department}`, 23, 55);
+    doc.rect(88, 48, 32, 11).stroke();
+    doc.text('SETAF', 95, 55);
+    
+    doc.rect(168, 48, 30, 11).stroke();
+    doc.setFontSize(15); 
+    doc.text(`${data.academic_year}`, 173, 55);
+    
+    doc.rect(12, 80, 58, 12).stroke();
+    doc.text('Name of Conference', 14, 88);
+    doc.setFont("times", "");
+    doc.rect(70, 80, 132, 12).stroke();
+    doc.text(`${data.name_of_the_conference}`, 73, 88);
+    
+    doc.setFont("times", "bold");
+    doc.rect(12, 92, 58, 12).stroke();
+    doc.text('Name of the Author', 14, 100);
+    doc.setFont("times", "");
+    doc.rect(70, 92, 132, 12).stroke();
+    doc.text(`${data.name_of_the_authors}`, 73, 100);
+    
+    doc.setFont("times", "bold");
+    doc.rect(12, 104, 58, 12).stroke();
+    doc.text('Title of the Conference', 14, 112);
+    doc.setFont("times", "");
+    doc.rect(70, 104, 132, 12).stroke();
+    doc.text(`${data.title_of_the_conference_paper}`, 73, 112);
+      
+    doc.setFont("times", "bold");
+    doc.rect(12, 116, 190, 105).stroke();
+    doc.text('', 18, 182);
+    
+    // Generate a data URI for the PDF
+    const pdfDataUri = doc.output('datauristring');
+  
+    // Open the PDF in a new tab or window
+    const newWindow = window.open();
+    newWindow.document.write(`<iframe width='100%' height='100%' src='${pdfDataUri}'></iframe>`);
+  }
+  catch(e)
+  {
+    console.log(e);
+  }
+  }
+
+    ////////////data fetch code/////////////////
 
     const [conferenceRecs,setConferenceRecs]=useState([])
     useEffect(()=>{
@@ -215,7 +301,6 @@ export const ConferencePublication=()=>{
         }
     }
 
-
     return(
         <>
          <div class="overallcontent ">
@@ -223,7 +308,7 @@ export const ConferencePublication=()=>{
          <h1 class="recent-Articles">Your Reports</h1>
          <a className="topic-headings" href="Setaf/SetafForms/Conferencefront"><button style={{top:"27.5px",right:"50px"}} class="views" id="addButton">+ Add</button></a>
          </div>
-         <table className='table table-striped '>
+         <table className='table table-striped '>                           
           <thead>
           <tr>
           
@@ -245,18 +330,18 @@ export const ConferencePublication=()=>{
                        conferenceRecs.length>0?
                        conferenceRecs.map((val)=>(
                             <tr>
-                                <th>{val.academic_year}</th>
-                                <th>{val.semester}</th>
-                                <th>{val.department}</th>
-                                <th>{val.name_of_the_authors}</th>
-                                <th>{val.title_of_the_conference_paper}</th>
-                                <th>{val.name_of_the_conference}</th>
-                                <th>{val.place_of_the_conference}</th>
-                                <th>{val.conference_type}</th>
-                                <th>{dateFormat(val.date_of_conference,'dd-mm-yyyy')}</th>
-                                <th>{val.isbn_of_the_conference_proceeding}</th>
-                                <th>{val.conference_certificate_and_proceeding_pdf}</th>
-                                <th><button>View</button></th>
+                                <td>{val.academic_year}</td>
+                                <td>{val.semester}</td>
+                                <td>{val.department}</td>
+                                <td>{val.name_of_the_authors}</td>
+                                <td>{val.title_of_the_conference_paper}</td>
+                                <td>{val.name_of_the_conference}</td>
+                                <td>{val.place_of_the_conference}</td>
+                                <td>{val.conference_type}</td>
+                                <td>{dateFormat(val.date_of_conference,'dd-mm-yyyy')}</td>
+                                <td>{val.isbn_of_the_conference_proceeding}</td>
+                                <td>{val.conference_certificate_and_proceeding_pdf}</td>
+                                <th><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></th>
                             </tr>
                         ))
                         :
@@ -780,5 +865,5 @@ export const Seed=()=>{
          
                       
         </>
-    )
+    );
 }

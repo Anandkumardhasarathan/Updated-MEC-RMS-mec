@@ -6,6 +6,7 @@ import "./SetafAddForm.css"
 export const Journalfront=()=>{
 
     const[journal,setjournal]=useState({
+        "dept_id":"",
         "academic_year":"",
         "semester":"",
         "department":"",
@@ -34,8 +35,8 @@ export const Journalfront=()=>{
  
     setNewFileName(journal.name_of_author);
         const file = e.target.files[0];
-        if (file && file.size > 2 * 1024 * 1024) {
-        alert("Please choose an image with a size below 2MB.");
+        if (file && file.size > 500 * 1024) {
+        alert("Please choose an image with a size below 500kb.");
         e.target.value = null; // Reset the file input
         return;
         }
@@ -43,7 +44,6 @@ export const Journalfront=()=>{
         
           // alert("handle upload working")
         const currentDate = new Date();
-       
         const dd = String(currentDate.getDate()).padStart(2, '0');
         const mm = String(currentDate.getMonth() + 1).padStart(2, '0'); // Months are zero-based, so we add 1
         const yyyy = currentDate.getFullYear();
@@ -77,7 +77,7 @@ const call=async()=>{
     // setLoading(true);
     const formData6 = new FormData();
   formData6.append('file', selectedFile1, journal.journal_first_page_PDF);
-  fetch('http://localhost:1234/journal/uploadPdf', {
+  fetch('http://localhost:1234/setaf/uploadPdf', {
     method: 'POST',
     body: formData6,
   })
@@ -114,11 +114,16 @@ const call=async()=>{
   // window.location.reload(false);
 }
     
-
-
-        ////////
-    
+ ////////
+      const log=JSON.parse(sessionStorage.getItem('person'));
+      
       const infoCollect=(eve)=>{
+        setjournal((old)=>{
+          return {
+            ...old,
+            dept_id:log.dept_id
+          }
+        })
         const{name,value}=eve.target
         setjournal((old)=>{
             if(name==="academic_year"||name==="semester"||name==="department"||name==="name_of_author"||name==="title_of_paper"||name==="name_of_journal"||name==="year_of_publication"||name==="month_of_publication"||name==="issn_number"||name==="volume_no"||name==="issue_no"||name==="page_no"||name==="journal_listed_in"||name==="link_to_website_of_journal"||name==="journal_first_page_pdf"){
@@ -137,45 +142,24 @@ const call=async()=>{
             else{
                 return{
                     ...old,
-                    [name]:parseInt(value)
+                    [name]:parseInt(value),
+                   
                 }
             }
-        })
-      
-    
-  
-        
+        })   
        
     }
     const Submit=async()=>{
       try{
             
-        const log=JSON.parse(sessionStorage.getItem('person'));
-        await axios.post(`http://localhost:1234/journal/journalnewrecord/${log.faculty_id}`,journal)
+        // const log=JSON.parse(sessionStorage.getItem('person'));
+        await axios.post(`http://localhost:1234/setaf/journalnewrecord/${log.faculty_id}`,journal)
         navigate("/setaf/journalpublication")
         }
     catch(err){
           alert(err)
         }
-        // setjournal(()=>{
-        //     return{
-        //         "academic_year":"",
-        //         "semester":"",
-        //         "department":"",
-        //         "name_of_author":"",
-        //         "title_of_paper":"",
-        //         "name_of_journal":"",
-        //         "year_of_publication":"",
-        //         "month_of_publication":"",
-        //         "issn_number":"",
-        //         "volume_no":"",
-        //         "issue_no":"",
-        //         "page_no":"",
-        //         "journal_listed_in":"",
-        //         "link_to_website_of_journal":"",
-        //         "journal_first_page_pdf":""
-        //         }
-        // })
+        
     }
     const [loading, setLoading] = useState(false);
     const [file, setFile] = useState(true);
@@ -183,8 +167,8 @@ const call=async()=>{
     return(
         <>
         <div className='overallcontent' style={{maxWidth:"50%",marginLeft:"25%"}}>
-        <div className="style" style={{justifyContent:"center"}}>
-        <div class="head"><h1 class="recent-Articles" style={{color:'purple'}}>JOURNAL PUBLICATIONS</h1></div>
+        <div className="style" style={{justifyContent:"center",marginLeft:"100px"}}>
+        <div class="head"><h1 class="recent-Articles" style={{color:'purple',marginLeft:"70px"}}>JOURNAL PUBLICATIONS</h1></div>
         <div className="row justify-content-center"style={{justifyContent:'center'}}>
         <div className="ej">
             <label>Academic Year</label>
@@ -259,7 +243,7 @@ const call=async()=>{
             <br />
         </div>
         
-        <div className='row mt-5 justify-content-around'>
+        <div style={{marginRight:"100px"}} className='row mt-5 justify-content-around'>
           <input type='button' onClick={Submit} value="Submit"  className='col-3 btn btn-primary' />
           
           <input type='button' onClick={()=>{}} value="Clear" className='col-3 btn btn-danger' />
@@ -277,6 +261,7 @@ const call=async()=>{
 export const Conferencefront=()=>{
 
     const[conference,setconference]=useState({
+        "dept_id":"",
         "academic_year":"",	
         "semester":"",	
         "department":"",
@@ -395,7 +380,15 @@ const call=async()=>{
 console.log(conference)
 const navi=useNavigate()
 
+
+const log=JSON.parse(sessionStorage.getItem('person'));
 const handlechange=(e)=>{
+  setconference((old)=>{
+    return {
+      ...old,
+      dept_id:log.dept_id
+    }
+  })
     setconference((prev)=>({
       ...prev,
       [e.target.name]:e.target.value
@@ -405,7 +398,7 @@ const handlechange=(e)=>{
     const callPropose=async()=>{
         try{
           const log=JSON.parse(sessionStorage.getItem('person'));
-            await axios.post(`http://localhost:1234/conference/conferencenewrecord/${log.faculty_id}`,conference)
+            await axios.post(`http://localhost:1234/setaf/conferencenewrecord/${log.faculty_id}`,conference)
             navi("/conferencepublication")
             }
             catch(err){
@@ -538,7 +531,7 @@ const navi=useNavigate()
      try{
       //alert(workshop)
       const log=JSON.parse(sessionStorage.getItem('person'));
-      await axios.post(`http://localhost:1234/Workshop/workshopnewrecord/${log.faculty_id}  `,workshop)
+      await axios.post(`http://localhost:1234/setaf/workshopnewrecord/${log.faculty_id}  `,workshop)
       navi('/workshop')
     }
   
@@ -698,7 +691,7 @@ export const Techtalks=()=>{
     const callPropose=async()=>{
         try{
           const log=JSON.parse(sessionStorage.getItem('person'));
-            await axios.post(`http://localhost:1234/techtalks/techtalknewrecord/${log.faculty_id}`,techtalk)
+            await axios.post(`http://localhost:1234/setaf/techtalknewrecord/${log.faculty_id}`,techtalk)
             navi('/techtalk')
             }
             catch(err){
@@ -861,7 +854,7 @@ export const Facultyfront=()=>{
      const callPropose=async()=>{
         try{
             const log=JSON.parse(sessionStorage.getItem('person'));
-            await axios.post(`http://localhost:1234/faculty/facultynewrecord/${log.faculty_id}`,faculty)
+            await axios.post(`http://localhost:1234/setaf/facultynewrecord/${log.faculty_id}`,faculty)
             navi('/facultly')
             }
             catch(err){
@@ -968,7 +961,7 @@ export const Nptelfront=()=>{
     
     const callPropose=async()=>{
         try{
-            await axios.post(`http://localhost:1234/nptel/nptelnewrecord`,nptel)
+            await axios.post(`http://localhost:1234/setaf/nptelnewrecord`,nptel)
             }
             catch(err){
               alert("Error in axios")
@@ -1121,7 +1114,7 @@ export const Tastefront=()=>{
     
     const callPropose=async()=>{
         try{
-            await axios.post(`http://localhost:1234/taste/tastenewrecord`,taste)
+            await axios.post(`http://localhost:1234/setaf/tastenewrecord`,taste)
             navi('/taste')
             }
             catch(err){
@@ -1216,7 +1209,7 @@ export const Proposalfront=()=>{
     
     const callPropose=async()=>{
         try{
-            await axios.post(`http://localhost:1234/proposal/proposalnewrecord`,proposal)
+            await axios.post(`http://localhost:1234/setaf/proposalnewrecord`,proposal)
             navi('/proposal')
             }
             catch(err){
@@ -1347,7 +1340,7 @@ export const Industryfront=()=>{
     const handleclick=async(e)=>{
       //e.preventDefault()
        try{
-        await axios.post(`http://localhost:1234/industry/newrecord`,industry)
+        await axios.post(`http://localhost:1234/setaf/newrecord`,industry)
         navi('/industry')
       }
       catch(err){
@@ -1460,7 +1453,7 @@ export const Industryfront=()=>{
       
       const callPropose=async()=>{
         try{
-        await axios.post(`http://localhost:1234/seed/newrecord`,Seed)
+        await axios.post(`http://localhost:1234/setaf/newrecord`,Seed)
         }
         catch(err){
           alert("Error in axios")

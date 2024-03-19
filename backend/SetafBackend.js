@@ -31,9 +31,9 @@ server.get('/journallist/:empId',async(req,res)=>{
 
 server.post('/journalnewrecord/:empid',async(req,res)=>{
     const  empid=req.params.empid;
-    const {report_id,emp_id,academic_year,semester,department,	name_of_author,	title_of_paper,	name_of_journal,year_of_publication,month_of_publication,issn_number,volume_no,issue_no,page_no,journal_listed_in,link_to_website_of_journal,journal_first_page_PDF}=req.body
-    const sql="insert into data_setaf_journal_publication values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);"
-    database.query(sql,[report_id,empid,
+    const {report_id,emp_id,dept_id,academic_year,semester,department,	name_of_author,	title_of_paper,	name_of_journal,year_of_publication,month_of_publication,issn_number,volume_no,issue_no,page_no,journal_listed_in,link_to_website_of_journal,journal_first_page_PDF}=req.body
+    const sql="insert into data_setaf_journal_publication values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);"
+    database.query(sql,[report_id,empid,dept_id,
         academic_year,
         semester,
         department,	
@@ -48,7 +48,8 @@ server.post('/journalnewrecord/:empid',async(req,res)=>{
         page_no,
         journal_listed_in,
         link_to_website_of_journal,
-        journal_first_page_PDF	
+        journal_first_page_PDF
+
 
     ],(err,result)=>{
         if (err) {
@@ -59,6 +60,58 @@ server.post('/journalnewrecord/:empid',async(req,res)=>{
         res.status(200).json(result)
     })
 })
+/////hod dashboard
+server.get('/journallist/hoddashboard/:deptID',async(req,res)=>{  
+    const deptid=req.params.deptID;
+    const query="select * from data_setaf_journal_publication where dept_id=?"
+    database.query(query,[deptid],(err,result)=>{
+        if(err){
+            res.status(404).json({error:err.message})
+            return
+        }
+        if(result.length==0){
+            res.status(500).json({message:"the value in not found in the table"})
+            return
+        }
+        else{
+            //console.log(result)
+            res.status(200).json(result)
+        }
+    })
+})
+
+/////principal dashboard///
+server.get('/journalrecs',async(req,res)=>{  
+    // const empid=req.params.empId;
+    const query="select * from data_setaf_journal_publication"
+    database.query(query,(err,result)=>{
+        if(err){
+            res.status(404).json({error:err.message})
+            return
+        }
+        if(result.length==0){
+            res.status(500).json({message:"the value in not found in the table"})
+            return
+        }
+        else{
+            //console.log(result)
+            res.status(200).json(result)
+        }
+    })
+})
+
+
+//////pdf fetch datas////////
+server.get('/data/:report_id', (req, res) => {
+    const report_id = req.params.report_id;
+    const sql =  `SELECT * FROM data_setaf_journal_publication where report_id=?`;
+
+    database.query(sql,[report_id], (err, results) => {
+      if (err) throw err;
+  
+      res.json(results[0]);
+    });
+  });
 
 ///////////////////conference publication and presentation//////////////////////////////
 server.get('/conferencelist/:empId',async(req,res)=>{
@@ -83,7 +136,9 @@ server.get('/conferencelist/:empId',async(req,res)=>{
 //post method
 server.post('/conferencenewrecord/:empid',async(req,res)=>{
     const  empid=req.params.empid;
-    const {emp_id,academic_year,
+    const {report_id,dept_id,
+        emp_id,
+        academic_year,
         semester,
         department,
         name_of_the_authors,
@@ -95,8 +150,9 @@ server.post('/conferencenewrecord/:empid',async(req,res)=>{
         isbn_of_the_conference_proceeding,
         conference_certificate_and_proceeding_pdf
     }=req.body
-    const sql="insert into data_setaf_conference_publication_and_presentations values (?,?,?,?,?,?,?,?,?,?,?,?);"
-    database.query(sql,[empid,
+    const sql="insert into data_setaf_conference_publication_and_presentations values (?,?,?,?,?,?,?,?,?,?,?,?,?,?);"
+    database.query(sql,[report_id,dept_id,
+            empid,
             academic_year,
         	semester,
             department,
@@ -118,6 +174,56 @@ server.post('/conferencenewrecord/:empid',async(req,res)=>{
     })
 })
 
+/////hod dashboard
+server.get('/conferencelist/hoddashboard/:deptID',async(req,res)=>{  
+    const deptid=req.params.deptID;
+    const query="select * from data_setaf_conference_publication_and_presentations where dept_id=?"
+    database.query(query,[deptid],(err,result)=>{
+        if(err){
+            res.status(404).json({error:err.message})
+            return
+        }
+        if(result.length==0){
+            res.status(500).json({message:"the value in not found in the table"})
+            return
+        }
+        else{
+            //console.log(result)
+            res.status(200).json(result)
+        }
+    })
+})
+/////principal dashboard///
+server.get('/conferencerecs',async(req,res)=>{  
+    // const empid=req.params.empId;
+    const query="select * from data_setaf_conference_publication_and_presentations"
+    database.query(query,(err,result)=>{
+        if(err){
+            res.status(404).json({error:err.message})
+            return
+        }
+        if(result.length==0){
+            res.status(500).json({message:"the value in not found in the table"})
+            return
+        }
+        else{
+            //console.log(result)
+            res.status(200).json(result)
+        }
+    })
+})
+
+//////pdf fetch datas////////
+server.get('/data/conf/:report_id', (req, res) => {
+    const report_id = req.params.report_id;
+    const sql =  `SELECT * FROM data_setaf_conference_publication_and_presentations where report_id=?`;
+
+    database.query(sql,[report_id], (err, results) => {
+      if (err) throw err;
+  
+      res.json(results[0]);
+    });
+  });
 
 /////////////////////////////////workshop//////////////////////////
 server.get('/workshoplist/:empId',async(req,res)=>{
@@ -541,7 +647,7 @@ server.get('/seedlist/:empId',async(req,res)=>{
     })
 })
 
-////
+//// pdf upload//////////
 const storage1 = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'D:/MEC/MEC PROJECT/New folder/Updated-MEC-RMS-mec/frontend/public/Journal_SETAF');
@@ -560,18 +666,95 @@ server.post('/uploadPdf', upload1.any(), (req, res) => {
     res.send('PDF uploaded and saved on the server.');
 });
 
-//////pdf fetch datas////////
-server.get('/data/:report_id', (req, res) => {
-    const report_id = req.params.report_id;
-    const sql =  `SELECT * FROM data_setaf_journal_publication where report_id=?`;
 
-    database.query(sql,[report_id], (err, results) => {
-      if (err) throw err;
-  
-      res.json(results[0]);
-    });
-  });
+//////////filter
 
+server.post('/filterSetaf/:tableName',async(req,res)=>{
+    try{
+
+        const tableName = req.params.tableName
+        const { acdyr_id, sem_id, dept_id, emp_id } = req.body
+        const academic_id = acdyr_id.split(',')
+        const dept = dept_id.split(",")
+        const sem = sem_id.split(',')
+        const emp = emp_id.split(',')
+        let resultArray = []
+
+        const processQuery = async (sql, params) => {
+            return new Promise((resolve, reject) => {
+                database.query(sql, params, (err, result) => {
+                    if (err) {
+                        console.error(err);
+                        reject(err);
+                    } else {
+                        resolve(result);
+                    }
+                });
+            });
+        };
+
+        const pushToResultArray = async (sql, params) => {
+            console.log(sql)
+            const temp = await processQuery(sql, params);
+            if (temp.length > 0) {
+                resultArray.push(...temp);
+                // console.log("Resultarray"+resultArray)
+            } else {
+                console.log("No records");
+            }
+        };
+// 1
+        if(acdyr_id!="" && sem_id=="" && dept_id=="" && emp_id==""){
+            await pushToResultArray(`select * from ${tableName} where academic_year in (${academic_id})`)
+        }
+// 2
+        else if(acdyr_id=="" && sem_id=="" && dept_id!="" && emp_id==""){
+            await pushToResultArray(`select * from ${tableName} where dept_id in (${dept})`)
+        }
+// 3
+        else if(acdyr_id=="" && sem_id=="" && dept_id=="" && emp_id!=""){
+            await pushToResultArray(`select * from ${tableName} where emp_id in (${emp})`)
+        }
+// 4
+        else if(acdyr_id!="" && sem_id!="" && dept_id=="" && emp_id==""){
+            await pushToResultArray(`select * from ${tableName} where academic_year in (${academic_id}) and semester in (${sem})`)
+        }
+// 5
+        else if(acdyr_id!="" && sem_id=="" && dept_id!="" && emp_id==""){
+            await pushToResultArray(`select * from ${tableName} where academic_year in (${academic_id}) and dept_id in (${dept})`)
+        }
+// 6
+        else if(acdyr_id!="" && sem_id=="" && dept_id=="" && emp_id!=""){
+            await pushToResultArray(`select * from ${tableName} where academic_year in (${academic_id}) and emp_id in (${emp})`)
+        }
+// 7
+        else if(acdyr_id=="" && sem_id=="" && dept_id!="" && emp_id!=""){
+            await pushToResultArray(`select * from ${tableName} where dept_id in (${dept}) and emp_id in (${emp})`)
+        }
+// 8
+        else if(acdyr_id!="" && sem_id!="" && dept_id!="" && emp_id==""){
+            await pushToResultArray(`select * from ${tableName} where academic_year in (${academic_id}) and semester in (${sem}) and dept_id in (${dept})`)
+        }
+// 9
+        else if(acdyr_id!="" && sem_id!="" && dept_id=="" && emp_id!=""){
+            await pushToResultArray(`select * from ${tableName} where academic_year in (${academic_id}) and semester in (${sem}) and emp_id in (${emp})`)
+        }
+// 10
+        else if(acdyr_id!="" && sem_id=="" && dept_id!="" && emp_id!=""){
+            await pushToResultArray(`select * from ${tableName} where dept_id in (${dept}) and academic_year in (${academic_id}) and emp_id in (${emp})`)
+        }
+// 11
+        else if(acdyr_id!="" && sem_id!="" && dept_id!="" && emp_id!=""){
+            await pushToResultArray(`select * from ${tableName} where dept_id in (${dept}) and academic_year in (${academic_id}) and emp_id in (${emp}) and semester in(${sem})`)
+        }
+
+        res.status(200).json({ resultArray });
+
+    }catch(err){
+        console.error(err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+})
 
 
 
