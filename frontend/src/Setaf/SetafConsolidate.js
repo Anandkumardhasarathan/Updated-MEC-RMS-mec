@@ -14,8 +14,8 @@ const empId=logged.faculty_id;
 const generatePDF = async ()=> {
   try{
 
-  const res = await axios.get(`http://localhost:1234/setaf/journallist/${empId}`);
-    const data = res.data;
+  // const res = await axios.get(`http://localhost:1234/setaf/journallist/${empId}`);
+  //   const data = res.data;
   const doc = new jsPDF();
   
     

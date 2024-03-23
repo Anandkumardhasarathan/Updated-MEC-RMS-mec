@@ -94,6 +94,7 @@ export const workshopRecords=async(empId)=>{
     return res
 }
 
+
 export const techtalkRecords=async(empId)=>{
     const res=await axios.get(`${url}/setaf/techtalklist/${empId}`)
     console.log(res.data.rows)

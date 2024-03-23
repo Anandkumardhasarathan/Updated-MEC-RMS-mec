@@ -43,13 +43,13 @@ export const JournalPublicationPrincipalDashboard=()=>{
         
         doc.setFontSize(15); 
         doc.rect(12, 48, 32, 11).stroke();
-        doc.text(`${data.department}`, 23, 55);
+        doc.text(`${data.dept}`, 23, 55);
         doc.rect(88, 48, 32, 11).stroke();
         doc.text('SETAF', 95, 55);
         
         doc.rect(168, 48, 30, 11).stroke();
         doc.setFontSize(15); 
-        doc.text(`${data.academic_year}`, 173, 55);
+        doc.text(`${data.acd_yr}`, 173, 55);
         
         doc.rect(12, 80, 50, 12).stroke();
         doc.text('Nature of Journal', 14, 88);
@@ -145,45 +145,27 @@ export const JournalPublicationPrincipalDashboard=()=>{
          <table className='table table-striped '>
          <thead>
          <tr>
-         <th >Academic Year</th>
+        <th>Report ID</th>
+         <th>Academic Year</th>
          <th>Semester</th>
-         <th>Department</th>
          <th>Name of the Author's</th>
          <th>Title of the Paper</th>
          <th>Name of the Journal</th>
-         <th>Year of Publication</th>
-         <th>Month of Publication</th>
-         <th>ISSN Number</th>
-         <th>Volume NO</th>
-         <th>Issue No</th>
-         <th>Page No</th>
-         <th>Journal Listed in</th>
-         <th>Link to Website of the Journal</th>
+         <th>Date of Publication</th>
          <th>Download PDF</th>
-         
-         {/* <th>Journal First Page - PDF</th> */}
          </tr>
          
          {               
                         journalRecs.length>0?
                         journalRecs.map((val)=>(
                             <tr>
-                                <td>{val.academic_year}</td>
+                                <td>{val.report_id}</td>
+                                <td>{val.acd_yr}</td>
                                 <td>{val.semester}</td>
-                                <td>{val.department}</td>
                                 <td>{val.name_of_author}</td>
                                 <td>{val.title_of_paper}</td>
                                 <td>{val.name_of_journal}</td>
-                                <td>{val.year_of_publication}</td>
-                                <td>{val.month_of_publication}</td>
-                                <td>{val.issn_number}</td>
-                                <td>{val.volume_no}</td>
-                                <td>{val.issue_no}</td>
-                                <td>{val.page_no}</td>
-                                <td>{val.journal_listed_in}</td>
-                                <td>{val.link_to_website_of_journal}</td>
-                                {/* <th>{val.journal_first_page_pdf}</th> */}
-                                
+                                <td>{val.date_of_publication}</td>
                                 <th><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></th>
                             </tr>
                         ))
@@ -233,13 +215,13 @@ const generatePDF = async (report_id)=> {
     
     doc.setFontSize(15); 
     doc.rect(12, 48, 32, 11).stroke();
-    doc.text(`${data.department}`, 23, 55);
+    doc.text(`${data.dept}`, 23, 55);
     doc.rect(88, 48, 32, 11).stroke();
     doc.text('SETAF', 95, 55);
     
     doc.rect(168, 48, 30, 11).stroke();
     doc.setFontSize(15); 
-    doc.text(`${data.academic_year}`, 173, 55);
+    doc.text(`${data.acd_yr}`, 173, 55);
     
     doc.rect(12, 80, 58, 12).stroke();
     doc.text('Name of Conference', 14, 88);
@@ -311,15 +293,13 @@ const generatePDF = async (report_id)=> {
           
                             <th>Accademic Year</th>
                             <th>Semester</th>
-                            <th>Department</th>
-                            <th>Name of the Author's</th>
+                            <th>Name of the Author</th>
                             <th>Title of the Conference Paper</th>
                             <th>Name of the Conference</th>
                             <th>Place of the Conference</th>
-                            <th>Conference Type</th>
-                            <th>Date of Conference</th>
-                            <th>ISBN of the Conference Proceeding</th>
-                            <th>Conference Certificate and Proceeding-PDF</th>
+                            <th>Type</th>
+                            <th>Date</th>
+                            <th>Download PDF</th>
                             
                           
           </tr>
@@ -327,17 +307,14 @@ const generatePDF = async (report_id)=> {
                        conferenceRecs.length>0?
                        conferenceRecs.map((val)=>(
                             <tr>
-                                <td>{val.academic_year}</td>
+                                <td>{val.acd_yr}</td>
                                 <td>{val.semester}</td>
-                                <td>{val.department}</td>
                                 <td>{val.name_of_the_authors}</td>
                                 <td>{val.title_of_the_conference_paper}</td>
                                 <td>{val.name_of_the_conference}</td>
                                 <td>{val.place_of_the_conference}</td>
                                 <td>{val.conference_type}</td>
                                 <td>{dateFormat(val.date_of_conference,'dd-mm-yyyy')}</td>
-                                <td>{val.isbn_of_the_conference_proceeding}</td>
-                                <td>{val.conference_certificate_and_proceeding_pdf}</td>
                                 <th><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></th>
                             </tr>
                         ))

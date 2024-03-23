@@ -5,15 +5,7 @@ import axios from "axios";
 import { getDocument } from 'pdfjs-dist/webpack';
 import { conferenceRecords, facultyRecords, industryRecords, journalRecords, proposalRecords, seedRecords, tasteRecords, techtalkRecords, workshopRecords } from "./axios"
 import dateFormat from 'dateformat'
-import Select from "react-select";
-import OutlinedInput from '@mui/material/OutlinedInput';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import ListItemText from '@mui/material/ListItemText';
-import Checkbox from '@mui/material/Checkbox';
-
-
+import { callAddBoldFont } from "../calibri-bold-normal";
 
 export const JournalPublication=()=>{
 
@@ -25,19 +17,20 @@ export const JournalPublication=()=>{
         const res = await axios.get(`http://localhost:1234/setaf/data/${report_id}`);
         const data = res.data;
         const doc = new jsPDF();
+        jsPDF.API.events.push(["addFonts", callAddBoldFont]);
 
         let pdfDocument;
         try{
             const pdfUrl = `/Journal_SETAF/${data.journal_first_page_PDF}`;
             const pdfResponse = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
             const pdfData = pdfResponse.data;
-    
+            
          pdfDocument = await getDocument({ data: pdfData }).promise;
            }catch(e){
             console.log(e)
            }  
         doc.setFontSize(18);
-        doc.setFont("times", "bold");
+        doc.setFont("calibri-bold", "normal");
         doc.text('MUTHAYAMMAL ENGINEERING COLLEGE',35, 15);
         doc.setFontSize(10);
         doc.setFont("times", "");
@@ -48,14 +41,16 @@ export const JournalPublication=()=>{
         doc.setFont("times", "bold");
         
         doc.setFontSize(15); 
-        doc.rect(12, 48, 32, 11).stroke();
-        doc.text(`${data.department}`, 23, 55);
-        doc.rect(88, 48, 32, 11).stroke();
-        doc.text('SETAF', 95, 55);
+        doc.rect(12, 53, 32, 11).stroke();
+        doc.text(`${data.dept}`,25,60)
+        doc.rect(90,38,32,11)
+        doc.text('SETAF', 97, 45);
+        doc.rect(80,54,52,11)
+        doc.text("Journal Publication",83,61)
         
-        doc.rect(168, 48, 30, 11).stroke();
+        doc.rect(168, 53, 30, 11).stroke();
         doc.setFontSize(15); 
-        doc.text(`${data.academic_year}`, 173, 55);
+        doc.text(`${data.acd_yr}`,173,60)
         
         doc.rect(12, 80, 50, 12).stroke();
         doc.text('Nature of Journal', 14, 88);
@@ -169,7 +164,7 @@ export const JournalPublication=()=>{
                         journalRecs.map((val)=>(
                             <tr>
                                 <td>{val.report_id}</td>
-                                <td>{val.academic_year}</td>
+                                <td>{val.acd_yr}</td>
                                 <td>{val.semester}</td>
                                 <td>{val.name_of_author}</td>
                                 <td>{val.title_of_paper}</td>
@@ -206,9 +201,19 @@ export const ConferencePublication=()=>{
 const generatePDF = async (report_id)=> {
     try{
         // alert(report_id)
-    const res = await axios.get(`http://localhost:1234/conference/data/conf/${report_id}`);
+    const res = await axios.get(`http://localhost:1234/setaf/data/conf/${report_id}`);
     const data = res.data;
-    const doc = new jsPDF();    
+    const doc = new jsPDF(); 
+    let pdfDocument;
+    try{
+        const pdfUrl = `/Journal_SETAF/${data.conference_certificate_and_proceeding_pdf}`;
+        const pdfResponse = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
+        const pdfData = pdfResponse.data;
+
+     pdfDocument = await getDocument({ data: pdfData }).promise;
+       }catch(e){
+        console.log(e)
+       }  
     doc.setFontSize(18);
     doc.setFont("times", "bold");
     doc.text('MUTHAYAMMAL ENGINEERING COLLEGE',35, 15);
@@ -222,13 +227,17 @@ const generatePDF = async (report_id)=> {
     
     doc.setFontSize(15); 
     doc.rect(12, 48, 32, 11).stroke();
-    doc.text(`${data.department}`, 23, 55);
+    doc.rect(12, 65, 32, 11).stroke();
+    doc.text("DEPT",25,55)
+    doc.text(`${data.dept}`, 25, 73);
+    doc.rect(88, 48, 32, 11).stroke();
+    // doc.text(`${data.dept}`, 23, 55);
     doc.rect(88, 48, 32, 11).stroke();
     doc.text('SETAF', 95, 55);
     
     doc.rect(168, 48, 30, 11).stroke();
     doc.setFontSize(15); 
-    doc.text(`${data.academic_year}`, 173, 55);
+    doc.text(`${data.acd_yr}`, 173, 55);
     
     doc.rect(12, 80, 58, 12).stroke();
     doc.text('Name of Conference', 14, 88);
@@ -250,10 +259,32 @@ const generatePDF = async (report_id)=> {
     doc.rect(70, 104, 132, 12).stroke();
     doc.text(`${data.title_of_the_conference_paper}`, 73, 112);
       
-    doc.setFont("times", "bold");
-    doc.rect(12, 116, 190, 105).stroke();
-    doc.text('', 18, 182);
-    
+    try{ 
+        // Add pages from the original PDF
+        for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber++) {
+          const page = await pdfDocument.getPage(pageNumber);
+          const pdfWidth = page.view[2];
+          const pdfHeight = page.view[3];
+      
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          canvas.width = pdfWidth;
+          canvas.height = pdfHeight;
+      
+          await page.render({ canvasContext: context, viewport: page.getViewport({ scale: 1 }) }).promise;
+      
+          const imageDataUrl = canvas.toDataURL('image/jpeg');
+          try{doc.addPage();
+          doc.addImage(imageDataUrl, 'JPEG', 5, 0, 200, 300);
+          }catch(error){
+            console.error(error);
+          }
+        }
+      }
+      catch(e){
+        console.log(e);
+      }
+
     // Generate a data URI for the PDF
     const pdfDataUri = doc.output('datauristring');
   
@@ -292,41 +323,35 @@ const generatePDF = async (report_id)=> {
          <div class="overallcontent ">
          <div class="report-header">
          <h1 class="recent-Articles">Your Reports</h1>
-         <a className="topic-headings" href="Setaf/SetafForms/Conferencefront"><button style={{top:"27.5px",right:"50px"}} class="views" id="addButton">+ Add</button></a>
+         <a className="topic-headings" href="/Setaf/SetafForms/Conferencefront"><button style={{top:"27.5px",right:"50px"}} class="views" id="addButton">+ Add</button></a>
          </div>
          <table className='table table-striped '>                           
           <thead>
           <tr>
-          
-                            <th>Accademic Year</th>
+                            <th>Report ID</th>
+                            <th>Academic Year</th>
                             <th>Semester</th>
-                            <th>Department</th>
-                            <th>Name of the Author's</th>
+                            <th>Name of the Author</th>
                             <th>Title of the Conference Paper</th>
                             <th>Name of the Conference</th>
                             <th>Place of the Conference</th>
-                            <th>Conference Type</th>
-                            <th>Date of Conference</th>
-                            <th>ISBN of the Conference Proceeding</th>
-                            <th>Conference Certificate and Proceeding-PDF</th>
-                            
-                          
+                            <th>Type</th>
+                            <th>Date</th>
+                            <th>Download PDF</th>
           </tr>
           {               
                        conferenceRecs.length>0?
                        conferenceRecs.map((val)=>(
                             <tr>
-                                <td>{val.academic_year}</td>
+                                <td>{val.report_id}</td>
+                                <td>{val.acd_yr}</td>
                                 <td>{val.semester}</td>
-                                <td>{val.department}</td>
                                 <td>{val.name_of_the_authors}</td>
                                 <td>{val.title_of_the_conference_paper}</td>
                                 <td>{val.name_of_the_conference}</td>
                                 <td>{val.place_of_the_conference}</td>
                                 <td>{val.conference_type}</td>
                                 <td>{dateFormat(val.date_of_conference,'dd-mm-yyyy')}</td>
-                                <td>{val.isbn_of_the_conference_proceeding}</td>
-                                <td>{val.conference_certificate_and_proceeding_pdf}</td>
                                 <th><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></th>
                             </tr>
                         ))
@@ -365,8 +390,6 @@ export const Workshop=()=>{
        }
 
     }
-
-
     return(
         <>
          <div class="overallcontent">
@@ -378,7 +401,6 @@ export const Workshop=()=>{
           <thead>
           <tr>
                             <th>SubType</th>
-                            <th>Name of the faculty</th>
                             <th>Designation</th>
                             <th>Nature of the program</th>
                             <th>Title of the program</th>
@@ -386,28 +408,21 @@ export const Workshop=()=>{
                             <th>Duration To (DAte)</th>
                             <th>Participation</th>
                             <th>Name of the Organization and Place</th>
-                            <th>Location of Organization</th>
-                            <th>Amount provided by the HEI</th>
-                            <th>Certificate-PDF</th>            
+                            <th>Location of Organization</th>     
           </tr>
           {             
                         workshopRecs.length>0?   
                         workshopRecs.map((val)=>(
                             <tr>
-                                <th>{val.subtype}</th>
-                                <th>{val.name_of_the_faculty}</th>
-                                <th>{val.designation}</th>
-                                <th>{val.nature_of_the_program}</th>
-                                <th>{val.title_of_the_program}</th>
-                                <th>{val.duration_from}</th>
-                                <th>{val.duration_to}</th>
-                                <th>{val.participation}</th>
-                                <th>{val.name_of_the_organization_and_place}</th>
-                                <th>{val.location_of_organization}</th>
-                                <th>{val.amount_provided_by_the_HEI}</th>
-                                <th>{val.Certificate_pdf}</th>
-
-
+                                <td>{val.subtype}</td>
+                                <td>{val.designation}</td>
+                                <td>{val.nature_of_the_program}</td>
+                                <td>{val.title_of_the_program}</td>
+                                <td>{val.duration_from}</td>
+                                <td>{val.duration_to}</td>
+                                <td>{val.participation}</td>
+                                <td>{val.name_of_the_organization_and_place}</td>
+                                <td>{val.location_of_organization}</td>
                             </tr>
                         ))
                         :
@@ -416,13 +431,9 @@ export const Workshop=()=>{
           </thead>
          </table>
          </div>
-         
-                      
         </>
     )
 }
-
-
 ////////Tech talk/////////
 
 export const Techtalk=()=>{

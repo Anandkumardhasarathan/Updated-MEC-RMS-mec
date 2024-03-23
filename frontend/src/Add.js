@@ -231,6 +231,7 @@ const [showInput, setShowInput] = useState(false);
     const infoCollect=(eve)=>{
         // const { value } = eve.target;
         
+        
 
         setSeminar((old)=>{
            

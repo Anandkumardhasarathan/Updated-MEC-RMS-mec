@@ -368,7 +368,7 @@ const empId=logged.faculty_id;
 
  
 try{
-  cres=await axios.get(`${url}/conference/conferencerecs`)
+  cres=await axios.get(`${url}/setaf/conferencerecs`)
   // alert(JSON.stringify(res.data.length))
   setConf(JSON.stringify(cres.data.length))
   console.log(cres.data)

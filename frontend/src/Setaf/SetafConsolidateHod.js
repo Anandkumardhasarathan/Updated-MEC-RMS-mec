@@ -345,13 +345,9 @@ try{
 catch(e){
     console.log(e);
 }
-
-
-// alert(JSON.stringify(res))
-
     }
     demo();
-  })
+})
   
 
    
@@ -364,11 +360,11 @@ useEffect(() => {
     const url="http://localhost:1234"
 
 const logged=JSON.parse(sessionStorage.getItem("person"))
-const empId=logged.faculty_id;
+const deptID=logged.dept_id;
 
  
 try{
-  cres=await axios.get(`${url}/conference/conferencelist/${empId}`)
+  cres=await axios.get(`${url}/setaf/conferencelist/hoddashboard/${deptID}`)
   // alert(JSON.stringify(res.data.length))
   setConf(JSON.stringify(cres.data.length))
   console.log(cres.data)

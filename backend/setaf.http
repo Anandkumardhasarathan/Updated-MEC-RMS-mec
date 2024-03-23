@@ -11,3 +11,7 @@ Content-Type: application/json
 ###
 
 GET http://localhost:1234/setaf/getAcdyr
+
+###
+
+GET http://localhost:1234/setaf/getDeptById/4

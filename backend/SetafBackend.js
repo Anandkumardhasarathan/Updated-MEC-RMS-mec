@@ -11,7 +11,7 @@ server.use(bodyparser.json())
 
 server.get('/journallist/:empId',async(req,res)=>{  
     const empid=req.params.empId;
-    const query="select * from data_setaf_journal_publication where emp_id=?"
+    const query="select * from data_setaf_journal_publication as setaf inner join predefined_academic_year as acd on acd.acd_yr_id=setaf.academic_year where emp_id=?"
     database.query(query,[empid],(err,result)=>{
         if(err){
             res.status(404).json({error:err.message})
@@ -31,12 +31,11 @@ server.get('/journallist/:empId',async(req,res)=>{
 
 server.post('/journalnewrecord/:empid',async(req,res)=>{
     const  empid=req.params.empid;
-    const {report_id,emp_id,dept_id,academic_year,semester,department,	name_of_author,	title_of_paper,	name_of_journal,date_of_publication,issn_number,volume_no,issue_no,page_no,journal_listed_in,link_to_website_of_journal,journal_first_page_PDF}=req.body
-    const sql="insert into data_setaf_journal_publication values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);"
+    const {report_id,emp_id,dept_id,academic_year,semester,	name_of_author,	title_of_paper,	name_of_journal,date_of_publication,issn_number,volume_no,issue_no,page_no,journal_listed_in,link_to_website_of_journal,journal_first_page_PDF}=req.body
+    const sql="insert into data_setaf_journal_publication values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);"
     database.query(sql,[report_id,empid,dept_id,
         academic_year,
         semester,
-        department,	
         name_of_author,	
         title_of_paper,	
         name_of_journal,
@@ -62,7 +61,7 @@ server.post('/journalnewrecord/:empid',async(req,res)=>{
 /////hod dashboard
 server.get('/journallist/hoddashboard/:deptID',async(req,res)=>{  
     const deptid=req.params.deptID;
-    const query="select * from data_setaf_journal_publication where dept_id=?"
+    const query="select * from data_setaf_journal_publication as setaf inner join predefined_academic_year as acd on acd.acd_yr_id=setaf.academic_year   where dept_id=?"
     database.query(query,[deptid],(err,result)=>{
         if(err){
             res.status(404).json({error:err.message})
@@ -82,7 +81,7 @@ server.get('/journallist/hoddashboard/:deptID',async(req,res)=>{
 /////principal dashboard///
 server.get('/journalrecs',async(req,res)=>{  
     // const empid=req.params.empId;
-    const query="select * from data_setaf_journal_publication"
+    const query="select * from data_setaf_journal_publication as setaf inner join predefined_academic_year as acd on acd.acd_yr_id=setaf.academic_year "
     database.query(query,(err,result)=>{
         if(err){
             res.status(404).json({error:err.message})
@@ -103,7 +102,7 @@ server.get('/journalrecs',async(req,res)=>{
 //////pdf fetch datas////////
 server.get('/data/:report_id', (req, res) => {
     const report_id = req.params.report_id;
-    const sql =  `SELECT * FROM data_setaf_journal_publication where report_id=?`;
+    const sql =  `SELECT * FROM data_setaf_journal_publication as setaf inner join predefined_academic_year as acd on acd.acd_yr_id=setaf.academic_year  inner join data_dept on setaf.dept_id=data_dept.dept_id  where setaf.report_id=?`;
 
     database.query(sql,[report_id], (err, results) => {
       if (err) throw err;
@@ -115,7 +114,7 @@ server.get('/data/:report_id', (req, res) => {
 ///////////////////conference publication and presentation//////////////////////////////
 server.get('/conferencelist/:empId',async(req,res)=>{
     const empid=req.params.empId;
-    const query="select  * from data_setaf_conference_publication_and_presentations where emp_id=? "
+    const query="select  * from data_setaf_conference_publication_and_presentations as setaf inner join predefined_academic_year as acd on acd.acd_yr_id=setaf.academic_year where emp_id=? "
     database.query(query,[empid],(err,result)=>{
         if(err){
             res.status(404).json({error:err.message})
@@ -139,7 +138,6 @@ server.post('/conferencenewrecord/:empid',async(req,res)=>{
         emp_id,
         academic_year,
         semester,
-        department,
         name_of_the_authors,
         title_of_the_conference_paper,
         name_of_the_conference,
@@ -149,12 +147,11 @@ server.post('/conferencenewrecord/:empid',async(req,res)=>{
         isbn_of_the_conference_proceeding,
         conference_certificate_and_proceeding_pdf
     }=req.body
-    const sql="insert into data_setaf_conference_publication_and_presentations values (?,?,?,?,?,?,?,?,?,?,?,?,?,?);"
+    const sql="insert into data_setaf_conference_publication_and_presentations values (?,?,?,?,?,?,?,?,?,?,?,?,?);"
     database.query(sql,[report_id,dept_id,
             empid,
             academic_year,
         	semester,
-            department,
             name_of_the_authors,
             title_of_the_conference_paper,
             name_of_the_conference,
@@ -176,7 +173,7 @@ server.post('/conferencenewrecord/:empid',async(req,res)=>{
 /////hod dashboard
 server.get('/conferencelist/hoddashboard/:deptID',async(req,res)=>{  
     const deptid=req.params.deptID;
-    const query="select * from data_setaf_conference_publication_and_presentations where dept_id=?"
+    const query="select * from data_setaf_conference_publication_and_presentations  as setaf inner join predefined_academic_year as acd on acd.acd_yr_id=setaf.academic_year where dept_id=?"
     database.query(query,[deptid],(err,result)=>{
         if(err){
             res.status(404).json({error:err.message})
@@ -195,7 +192,7 @@ server.get('/conferencelist/hoddashboard/:deptID',async(req,res)=>{
 /////principal dashboard///
 server.get('/conferencerecs',async(req,res)=>{  
     // const empid=req.params.empId;
-    const query="select * from data_setaf_conference_publication_and_presentations"
+    const query="select * from data_setaf_conference_publication_and_presentations  as setaf inner join predefined_academic_year as acd on acd.acd_yr_id=setaf.academic_year "
     database.query(query,(err,result)=>{
         if(err){
             res.status(404).json({error:err.message})
@@ -215,7 +212,7 @@ server.get('/conferencerecs',async(req,res)=>{
 //////pdf fetch datas////////
 server.get('/data/conf/:report_id', (req, res) => {
     const report_id = req.params.report_id;
-    const sql =  `SELECT * FROM data_setaf_conference_publication_and_presentations where report_id=?`;
+    const sql =  `SELECT * FROM data_setaf_conference_publication_and_presentations as setaf inner join data_dept on setaf.dept_id=data_dept.dept_id inner join predefined_academic_year as acd on acd.acd_yr_id=setaf.academic_year  where setaf.report_id=?`;
 
     database.query(sql,[report_id], (err, results) => {
       if (err) throw err;
@@ -247,7 +244,9 @@ server.get('/workshoplist/:empId',async(req,res)=>{
 
 server.post('/workshopnewrecord/:empid',async(req,res)=>{
     const  empid=req.params.empid;
-    const {emp_id,
+    const {report_id,
+        emp_id,
+        dept_id,
         subtype,
         name_of_the_faculty,
         designation,
@@ -260,11 +259,11 @@ server.post('/workshopnewrecord/:empid',async(req,res)=>{
         location_of_organization,
         amount_provided_by_the_HEI,
         Certificates_pdf
-
-    
     }=req.body
-    const sql="insert into data_setaf_workshop_seminar_fdps_sdpa_participation values (?,?,?,?,?,?,?,?,?,?,?,?,?);"
-    database.query(sql,[empid,
+    const sql="insert into data_setaf_workshop_seminar_fdps_sdpa_participation values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);"
+    database.query(sql,[report_id,
+        empid,
+        dept_id,
         subtype,
         name_of_the_faculty,
         designation,
@@ -753,6 +752,17 @@ server.post('/filterSetaf/:tableName',async(req,res)=>{
         console.error(err);
         res.status(500).json({ error: 'Internal Server Error' });
     }
+})
+
+server.get('/getDeptById/:dept',async(req,res)=>{
+    let sql= `select * from data_dept where dept_id = ${req.params.dept}`
+    database.query(sql,(err,row)=>{
+        if(err){
+            console.log(err)
+            return
+        }
+        res.status(200).json({row})
+    })
 })
 
 server.get('/getAcdyr',async(req,res)=>{

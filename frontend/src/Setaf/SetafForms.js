@@ -6,11 +6,15 @@ import { Academic } from '../connect';
 
 export const Journalfront=()=>{
 
+  useEffect(()=>{
+    Acad()
+  },[])
+const logged = JSON.parse(sessionStorage.getItem("person"))
+console.log(logged)
     const[journal,setjournal]=useState({
-        "dept_id":"",
+        "dept_id":`${logged.dept_id}`,
         "academic_year":"",
         "semester":"",
-        "department":"",
         "name_of_author":"",
         "title_of_paper":"",
         "name_of_journal":"",
@@ -139,7 +143,7 @@ const call=async()=>{
         })
         const{name,value}=eve.target
         setjournal((old)=>{
-            if(name==="academic_year"||name==="semester"||name==="department"||name==="name_of_author"||name==="title_of_paper"||name==="name_of_journal"||name==="date_of_publication"||name==="issn_number"||name==="volume_no"||name==="issue_no"||name==="page_no"||name==="journal_listed_in"||name==="link_to_website_of_journal"||name==="journal_first_page_pdf"){
+            if(name==="academic_year"||name==="semester"||name==="name_of_author"||name==="title_of_paper"||name==="name_of_journal"||name==="date_of_publication"||name==="issn_number"||name==="volume_no"||name==="issue_no"||name==="page_no"||name==="journal_listed_in"||name==="link_to_website_of_journal"||name==="journal_first_page_pdf"){
                 return{
                     ...old,
                     [name]:value
@@ -201,9 +205,6 @@ const call=async()=>{
                 <option >Odd</option>
                 <option >Even</option>
             </select>
-
-            <label>Department</label>
-            <input type='text' placeholder='Enter the Department' name='department' value={journal.department} onChange={infoCollect}/>
 
             <label>Name of the Author's</label>
             <input type="text" placeholder="Enter the Author's Name" name='name_of_author' onChange={infoCollect} value={journal.name_of_author}/>
@@ -274,11 +275,16 @@ const call=async()=>{
 //conference
 export const Conferencefront=()=>{
 
+  useEffect(()=>{
+    Acad()
+  },[])
+const logged = JSON.parse(sessionStorage.getItem("person"))
+console.log(logged)
+
     const[conference,setconference]=useState({
-        "dept_id":"",
+        "dept_id":`${logged.dept_id}`,
         "academic_year":"",	
         "semester":"",	
-        "department":"",
         "name_of_the_authors":"",
         "title_of_the_conference_paper":"",
         "name_of_the_conference":"",
@@ -289,6 +295,18 @@ export const Conferencefront=()=>{
         "conference_certificate_and_proceeding_pdf":""	
       })
         
+          ///autofetch code for academic from db
+         
+          
+          const [acd,setAcd] = useState([])
+    
+          const Acad=async()=>{
+            const temp = await axios.get(`http://localhost:1234/setaf/getAcdyr`)
+            // console.log(temp.data.row)
+            setAcd(temp.data.row)
+          }
+          
+
       console.log(conference)
       const navigate = useNavigate()
       const [newFileName, setNewFileName] = useState('');
@@ -301,8 +319,8 @@ export const Conferencefront=()=>{
  
     setNewFileName(conference.name_of_the_conference);
         const file = e.target.files[0];
-        if (file && file.size > 2 * 1024 * 1024) {
-        alert("Please choose an image with a size below 2MB.");
+        if (file && file.size > 500 * 1024) {
+        alert("Please choose an image with a size below 500kb.");
         e.target.value = null; // Reset the file input
         return;
         }
@@ -344,7 +362,7 @@ const call=async()=>{
     // setLoading(true);
     const formData6 = new FormData();
   formData6.append('file', selectedFile1, conference.conference_certificate_and_proceeding_pdf);
-  fetch('http://localhost:1234/conference/uploadPdf', {
+  fetch('http://localhost:1234/setaf/uploadPdf', {
     method: 'POST',
     body: formData6,
   })
@@ -382,31 +400,43 @@ const call=async()=>{
 }
     
 
-
-
-
-
-
-
-
-
       ////////////////////////////
 console.log(conference)
 const navi=useNavigate()
 
 
 const log=JSON.parse(sessionStorage.getItem('person'));
-const handlechange=(e)=>{
+const handlechange=(eve)=>{
   setconference((old)=>{
     return {
       ...old,
       dept_id:log.dept_id
     }
   })
-    setconference((prev)=>({
-      ...prev,
-      [e.target.name]:e.target.value
-    }))
+  const{name,value}=eve.target
+  setconference((old)=>{
+      if(name==="dept_id"||name==="academic_year"||name==="semester"||name==="name_of_the_authors"||name==="title_of_the_conference_paper"||name==="name_of_the_conference"||name==="place_of_the_conference"||name==="conference_type"||name==="date_of_conference"||name==="isbn_of_the_conference_proceeding"||name==="conference_certificate_and_proceeding_pdf"){
+          return{
+              ...old,
+              [name]:value
+          }
+      }
+      else if(name==="s_no"){
+          // fillPorposals(value)
+          return{
+              ...old,
+              [name]:parseInt(value)
+          }
+      }
+      else{
+          return{
+              ...old,
+              [name]:parseInt(value),
+             
+          }
+      }
+  })   
+
 }
 
     const callPropose=async()=>{
@@ -418,21 +448,7 @@ const handlechange=(e)=>{
             catch(err){
               alert("Error in axios")
             }
-        //     setconference(()=>{
-        //         return{
-        //             "academic_year":"",	
-        //             "semester":"",	
-        //             "department":"",
-        //             "name_of_the_authors":"",
-        //             "title_of_the_conference_paper":"",
-        //             "name_of_the_conference":"",
-        //             "place_of_the_conference":"",
-        //             "conference_type":"",
-        //             "date_of_conference":"",
-        //             "isbn_of_the_conference_proceeding":"",
-        //             "conference_certificate_and_proceeding_pdf":""	
-        //           }
-        //     })
+     
          }
 
     return(
@@ -443,51 +459,54 @@ const handlechange=(e)=>{
         <div className="row justify-content-center"style={{justifyContent:'center'}}>
         <div className="ej">
             <label>Academic Year</label>
-            <select  value={setconference.academic_year} onClick={handlechange}  name='academic_year' >
-                <option >--</option>
-                <option >2022-23</option>
-                <option >2023-24</option>
+            <select  value={conference.academic_year} onChange={handlechange}  name='academic_year' >
+                 <option value="">Select The Academic Year</option>
+              {
+    // let t=0;
+                                acd.map((val,key)=>{
+                                    return (<option key={val.acd_yr_id}  value={val.acd_yr_id}>{val.acd_yr}</option>)
+                                })
+              } 
             </select>
 
             <label>Semester</label>
-            <select value={setconference.semester} onClick={handlechange}  name='semester'>
-                <option >--</option>
-                <option>Odd Sem</option>
-                <option>Even Sem</option>
+            <select value={conference.semester} onChange={handlechange}  name='semester'>
+                <option value="">Select the Semester</option>
+                <option>Odd</option>
+                <option>Even</option>
             </select>
          
-            <label>Department</label>
-            <input type="text" placeholder="Enter the Department" value={setconference.department} name='department' onChange={(e)=>handlechange(e)}/>
+            {/* <label>Department</label>
+            <input type="text" placeholder="Enter the Department" value={conference.department} name='department' onChange={(e)=>handlechange(e)}/> */}
 
-            <label>Name of the Author's</label>
-            <input type="text" placeholder="Enter the Name" value={setconference.name_of_the_authors} name='name_of_the_authors' onChange={handlechange}/>
+            <label>Name of the Author</label>
+            <input type="text" placeholder="Enter the Name" value={conference.name_of_the_authors} name='name_of_the_authors' onChange={handlechange}/>
 
             <label>Title of the Conference Paper</label>
-            <input type="text" placeholder="Enter the Title" value={setconference.title_of_the_conference_paper} name='title_of_the_conference_paper' onChange={handlechange}/>
+            <input type="text" placeholder="Enter the Title" value={conference.title_of_the_conference_paper} name='title_of_the_conference_paper' onChange={handlechange}/>
 
             <label>Name of the Conference</label>
-            <input type="text" placeholder="Enter the Name" value={setconference.name_of_the_conference} name='name_of_the_conference' onChange={handlechange}/>
+            <input type="text" placeholder="Enter the Name" value={conference.name_of_the_conference} name='name_of_the_conference' onChange={handlechange}/>
 
-            <label>Place of the Conference</label>
-            <input type="text" placeholder="Enter the Place" value={setconference.place_of_the_conference} name='place_of_the_conference' onChange={handlechange}/>
+            <label>Venue of the Conference</label>
+            <input type="text" placeholder="Enter the Place" value={conference.place_of_the_conference} name='place_of_the_conference' onChange={handlechange}/>
 
             <label>Conference Type</label>
-            <select value={setconference.conference_type} name='conference_type' onClick={handlechange}>
+            <select value={conference.conference_type} name='conference_type' onChange={handlechange}>
                 <option>Select the Type</option>
                 <option >National</option>
                 <option >International</option>
             </select>
 
             <label>Date of Conference</label>
-            <input type="date" value={setconference.date_of_conference} name='date_of_conference' onChange={handlechange}/>
+            <input type="date" value={conference.date_of_conference} name='date_of_conference' onChange={handlechange}/>
 
             <label>ISBN of the Conference Proceeding</label>
-            <input type="text" placeholder="Enter the ISBN" value={setconference.isbn_of_the_conference_proceeding} name='isbn_of_the_conference_proceeding' onChange={handlechange}/>
+            <input type="text" placeholder="Enter the ISBN" value={conference.isbn_of_the_conference_proceeding} name='isbn_of_the_conference_proceeding' onChange={handlechange}/>
 
            
-            <option>UGC CARE</option>
               {file&&(<div>
-                <label>Conference Certificate and Proceedings - PDF</label>
+                <label>Conference Certificate</label>
           <input type="file" onChange={handleFileChange1}   id="event" name="pdf" accept = "application/pdf"/>
           <button onClick={call}>Upload</button>
               </div>)}
@@ -514,8 +533,11 @@ const handlechange=(e)=>{
 
 ////////////////workshop///////////////////
  export const Workshopfront=()=>{
-  
+
+const logged = JSON.parse(sessionStorage.getItem("person"))
+console.log(logged)
   const [workshop,setworkshop]=useState({
+    "dept_id":`${logged.dept_id}`,
     "subtype":"",
     "name_of_the_faculty":"",
     "designation":"",
@@ -532,13 +554,41 @@ const handlechange=(e)=>{
     })
  
 console.log(workshop)
+const log=JSON.parse(sessionStorage.getItem('person'));
 const navi=useNavigate()
-  const handlechange=(e)=>{
-      setworkshop((prev)=>({
-        ...prev,
-        [e.target.name]:e.target.value
-      }))
-  }
+const handlechange=(eve)=>{
+  setworkshop((old)=>{
+    return {
+      ...old,
+      dept_id:log.dept_id
+    }
+  })
+  const{name,value}=eve.target
+  setworkshop((old)=>{
+      if(name==="dept_id"||name==="subtype"||name==="name_of_the_faculty"||name==="designation"||name==="nature_of_the_program"||name==="title_of_the_program"||name==="duration_from"||name==="duration_to"||name==="participation"||name==="name_of_the_organization_and_place"||name==="location_of_organization"||name==="amount_provided_by_the_HEI"||name==="Certificates_pdf"){
+          return{
+              ...old,
+              [name]:value
+          }
+      }
+      else if(name==="s_no"){
+          // fillPorposals(value)
+          return{
+              ...old,
+              [name]:parseInt(value)
+          }
+      }
+      else{
+          return{
+              ...old,
+              [name]:parseInt(value),
+             
+          }
+      }
+  })   
+
+}
+
     
   const handleclick=async(e)=>{
     e.preventDefault()
@@ -552,22 +602,7 @@ const navi=useNavigate()
       catch(err){
       console.log(err)
     } 
-    setworkshop(()=>{
-        return{
-            "subtype":"",
-            "name_of_the_faculty":"",
-            "designation":"",
-            "nature_of_the_program":"",
-            "title_of_the_program":"",
-            "duration_from":"",
-            "duration_to":"",
-            "participation":"",
-            "name_of_the_organization_and_place":""	,
-            "location_of_organization":"",
-            "amount_provided_by_the_HEI":"",
-            "Certificates_pdf":""	   
-            }
-    })
+
   }
 
   return (
