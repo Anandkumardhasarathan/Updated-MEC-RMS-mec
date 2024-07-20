@@ -10,18 +10,18 @@ const db = mysql.createConnection({
     // "database":"mec_report_management",
     // "connectTimeout":3000000
 
-    "host":"10.167.1.2",
-    "port":3306,
-    "user":"testuser",
-    "password":"testuser",
-    "database":"mec_report_management",
-    "connectTimeout":3000000
+    // "host":"10.167.1.2",
+    // "port":3306,
+    // "user":"testuser",
+    // "password":"testuser",
+    // "database":"mec_report_management",
+    // "connectTimeout":3000000
 
-    // host:"localhost",
-    // user:"root",
-    // database:"mec_report_management",
-    // port:"3306",
-    // password:"7547"
+    host:"localhost",
+    user:"root",
+    database:"mec_report_management2",
+    port:"3306",
+    password:"7547"
 
 })
 

@@ -16,8 +16,8 @@ import Iv from "./Iv/Iv"
 import Ivadd from "./Iv/Ivadd"
 import IvInput from "./Iv/IvInput"
 import Setafbutton from "./Setaf/Setafbuttons"
-import { ConferencePublication, JournalPublication, Techtalk, Workshop,Nptel, FacultyGuestTalk, Proposal, Taste, Industry, Seed } from "./Setaf/SetafFAcultyView"
-import { Facultyfront, Conferencefront, Journalfront, Nptelfront, Techtalks, Workshopfront, Proposalfront, Tastefront, Industryfront, Seedfront} from "./Setaf/SetafForms"
+import { ConferencePublication, JournalPublication, Techtalk, Workshop,Nptel, FacultyGuestTalk, Proposal, Taste, Industry, Seed, Consultancy, Patentsfilled, Collabrative, Econtent, VisitToLibrary, Award, BooksFaculty, StudentsMotivation } from "./Setaf/SetafFAcultyView"
+import { Facultyfront, Conferencefront, Journalfront, Nptelfront, Techtalks, Workshopfront, Proposalfront, Tastefront, Industryfront, Seedfront, Consultancyfront, Patentfilledfront, Collabrativefront, VisittoIndustryfront, Econtentfront, VisittoLibraryfront, AwardAtNational, Books, Motivationfront} from "./Setaf/SetafForms"
 import SetafConsolidation from "./Setaf/SetafConsolidate"
 
 
@@ -75,20 +75,35 @@ export const Dashboard=()=>{
                                 <Route path="/Setaf/SetafForms/Workshopfront" element={<Workshopfront/>}/>
                             <Route path="/techtalk" element={<Techtalk/>}/>
                                 <Route path="/Setaf/SetafForms/techtalks" element={<Techtalks/>}/>
-                            <Route path="/nptel" element={<Nptel/>}/>
-                            <Route path="/Setaf/SetafForms/nptelform" element={<Nptelfront/>}/>
                             <Route path="/facultly" element={<FacultyGuestTalk/>}/>
                             <Route path="/Setaf/SetafForms/facultyfront" element={<Facultyfront/>}/>
-                            <Route path="/proposal" element={<Proposal/>}/>
-                            <Route path="/Setaf/SetafForms/proposalfront" element={<Proposalfront/>}/>
+                            <Route path="/nptelcertification" element={<Nptel/>}/>
+                            <Route path="/Setaf/SetafForms/nptelform" element={<Nptelfront/>}/>
                             <Route path="/taste" element={<Taste/>}/>
                             <Route path="/Setaf/SetafForms/tastefront" element={<Tastefront/>}/>
                             <Route path="/industry" element={<Industry/>}/>
-                            <Route path="/Setaf/SetafForms/visitindustry" element={<Industryfront/>}/>
+                            <Route path="/Setaf/SetafForms/visitindustry" element={<VisittoIndustryfront/>}/>
+                            <Route path="/consultancy" element={<Consultancy/>}/>
+                            <Route path="/Setaf/SetafForms/consultancyfront" element={<Consultancyfront/>}/>
+                            <Route path="/patent" element={<Patentsfilled/>}/>
+                            <Route path="/Setaf/SetafForms/patentfront" element={<Patentfilledfront/>}/>
+                            <Route path="/collabrative" element={<Collabrative/>}/>
+                            <Route path="/Setaf/SetafForms/collabrative" element={<Collabrativefront/>}/>
                             <Route path="/seed" element={<Seed/>}/>
-                            <Route path="/Setaf/SetafForms/seedfront" element={<Seedfront/>}/>
-   
-                            
+                            <Route path="/Setaf/SetafForms/seed" element={<Seedfront/>}/>
+                            <Route path="/econtent" element={<Econtent/>}/>
+                            <Route path="/Setaf/SetafForms/Econtentfront" element={<Econtentfront/>}/>
+                            <Route path="/Proposal" element={<Proposal/>}/>
+                            <Route path="/Setaf/SetafForms/proposalfront" element={<Proposalfront/>}/>
+                            <Route path="/visittolibrary" element={<VisitToLibrary/>}/>
+                            <Route path="/Setaf/SetafForms/visittolibraryfront" element={<VisittoLibraryfront/>}/>
+                            <Route path="/award" element={<Award/>}/>
+                            <Route path="/Setaf/SetafForms/award" element={<AwardAtNational/>}/>
+                            <Route path="/books" element={<BooksFaculty/>}/>
+                            <Route path="/Setaf/SetafForms/books" element={<Books/>}/>
+                            <Route path="/motivationfront" element={<Motivationfront/>}/>
+                            <Route path="/setaf/studentsmotivation" element={<StudentsMotivation/>}/>
+
                         {/* SeSTA routers */}
                             <Route path="/consolidation" element={<SetafConsolidation/>}/>  
                             <Route path="sesta" element={<SeSTAbuttons/>}/>

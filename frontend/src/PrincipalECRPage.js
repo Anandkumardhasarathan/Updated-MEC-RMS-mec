@@ -1,6 +1,4 @@
-
 import { onTable,approveLevel1, approveLevel2, approveLevel3, approveLevel4, approveLevel5,loadComForLevel2,loadComForLevel3,loadComForLevel4,loadComForLevel5, loadForLevel1, loadForLevel2, loadForLevel3, loadForLevel4, loadForLevel5, loadComForLevel1, approveComLevel1, approveComLevel2, approveComLevel3, approveComLevel4, approveComLevel5, Table, Major, SubReport } from "./connect"
-
 import React, { useState, useEffect} from 'react';
 import "./sty.css"
 import axios from 'axios';
@@ -297,7 +295,7 @@ let [subs,setSubs]=useState([])
         value: val.acd_yr_id,
         label: val.acd_yr,
         extraInfo: "acdyr_id"
-        }));
+        }));    
     // console.log(years)
     // alert(JSON.stringify(years))
 

@@ -7,8 +7,8 @@ import Setafbutton from "./Setaf/Setafbuttons"
 import SetafConsolidation from "./Setaf/SetafConsolidate"
 import SetafConsolidationHod from "./Setaf/SetafConsolidateHod"
 import { JournalPublication } from "./Setaf/SetafFAcultyView"
-import { Conferencefront, Journalfront } from "./Setaf/SetafForms"
-import { ConferencePublicationHodDashboard, JournalPublicationHodDashboard } from "./Setaf/SetafHodView"
+import { AwardAtNational, Books, Collabrativefront, Conferencefront, Consultancyfront, Econtentfront, Facultyfront, Journalfront, Nptelfront, Patentfilledfront, Proposalfront, Seedfront, Tastefront, Techtalks, VisittoIndustryfront, VisittoLibraryfront, Workshopfront } from "./Setaf/SetafForms"
+import { AwardHod, BooksHod, CollabrativeHod, ConferencePublicationHodDashboard, ConsultancyHodDashboard, Econtent, FacultyGuestTalkHodDashboard, IndustryHodDashboard, JournalPublicationHodDashboard, NptelhodDashboard, PatentsfilledHod, Proposal, ProposalHodView, SeedHodDashboard, TastehodDashboard, TechtalkHodView, VisitToLibrary, VisitToLibraryHod, WorkshopHodDashboard } from "./Setaf/SetafHodView"
 
 export const HodDashboard=()=>{
     return(
@@ -30,6 +30,37 @@ export const HodDashboard=()=>{
                 <Route path="/Setaf/SetafForms/Journalfront" element={<Journalfront/>}/>
                 <Route path="/conferencepublication" element={<ConferencePublicationHodDashboard/>}/>
                 <Route path="/Setaf/SetafForms/Conferencefront" element={<Conferencefront/>}/>
+                <Route path="/workshop" element={<WorkshopHodDashboard/>}/>
+                <Route path="/Setaf/SetafForms/Workshopfront" element={<Workshopfront/>}/>
+                <Route path="/techtalk" element={<TechtalkHodView/>}/>
+                <Route path="/Setaf/SetafForms/techtalks" element={<Techtalks/>}/>            
+                <Route path="/facultly" element={<FacultyGuestTalkHodDashboard/>}/>
+                <Route path="/Setaf/SetafForms/facultyfront" element={<Facultyfront/>}/>
+                <Route path="/Nptelcertification" element={<NptelhodDashboard/>}/>
+                <Route path="Setaf/SetafForms/nptelform" element={<Nptelfront/>}/>
+                <Route path="/taste" element={<TastehodDashboard/>}/>
+                <Route path="/Setaf/SetafForms/tastefront" element={<Tastefront/>}/>
+                <Route path="/consultancy" element={<ConsultancyHodDashboard/>}/>
+                <Route path="/Setaf/SetafForms/consultancyfront" element={<Consultancyfront/>}/>
+                <Route path="/patent" element={<PatentsfilledHod/>}/>
+                <Route path="/Setaf/SetafForms/patentfront" element={<Patentfilledfront/>}/>
+                <Route path="/seed" element={<SeedHodDashboard/>}/>
+                <Route path="/Setaf/SetafForms/seedfront" element={<Seedfront/>}/>
+                <Route path="/econtent" element={<Econtent/>}/>
+                <Route path="/Setaf/SetafForms/Econtentfront" element={<Econtentfront/>}/>
+                <Route path="/Proposal" element={<ProposalHodView/>}/>
+                <Route path="/Setaf/SetafForms/proposalfront" element={<Proposalfront/>}/>
+                <Route path="/industry" element={<IndustryHodDashboard/>}/>
+                <Route path="/Setaf/SetafForms/visittoindustry" element={<VisittoIndustryfront/>}/>
+                <Route path="/collabrative" element={<CollabrativeHod/>}/>
+                <Route path="/Setaf/SetafForms/collabrative" element={<Collabrativefront/>}/>  
+                <Route path="/visittolibrary" element={<VisitToLibraryHod/>}/>
+                <Route path="/Setaf/SetafForms/visittolibraryfront" element={<VisittoLibraryfront/>}/>
+                <Route path="/award" element={<AwardHod/>}/>
+                <Route path="/Setaf/SetafForms/award" element={<AwardAtNational/>}/>
+                <Route path="/books" element={<BooksHod/>}/>
+                <Route path="/Setaf/SetafForms/books" element={<Books/>}/>
+
                 </Routes>
             </BrowserRouter>
         </>

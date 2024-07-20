@@ -279,7 +279,6 @@ try{
  const name10 = newFileName + '_particiFeedback_' + dateTimeString + '_' + random+'.pdf';
  const name11 = newFileName + '_resProfile_' + dateTimeString + '_' + random+'.pdf';
  const name12 = newFileName + '_ppt_' + dateTimeString + '_' + random+'.pdf';
-
  setFormData((old)=>{
  return{
  ...old,
@@ -301,6 +300,7 @@ try{
  }
  setSelectedFile1(e.target.files[0]);
  };
+
  const handleFileChange2 = (e) => {
  
  const file = e.target.files[0];
@@ -311,8 +311,8 @@ try{
  e.target.value = null; // Reset the file input
  return;
  }
- setSelectedFile2(e.target.files[0]);
  
+ setSelectedFile2(e.target.files[0]);
  };
  const handleFileChange3 = (e) => {
  const file = e.target.files[0];

@@ -305,3 +305,142 @@ Content-Type: application/json
         "amount_provided_by_the_HEI":"100",
         "Certificates_pdf":""
 }
+
+###
+POST http://localhost:1234/setaf/techtalknewrecord/60EE18
+Content-Type: application/json
+
+{
+        "report_id":11,
+        "emp_id":"60EE18",
+        "dept_id":4,
+        "name_of_the_faculty":"Anand",
+        "MuDiL_number":"9208",
+        "lecture_delivered_to_branch":"akj",
+        "semester":"2",
+        "section":"a",
+        "data_of_lecture_delivered":"2023-02-03",
+        "period":2,
+        "topic_of_discussion":"ml",
+        "no_of_beneficiaries":100,
+        "detail_of_discussion_made":"ml",
+        "outcome_of_the_discussion":"good",
+        "outcome_of_he_activity":"good",
+        "PO_and_PSO":"no",
+        "attendance_sheet_pdf":"",
+        "handout_of_lecture_pdf":""
+}
+###
+GET http://localhost:1234/setaf/journallist/60EE18
+
+###
+GET http://localhost:1234/setaf/visittolibrarylist/60EE18
+
+###
+GET http://localhost:1234/setaf/visittolibraryrecs
+
+
+###
+GET http://localhost:1234/setaf/visittolibrary/hoddashboard/4
+
+###
+POST http://localhost:1234/setaf/visittolibrarynewrecord/60CS18
+Content-Type: application/json
+
+{
+    "report_id": 7,
+    "emp_id": "",
+    "dept_id": 4,
+    "academic_year":"2024-25",
+    "name_of_the_faculty": "Anand",
+    "date": "2024-02-01",
+    "purpose_of_visit": "Reading"
+}
+
+/////award at national and international
+
+###
+POST http://localhost:1234/setaf/awardatnational/60EE18
+Content-Type: application/json
+
+{
+    "report_id":9,
+    "emp_id":"60EE18",
+    "dept_id":4,
+    "academic_year":3,
+    "semester":"ODD",
+    "name_of_the_faculty":"Anand",
+    "name_of_the_award":"Behindhoods",
+    "category":"National",
+    "date_of_award":"2024-04-02",
+    "name_of_awarding_organization":"Behindhood",
+    "award_certificate_pdf":""
+}
+###
+GET http://localhost:1234/setaf/awardatnationallist/60EE18
+
+###
+GET http://localhost:1234/setaf/awardatnational/hoddashboard/4
+
+###
+GET http://localhost:1234/setaf/awardatnational/principaldashboard
+
+
+###
+POST http://localhost:1234/setaf/booksrecord/60EE18
+Content-Type: application/json
+
+{
+    "report_id":9,
+    "emp_id":"60EE18",
+    "dept_id":4,
+    "academic_year":"3",
+    "semester":"Even Semester",
+    "name_of_the_faculty":"Anand",
+    "name_of_the_authors":"",
+    "title_of_the_book":"",
+    "date_of_publication":"",
+    "isbn_number":"",
+    "details_of_the_publisher":"",
+    "website_link_of_the_publisher":"",
+    "national_international":"",
+    "enclose_proof_pdf":""
+}
+
+###
+GET http://localhost:1234/setaf/bookslist/60EE18
+
+###
+GET http://localhost:1234/setaf/books/hoddashboard/4
+
+####
+GET http://localhost:1234/setaf/books/principaldashboard
+
+###
+POST http://localhost:1234/setaf/filterSetaf/data_setaf_journal_publication/1
+Content-Type: application/json
+
+{
+    "academic_year":"3"
+}
+
+###
+GET http://localhost:1234/seminar/findFacWithDept/1
+
+###
+POST http://localhost:1234/setaf/Motivationnewrecord/60EE18
+Content-Type: application/json
+
+{
+        "report_id":6,
+        "emp_id":"",
+        "dept_id":4,
+        "academic_year":"2023-24",
+        "semester":"Odd",
+        "name_of_the_faculty":"Anand",	
+        "name_of_the_student":"AK",
+        "paper_presentation_project_submission_other_contest":"paper",
+        "date":"2023-01-02",
+        "no_of_beneficiaries":"10",
+        "certificate_PDF":""
+}

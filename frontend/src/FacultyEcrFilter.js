@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Major, SubReport } from './connect'
 import axios from 'axios'
-import './facultyEcrFilter.css'
+import './facultyEcrFilter.css' 
 
 function FacultyEcrFilter() {
 

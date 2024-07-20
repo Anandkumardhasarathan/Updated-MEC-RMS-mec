@@ -9,6 +9,8 @@ const cfilter=require('./commonFilter')
 const load=require('./loadAndApprove')
 const iv=require('./iv_workflow')
 const setaf = require('./SetafBackend')
+const setaffilter = require('./setafFilter')
+
 const app=express()
 
 app.use(bodyParser.urlencoded({extended:true}))
@@ -23,6 +25,7 @@ app.use('/cfilter',cfilter)
 app.use('/load',load)
 app.use('/iv',iv)
 app.use('/setaf',setaf)
+app.use('/setaffilter',setaffilter)
 
 
 app.listen(1234,()=>{

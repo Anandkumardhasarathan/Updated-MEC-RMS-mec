@@ -21,3 +21,9 @@ button:disabled {
     color: #666; /* Change the text color to a darker shade */
     cursor: not-allowed; /* Change the cursor to indicate that it's not clickable */
   }
+
+#event_coordinator{
+    width: 80%;
+    
+}
+

@@ -4,6 +4,10 @@ import React, { useEffect, useState } from 'react';
 import './SetafConsolidate.css'
 import 'bootstrap/dist/css/bootstrap.min.css'; // Import Bootstrap CSS
 import jsPDF from "jspdf";
+import Image from '../logo.png';
+import Image2 from '../logo2.png';
+import Image3 from '../logo3.jpg';
+import Image4 from '../logo4.jpg';
 
 const SetafConsolidationPrincipal = () => {
 
@@ -13,20 +17,30 @@ const deptId=logged.dept_id;
 
 const generatePDF = async ()=> {
   try{
-
-  const res = await axios.get(`http://localhost:1234/setaf/journalrecs`);
-    const data = res.data;
   const doc = new jsPDF();
   
     
-doc.setFontSize(18);
-doc.setFont("times", "bold");
-doc.text('MUTHAYAMMAL ENGINEERING COLLEGE',35, 15);
-doc.setFontSize(10);
-doc.setFont("times", "");
-doc.text('(An Autonomous Institution)', 80, 20);
-doc.text('(Approved by AICTE, New Delhi, Accredited by NAAC & Affiliated to Anna University)', 35, 25);
-doc.text('Rasipuram - 637 408, Namakkal Dist., Tamil Nadu', 65, 30);
+
+  doc.addImage(Image, 'PNG', 10, 3, 20, 20);
+  doc.addImage(Image2, 'PNG', 12,23, 15, 15);
+  doc.addImage(Image3, 'JPG', 175, 3, 20, 15);
+  doc.addImage(Image4, 'JPG', 175, 20, 20, 15);
+
+  doc.setFontSize(18);
+  doc.setFont("times", "bold");
+  doc.text('MUTHAYAMMAL ENGINEERING COLLEGE',35, 15);
+  doc.setFontSize(10);
+  doc.setFont("times", "");
+  doc.text('(An Autonomous Institution)', 80, 20);
+  doc.text('(Approved by AICTE, New Delhi, Accredited by NAAC & Affiliated to Anna University)', 35, 25);
+  doc.text('Rasipuram - 637 408, Namakkal Dist., Tamil Nadu', 65, 30);
+  doc.setFont("times", "bold");
+  
+  doc.setFont("times", "bold");
+
+  doc.setFontSize(15); 
+  doc.rect(90,42,32,11)
+  doc.text('SETAF', 97,49);
 
 
 doc.rect(10,60,40,8).stroke.apply()
@@ -34,6 +48,7 @@ doc.setFontSize(10)
 doc.setFont("times","bold")
 doc.text('Name of the faculty',11,66)
 doc.rect(50,60,65,8).stroke.apply()
+doc.text(`${logged.faculty_name}`,66,66)
 doc.rect(115,60,35,8).stroke.apply()
 doc.text('Designation',118,66)
 doc.rect(115,60,35,8).stroke.apply()
@@ -82,6 +97,7 @@ doc.text("Workshop/Seminar Participation",23,99)
 doc.rect(153,93,23,8).stroke.apply()
 doc.rect(176,93,22,8).stroke.apply()
 doc.text('2',162,98)
+doc.text(`${work}`,185,98)
 
 
 doc.rect(10,101,10,8).stroke.apply()
@@ -102,6 +118,8 @@ doc.text("TechTalks to be delivered Multidisciplinary Lectures (MuDiL)",23,115)
 doc.rect(153,109,23,8).stroke.apply()
 doc.rect(176,109,22,8).stroke.apply()
 doc.text('2',162,114)
+doc.text(`${tech}`,185,114)
+
 
 
 doc.rect(10,117,10,8).stroke.apply()
@@ -112,6 +130,7 @@ doc.text("Faculty Guest Talk in other Institutions",23,123)
 doc.rect(153,117,23,8).stroke.apply()
 doc.rect(176,117,22,8).stroke.apply()
 doc.text('1',162,122)
+doc.text(`${faculty}`,185,122)
 
 
 doc.rect(10,125,10,8).stroke.apply()
@@ -122,6 +141,8 @@ doc.text("NPTEL Certification",23,131)
 doc.rect(153,125,23,8).stroke.apply()
 doc.rect(176,125,22,8).stroke.apply()
 doc.text('1',162,130)
+doc.text(`${nptel}`,185,130)
+
 
 
 doc.rect(10,133,10,8).stroke.apply()
@@ -132,6 +153,8 @@ doc.text("Participation in TASTE",23,139)
 doc.rect(153,133,23,8).stroke.apply()
 doc.rect(176,133,22,8).stroke.apply()
 doc.text('10',162,138)
+doc.text(`${taste}`,185,138)
+
 
 
 doc.rect(10,141,10,8).stroke.apply()
@@ -172,6 +195,7 @@ doc.text("Seed Money Proposal for Research",23,171)
 doc.rect(153,165,23,8).stroke.apply()
 doc.rect(176,165,22,8).stroke.apply()
 doc.text('1',162,170)
+doc.text(`${seed}`,185,170)
 
 
 
@@ -213,6 +237,8 @@ doc.text("Consultancy and Corporate Training",23,203)
 doc.rect(153,197,23,8).stroke.apply()
 doc.rect(176,197,22,8).stroke.apply()
 doc.text('1',162,202)
+doc.text(`${consultancy}`,185,202)
+
 
 
 doc.rect(10,205,10,8).stroke.apply()
@@ -223,6 +249,8 @@ doc.text("Patents Filed/Published/Granted",23,211)
 doc.rect(153,205,23,8).stroke.apply()
 doc.rect(176,205,22,8).stroke.apply()
 doc.text('1',162,210)
+doc.text(`${patent}`,185,210)
+
 
 doc.rect(10,213,10,8).stroke.apply()
 doc.setFont("times","")
@@ -321,9 +349,6 @@ catch(e)
 }
 
 
-
-
-
 ////////////////////ui count code///////////////
   const [journ,setJourn]=useState("")
 
@@ -333,9 +358,6 @@ catch(e)
       const url="http://localhost:1234"
 
 const logged=JSON.parse(sessionStorage.getItem("person"))
-// const deptId=logged.dept_id;
-
-   
 try{
     res=await axios.get(`${url}/setaf/journalrecs`)
     // alert(JSON.stringify(res.data.length))
@@ -345,16 +367,10 @@ try{
 catch(e){
     console.log(e);
 }
-
-
-// alert(JSON.stringify(res))
-
     }
     demo();
   })
   
-
-   
 /////////////////////////////////conference///////////
 const [conf,setConf]=useState("")
 
@@ -369,55 +385,201 @@ const empId=logged.faculty_id;
  
 try{
   cres=await axios.get(`${url}/setaf/conferencerecs`)
-  // alert(JSON.stringify(res.data.length))
   setConf(JSON.stringify(cres.data.length))
   console.log(cres.data)
 }
 catch(e){
   console.log(e);
 }
-
-
-// alert(JSON.stringify(res))
-
   }
   demo();
 })
 
 
 
+/////////////////////////workshop/////////////////////////
+const [work,setWork]=useState("")
+
+  let resw;
+  useEffect(() => {
+    const demo=async()=>{
+      const url="http://localhost:1234"
+
+const logged=JSON.parse(sessionStorage.getItem("person"))
+try{
+    resw=await axios.get(`${url}/setaf/workshopprincipalrecs`)
+    setWork(JSON.stringify(resw.data.length))
+    console.log(resw.data)
+}
+catch(e){
+    console.log(e);
+}
+    }
+    demo();
+  })
+
+//////////////tech talk///////////////
+const [tech,setTech]=useState("")
+
+  let rest;
+  useEffect(() => {
+    const demo=async()=>{
+      const url="http://localhost:1234"
+try{
+    rest=await axios.get(`${url}/setaf/techtalkprincipalrecs`)
+    setTech(JSON.stringify(rest.data.length))
+    console.log(rest.data)
+}
+catch(e){
+    console.log(e);
+}
+    }
+    demo();
+  })
+
+//////////////faculty Guest Talk//////
+  const [faculty,setFaculty]=useState("")
+
+  let resf;
+  useEffect(() => {
+    const demo=async()=>{
+      const url="http://localhost:1234"
+
+const logged=JSON.parse(sessionStorage.getItem("person"))
+try{
+    resf=await axios.get(`${url}/setaf/facultyprincipalrecs`)
+    // alert(JSON.stringify(reswork.data.length))
+    setFaculty(JSON.stringify(resf.data.length))
+    console.log(resf.data)
+}
+catch(e){
+    console.log(e);
+}
+    }
+    demo();
+})
+
+ //////////////////Nptel certificate/////////////
+
+ const [nptel,setnptel]=useState("")
+
+ let nesf;
+ useEffect(() => {
+   const demo=async()=>{
+     const url="http://localhost:1234"
+ const logged=JSON.parse(sessionStorage.getItem("person"))
+ const deptID=logged.dept_id;
+ try{
+   nesf=await axios.get(`${url}/setaf/nptelrecs`)
+   // alert(JSON.stringify(reswork.data.length))
+   setnptel(JSON.stringify(nesf.data.length))
+   console.log(nesf.data)
+ }
+ catch(e){
+   console.log(e);
+ }
+   }
+   demo();
+ })
+ /////////////////Participation in taste
+ const [taste,settaste]=useState("")
+ 
+ let tesf;
+ useEffect(() => {
+   const demo=async()=>{
+     const url="http://localhost:1234"
+ const logged=JSON.parse(sessionStorage.getItem("person"))
+ const deptID=logged.dept_id;
+ try{
+   tesf=await axios.get(`${url}/setaf/tasterecs`)
+   // alert(JSON.stringify(tesf.data.length))
+   settaste(JSON.stringify(tesf.data.length))
+   console.log(tesf.data)
+ }
+ catch(e){
+   console.log(e);
+ }
+   }
+   demo();
+ })
+ ////////////////////////seed
+ const [seed,setseed]=useState("")
+
+  let sres;
+  useEffect(() => {
+    const demo=async()=>{
+      const url="http://localhost:1234"
+const logged=JSON.parse(sessionStorage.getItem("person"))
+try{
+    sres=await axios.get(`${url}/setaf/seedrecs`)
+    setseed(JSON.stringify(sres.data.length))
+    console.log(sres.data)
+}
+catch(e){
+    console.log(e);
+}
+    }
+    demo();
+  })
+
+
+ 
+ /////////////////////////consultancy//////////////////////////
+ const [consultancy,setconsultancy]=useState("")
+ 
+ let sesf;
+ useEffect(() => {
+   const demo=async()=>{
+     const url="http://localhost:1234"
+ try{
+   sesf=await axios.get(`${url}/setaf/consultancyrecs`)
+   // alert(JSON.stringify(reswork.data.length))
+   setconsultancy(JSON.stringify(sesf.data.length))
+   console.log(sesf.data)
+ }
+ catch(e){
+   console.log(e);
+ }
+   }
+   demo();
+ })
+ 
+///////////////////////patent
+const [patent,setpatent]=useState("")
+ 
+ let pres;
+ useEffect(() => {
+   const demo=async()=>{
+     const url="http://localhost:1234"
+ try{
+   pres=await axios.get(`${url}/setaf/patentrecs`)
+   // alert(JSON.stringify(reswork.data.length))
+   setpatent(JSON.stringify(pres.data.length))
+   console.log(pres.data)
+ }
+ catch(e){
+   console.log(e);
+ }
+   }
+   demo();
+ })
+ 
+
+
+
+
   return (
     <div className=" container-fluid" >
-      {/* <div className='' accordion style={{marginLeft:"220px"}}> <img src={logo} style={{height:"150px"} }/></div>
-      <div className='' accordion style={{marginTop:"-140px",marginLeft:"20px"}}>
-      <h1 className="text-center mt-4">MUTHAYAMMAL ENGINEERING COLLEGE</h1>
-       <h4 className="text-center "style={{marginTop:"-10px"}} >(An Autonomus Instiution)</h4>
-       <h5 className="text-center" style={{marginTop:"-7px"}}>(Approved by AICTE, New Delhi, Accredited by NAAC & Affliated to Anna Univeristy)</h5>
-       <h6 className="text-center" style={{marginTop:"-9px"}}>Rasipuram -637 408, Namakkal Dist., Tamilnadu</h6>
-      </div> */}
      
      <div>
         <p>&nbsp;</p>
         <p>&nbsp;</p>
-        {/* <p>&nbsp;
-        </p> */}
         <p>&nbsp;</p>
       </div>
      <div >
       <div className="" style={{color: "#5500cb"}}><h1>SETAF CONSOLIDATION</h1></div>
      
      <table  className="table table-striped " >
-
-{/* <thead  className="table table-bordered mt-9">
-    <tr>
-      <th scope="col" >Name of the Faculty</th>
-      <th></th>
-      <th scope="col">Designation</th>
-      <th scope="col"></th>
-    </tr>
-  </thead> */}
-
-
   <thead>
     <tr>
       <th scope="col" >S. No.</th>
@@ -451,7 +613,7 @@ catch(e){
       <td>WorkShop/Seminar Participation</td>
       <td>(Internal - 5 perday, External- 10 perday)</td>
       <td>2</td>
-      <td></td>
+      <td>{work}</td>
     </tr>
 
     <tr>
@@ -467,7 +629,7 @@ catch(e){
       <td>TechTalks to be delivered Multidisciplinary Lectures </td>
       <td>(5 per Lecture)</td>
       <td>2</td>
-      <td></td>
+      <td>{tech}</td>
     </tr>
 
     <tr>
@@ -475,7 +637,7 @@ catch(e){
       <td>Faculty Guest Talk in other Institutions </td>
       <td> (15 per Lecture)</td>
       <td>1</td>
-      <td></td>
+      <td>{faculty}</td>
     </tr>
 
     <tr>
@@ -483,7 +645,7 @@ catch(e){
       <td>NPTEL Certification</td>
       <td> (Max. 25 per Certificate; Gold/Topper 25, Silver 20, Elite 15, Pass 10)</td>
       <td>1</td>
-      <td></td>
+      <td>{nptel}</td>
     </tr>
 
     <tr>
@@ -491,7 +653,7 @@ catch(e){
       <td>Participation in TASTE</td>
       <td>(2 for each TASTE; Caped to Max. 30)</td>
       <td>10</td>
-      <td></td>
+      <td>{taste}</td>
     </tr>
 
     <tr>
@@ -523,7 +685,7 @@ catch(e){
       <td>Seed Money Proposal for Research</td>
       <td>  (15 per Proposal) </td>
       <td>1</td>
-      <td></td>
+      <td>{seed}</td>
     </tr>
 
     <tr>
@@ -555,7 +717,7 @@ catch(e){
       <td>Consultancy and Corporate Training done for Revenue Generation</td>
       <td>  (15 per Consultancy)  </td>
       <td>1</td>
-      <td></td>
+      <td>{consultancy}</td>
     </tr>
 
     <tr>
@@ -563,7 +725,7 @@ catch(e){
       <td> Patents Filed/Published/Granted     </td>
       <td> (Published - 5 Points, Granted - 25 Points) </td>
       <td>1</td>
-      <td></td>
+      <td>{patent}</td>
     </tr>
 
     <tr>
