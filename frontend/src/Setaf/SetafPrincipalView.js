@@ -2,7 +2,7 @@ import "./setafsty.css"
 import { useEffect, useState } from "react"
 import jsPDF from 'jspdf';
 import axios from "axios";
-import { AwardAtNationalPrincipal, BooksPrincipal, TastePrincipalView, conferencePrincipalView, conferenceRecords, consultancyPrincipalView, econtentprincipalView, facultyPrincipalView, facultyRecords, industryPrincipalView, industryRecords, journalPrincipalView, journalRecords, journalRecordsDept, nptelPrincipalView, patentPrincipalView, proposalPrincipalView, proposalRecords, seedPrincipalView, seedRecords, tasteRecords, techtalkPrincipalView, techtalkRecords, visitToLibraryPrincipalView, workshopPrincipalView, workshopRecords } from "./axios"
+import { AwardAtNationalPrincipal, BooksPrincipal, FieldworkPrincipalView, MotivationPrincipalView, StudentFieldwork, StudentFieldworkPrincipal, TastePrincipalView, collaborativePrincipalView, conferencePrincipalView, conferenceRecords, consultancyPrincipalView, econtentprincipalView, facultyPrincipalView, facultyRecords, fdpSdpRecordsPrincipal, industryPrincipalView, industryRecords, journalPrincipalView, journalRecords, journalRecordsDept, nptelPrincipalView, patentPrincipalView, professionalPrincipalView, proposalPrincipalView, proposalRecords, seedPrincipalView, seedRecords, tasteRecords, techtalkPrincipalView, techtalkRecords, visitToLibraryPrincipalView, workshopPrincipalView, workshopRecords } from "./axios"
 import { getDocument } from 'pdfjs-dist/webpack';
 import Image from '../logo.png';
 import Image2 from '../logo2.png';
@@ -479,19 +479,41 @@ export const JournalPublicationPrincipalDashboard=()=>{
        extraInfo: "sem_id"
      }))
 
-     const fetchFac=async()=>{
-      await axios.get(`http://localhost:1234/seminar/findFacWithDept/${logged.dept_id}`)
-              .then((response) => {
-              console.log(response);
-              setEmp(response.data.rows);
-              })
-      }
+      // const fetchFac=async(dId)=>{
+      //   await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`)
+      //           .then((response) => {
+      //           console.log(response);
+      //           setEmp(response.data.rows);
+      //           })
+      //   }
 
-     const facs=emp.map((val)=>({
-      value: val.faculty_id,
-      label: val.faculty_name,
-      extraInfo: "emp_id"
-      }))
+      const fetchFac = async (dId) => {
+        try {
+          const response = await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`);
+          console.log(response);
+          setEmp(response.data.rows);
+        } catch (error) {
+          if (error.response) {
+            // The request was made and the server responded with a status code
+            // that falls out of the range of 2xx
+            console.error('Response error:', error.response.data);
+            console.error('Response status:', error.response.status);
+            console.error('Response headers:', error.response.headers);
+          } else if (error.request) {
+            // The request was made but no response was received
+            console.error('Request error:', error.request);
+          } else {
+            // Something happened in setting up the request that triggered an Error
+            console.error('Error', error.message);
+          }
+          console.error('Config error:', error.config);
+        }
+      };
+        const facs=emp.map((val)=>({
+          value: val.faculty_id,
+          label: val.faculty_name,
+          extraInfo: "emp_id"
+          }))
      
       const[dept,setDept]=useState([])
   const fetchDept=async()=>{
@@ -581,20 +603,7 @@ export const JournalPublicationPrincipalDashboard=()=>{
       options={sems}
     />
 
-<label for="emp_id">Faculty : </label>
-    <Select
-        closeMenuOnSelect={false}
-        components={{ ClearIndicator }}
-        styles={{ clearIndicator: ClearIndicatorStyles }}
-        defaultValue={[]}
-        name="emp_id"
-        onChange={facInfoCollect}
-        isSearchable
-        isMulti
-        options={facs}
-        />
-  
-  <label for="dept_id">Department : </label>
+<label for="dept_id">Department : </label>
   <Select
         closeMenuOnSelect={false}
         components={{ ClearIndicator }}
@@ -606,6 +615,19 @@ export const JournalPublicationPrincipalDashboard=()=>{
         isMulti
         options={depts}
       />
+      
+      <label for="emp_id">Faculty : </label>
+<Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="emp_id"
+      onChange={facInfoCollect}
+      isSearchable
+      isMulti
+      options={facs}
+    />
 
            <input
   className='filter-button'
@@ -790,6 +812,429 @@ const generatePDF = async (report_id)=> {
   }
   }
 
+        /////////////////////filter options
+        const[year,setYear]=useState([])
+        const [currentRecords, setCurrentRecords] = useState([]);
+        let [AcdVals,setAcdVals]=useState("")
+        const[selectedSem,setSelectedSem]=useState([])
+        let [empVals,setEmpVals]=useState("")
+        const [emp,setEmp]=useState([])
+        let [deptVals,setDeptVals]=useState("")
+ 
+        
+        const[filter,setFilter]=useState({
+         "acdyr_id":"",
+         "sem_id":"",
+         "emp_id":""
+     })
+     console.log(filter)
+        const CustomClearText = () => <>X</>;
+   
+        const ClearIndicator =(props) =>{
+          const {
+            children = <CustomClearText />,
+            getStyles,
+            innerProps: {ref, ...restInnerProps },
+          }= props;
+          return(
+            <div
+              {...restInnerProps}
+              ref={ref}
+              style={getStyles('clearIndicator', props)}
+            >
+              <div style={{padding: '0px 5px'}}>{children}</div>
+            </div>
+          )
+        }
+      
+        const ClearIndicatorStyles = (base, state) => ({
+          ...base,
+          cursor: 'pointer',
+          color: state.isFocused ? 'blue' : 'black',
+        });
+      
+        const acdInfoCollect=(eve)=>{
+         if(eve.length==0){
+           setFilter((old)=>({
+             ...old,
+             acdyr_id:""
+         }))
+         }else{
+       
+           const label = eve.label
+           const value = eve.value
+           const extraInfo = eve.extraInfo
+       
+           let isArray = Array.isArray(eve);
+           // alert(JSON.stringify(eve))
+           if(eve.length==1){
+               if(typeof eve[0].value === 'string'){
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[0].extraInfo]:eve[0].value
+                   }))
+               }else{
+               setFilter((old)=>({
+                   ...old,
+                   [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+               }))}
+           }
+           if(isArray){
+               // if(eve.length==1){
+               //     if(eve[0].extraInfo=="major_id"){
+               //         Sub(eve[0].value)
+               //     }
+               //     setFilter((old)=>({
+               //         ...old,
+               //         [eve[0].extraInfo]:eve[0].value
+               //     }))
+               // }
+               if(eve.length!=1){
+               
+           if(eve[0].extraInfo=="acdyr_id"){
+               
+                   // alert(JSON.stringify(eve))
+                   for(let i=0;i<eve.length;i++){
+                       // alert(JSON.stringify(eve[i].value))
+                       AcdVals+=eve[i].value
+                       if(i!=eve.length-1){
+                           AcdVals+=","
+                       }
+                       setFilter((old)=>({
+                           ...old,
+                           [eve[i].extraInfo]:AcdVals
+                       }))
+                   }
+                   // alert(majorVals)
+               
+           }
+           }
+           }
+           else if(extraInfo=="sem_id"){
+               setSelectedSem(value)
+               // handleChange(value)
+               setFilter((old)=>({
+                   ...old,
+                   [extraInfo]:JSON.stringify(value)
+               }))
+           }
+         
+       }
+       }
+   
+       const semInfoCollect=(eve)=>{
+         if(eve.length==0){
+           setFilter((old)=>({
+             ...old,
+             sem_id:""
+         }))
+         }else{
+       
+         const label = eve.label
+         const value = eve.value
+         const extraInfo = eve.extraInfo
+       
+         let isArray = Array.isArray(eve);
+         
+         if(isArray){
+             
+             if(eve.length!=1){
+             
+         if(eve[0].extraInfo=="acdyr_id"){
+             
+                 // alert(JSON.stringify(eve))
+                 for(let i=0;i<eve.length;i++){
+                     // alert(JSON.stringify(eve[i].value))
+                     AcdVals+=eve[i].value
+                     if(i!=eve.length-1){
+                         AcdVals+=","
+                     }
+                     setFilter((old)=>({
+                         ...old,
+                         [eve[i].extraInfo]:AcdVals
+                     }))
+                 }
+                 // alert(majorVals)
+             
+         }
+         }
+         }
+         else if(extraInfo=="sem_id"){
+             setSelectedSem(value)
+             // handleChange(value)
+             setFilter((old)=>({
+                 ...old,
+                 [extraInfo]:JSON.stringify(value)
+             }))
+         }
+         
+       }}
+ 
+       const facInfoCollect=(eve)=>{
+         if(eve.length==0){
+         setFilter((old)=>({
+             ...old,
+             emp_id:""
+         }))
+         }else{
+     
+         const label = eve.label
+         const value = eve.value
+         const extraInfo = eve.extraInfo
+     
+         let isArray = Array.isArray(eve);
+         // alert(JSON.stringify(eve))
+         if(eve.length==1){
+            
+             if(typeof eve[0].value === 'string'){
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[0].extraInfo]:eve[0].value
+                 }))
+             }else{
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+             }))}
+         }
+         if(isArray){
+             // if(eve.length==1){
+             //     if(eve[0].extraInfo=="major_id"){
+             //         Sub(eve[0].value)
+             //     }
+             //     setFilter((old)=>({
+             //         ...old,
+             //         [eve[0].extraInfo]:eve[0].value
+             //     }))
+             // }
+             if(eve.length!=1){
+             if(eve[0].extraInfo=="emp_id"){
+                 // Sub(0)
+                 for(let i=0;i<eve.length;i++){
+                     empVals+=eve[i].value
+                     if(i!=eve.length-1){
+                         empVals+=","
+                     }
+                     setFilter((old)=>({
+                         ...old,
+                         [eve[i].extraInfo]:empVals,
+                         // sub_id:""
+                     }))
+                 }
+                 // alert(majorVals)
+             
+         }
+         if(eve[0].extraInfo=="acdyr_id"){
+             
+                 // alert(JSON.stringify(eve))
+                 for(let i=0;i<eve.length;i++){
+                     // alert(JSON.stringify(eve[i].value))
+                     AcdVals+=eve[i].value
+                     if(i!=eve.length-1){
+                         AcdVals+=","
+                     }
+                     setFilter((old)=>({
+                         ...old,
+                         [eve[i].extraInfo]:AcdVals
+                     }))
+                 }
+                 // alert(majorVals)
+             
+         }
+        
+         }
+         }
+         else if(extraInfo=="sem_id"){
+             setSelectedSem(value)
+             // handleChange(value)
+             setFilter((old)=>({
+                 ...old,
+                 [extraInfo]:JSON.stringify(value)
+             }))
+         }
+       
+     }}
+     
+     const deptInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           dept_id:""
+       }))
+       }else{
+     
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+     
+       let isArray = Array.isArray(eve);
+       // alert(JSON.stringify(eve))
+       if(eve.length==1){
+           if(eve[0].extraInfo=="dept_id"){
+               // alert(eve[0].value)
+               fetchFac(eve[0].value)
+           }
+           if(typeof eve[0].value === 'string'){
+               setFilter((old)=>({
+                   ...old,
+                   [eve[0].extraInfo]:eve[0].value
+               }))
+           }else{
+           setFilter((old)=>({
+               ...old,
+               [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+           }))}
+       }
+       if(isArray){
+           // if(eve.length==1){
+           //     if(eve[0].extraInfo=="major_id"){
+           //         Sub(eve[0].value)
+           //     }
+           //     setFilter((old)=>({
+           //         ...old,
+           //         [eve[0].extraInfo]:eve[0].value
+           //     }))
+           // }
+           if(eve.length!=1){
+           if(eve[0].extraInfo=="dept_id"){
+               fetchFac(0)
+               for(let i=0;i<eve.length;i++){
+                   deptVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       deptVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:deptVals,
+                       emp_id:""
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+       
+     }}
+      
+        const Acad=async()=>{
+          const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+         //  alert(JSON.stringify(t.data.result))
+          setYear(t.data.result)
+      }
+      const years = year.map((val) => ({
+       value: val.acd_yr_id,
+       label: val.acd_yr,
+       extraInfo: "acdyr_id"
+       }));
+      useEffect(()=>{
+        Acad()
+        fetchFac()
+        fetchDept()
+      },[])
+    
+      const semester = [
+        {sem_id:1,sem:"Odd"},
+        {sem_id:2,sem:"Even"},
+        {sem_id:3,sem:"Both"},
+      ]
+      let sems = semester.map((val)=>({
+        value: val.sem_id,
+        label: val.sem,
+        extraInfo: "sem_id"
+      }))
+ 
+       // const fetchFac=async(dId)=>{
+       //   await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`)
+       //           .then((response) => {
+       //           console.log(response);
+       //           setEmp(response.data.rows);
+       //           })
+       //   }
+ 
+       const fetchFac = async (dId) => {
+         try {
+           const response = await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`);
+           console.log(response);
+           setEmp(response.data.rows);
+         } catch (error) {
+           if (error.response) {
+             // The request was made and the server responded with a status code
+             // that falls out of the range of 2xx
+             console.error('Response error:', error.response.data);
+             console.error('Response status:', error.response.status);
+             console.error('Response headers:', error.response.headers);
+           } else if (error.request) {
+             // The request was made but no response was received
+             console.error('Request error:', error.request);
+           } else {
+             // Something happened in setting up the request that triggered an Error
+             console.error('Error', error.message);
+           }
+           console.error('Config error:', error.config);
+         }
+       };
+         const facs=emp.map((val)=>({
+           value: val.faculty_id,
+           label: val.faculty_name,
+           extraInfo: "emp_id"
+           }))
+      
+       const[dept,setDept]=useState([])
+   const fetchDept=async()=>{
+       const t = await axios.get("http://localhost:1234/ecrFilter/getDeptList")
+       // alert(JSON.stringify(t.data.result))
+       setDept(t.data.result)
+   }
+   const depts = dept.map((val) => ({
+       value: val.dept_id,
+       label: val.dept,
+       extraInfo: "dept_id"
+       }));
+ 
+      const onClickFilter=async()=>{
+       alert("clicked")
+       alert(JSON.stringify(filter))
+       try{
+           // alert("hi")
+           const logged=JSON.parse(sessionStorage.getItem("person"))
+           const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/principal/data_setaf_conference_publication_and_presentations`,filter)
+           setConferenceRecs(filteredRecords.data.resultArray)
+           console.log(filteredRecords.data)
+           setCurrentRecords(filteredRecords.data.resultArray)
+       }
+       catch(err){
+           alert("No Reports in the selected filter")
+           console.log(err)
+       }
+   
+     }
+
     ////////////data fetch code/////////////////
 
     const [conferenceRecs,setConferenceRecs]=useState([])
@@ -812,10 +1257,89 @@ const generatePDF = async (report_id)=> {
 
     return(
         <>
+        <div> <p>&nbsp;</p>
+        <p>&nbsp;</p>
+
+        </div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',marginTop:"120px",alignItems:'center',marginLeft:'-5%',justifyContent:'center'}}>
+        <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+<label for="dept_id">Department : </label>
+  <Select
+        closeMenuOnSelect={false}
+        components={{ ClearIndicator }}
+        styles={{ clearIndicator: ClearIndicatorStyles }}
+        defaultValue={[]}
+        name="emp_id"
+        onChange={deptInfoCollect}
+        isSearchable
+        isMulti
+        options={depts}
+      />
+      
+      <label for="emp_id">Faculty : </label>
+<Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="emp_id"
+      onChange={facInfoCollect}
+      isSearchable
+      isMulti
+      options={facs}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+</div>
          <div class="overallcontent"  style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%"}}>
          <div class="report-header">
          <h1 class="recent-Articles">Your Reports</h1>
-         <a className="topic-headings" href="Setaf/SetafForms/Conferencefront"><button style={{top:"27.5px",right:"50px"}} class="views" id="addButton">+ Add</button></a>
          </div>
          <table className='table table-striped '>                           
           <thead>
@@ -838,7 +1362,7 @@ const generatePDF = async (report_id)=> {
                        conferenceRecs.map((val)=>(
                             <tr>
                                 <td>{val.acd_yr}</td>
-                                <td>{val.semester}</td>
+                                <td>{val.sem}</td>
                                 <td>{val.name_of_the_authors}</td>
                                 <td>{val.title_of_the_conference_paper}</td>
                                 <td>{val.name_of_the_conference}</td>
@@ -982,7 +1506,430 @@ export const WorkshopPrincipalDashboard=()=>{
     }
     }
 
-///////////////////////    
+      /////////////////////filter options
+      const[year,setYear]=useState([])
+      const [currentRecords, setCurrentRecords] = useState([]);
+      let [AcdVals,setAcdVals]=useState("")
+      const[selectedSem,setSelectedSem]=useState([])
+      let [empVals,setEmpVals]=useState("")
+      const [emp,setEmp]=useState([])
+      let [deptVals,setDeptVals]=useState("")
+
+      
+      const[filter,setFilter]=useState({
+       "acdyr_id":"",
+       "sem_id":"",
+       "emp_id":""
+   })
+   console.log(filter)
+      const CustomClearText = () => <>X</>;
+ 
+      const ClearIndicator =(props) =>{
+        const {
+          children = <CustomClearText />,
+          getStyles,
+          innerProps: {ref, ...restInnerProps },
+        }= props;
+        return(
+          <div
+            {...restInnerProps}
+            ref={ref}
+            style={getStyles('clearIndicator', props)}
+          >
+            <div style={{padding: '0px 5px'}}>{children}</div>
+          </div>
+        )
+      }
+    
+      const ClearIndicatorStyles = (base, state) => ({
+        ...base,
+        cursor: 'pointer',
+        color: state.isFocused ? 'blue' : 'black',
+      });
+    
+      const acdInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           acdyr_id:""
+       }))
+       }else{
+     
+         const label = eve.label
+         const value = eve.value
+         const extraInfo = eve.extraInfo
+     
+         let isArray = Array.isArray(eve);
+         // alert(JSON.stringify(eve))
+         if(eve.length==1){
+             if(typeof eve[0].value === 'string'){
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[0].extraInfo]:eve[0].value
+                 }))
+             }else{
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+             }))}
+         }
+         if(isArray){
+             // if(eve.length==1){
+             //     if(eve[0].extraInfo=="major_id"){
+             //         Sub(eve[0].value)
+             //     }
+             //     setFilter((old)=>({
+             //         ...old,
+             //         [eve[0].extraInfo]:eve[0].value
+             //     }))
+             // }
+             if(eve.length!=1){
+             
+         if(eve[0].extraInfo=="acdyr_id"){
+             
+                 // alert(JSON.stringify(eve))
+                 for(let i=0;i<eve.length;i++){
+                     // alert(JSON.stringify(eve[i].value))
+                     AcdVals+=eve[i].value
+                     if(i!=eve.length-1){
+                         AcdVals+=","
+                     }
+                     setFilter((old)=>({
+                         ...old,
+                         [eve[i].extraInfo]:AcdVals
+                     }))
+                 }
+                 // alert(majorVals)
+             
+         }
+         }
+         }
+         else if(extraInfo=="sem_id"){
+             setSelectedSem(value)
+             // handleChange(value)
+             setFilter((old)=>({
+                 ...old,
+                 [extraInfo]:JSON.stringify(value)
+             }))
+         }
+       
+     }
+     }
+ 
+     const semInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           sem_id:""
+       }))
+       }else{
+     
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+     
+       let isArray = Array.isArray(eve);
+       
+       if(isArray){
+           
+           if(eve.length!=1){
+           
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+       
+     }}
+
+     const facInfoCollect=(eve)=>{
+       if(eve.length==0){
+       setFilter((old)=>({
+           ...old,
+           emp_id:""
+       }))
+       }else{
+   
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+   
+       let isArray = Array.isArray(eve);
+       // alert(JSON.stringify(eve))
+       if(eve.length==1){
+          
+           if(typeof eve[0].value === 'string'){
+               setFilter((old)=>({
+                   ...old,
+                   [eve[0].extraInfo]:eve[0].value
+               }))
+           }else{
+           setFilter((old)=>({
+               ...old,
+               [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+           }))}
+       }
+       if(isArray){
+           // if(eve.length==1){
+           //     if(eve[0].extraInfo=="major_id"){
+           //         Sub(eve[0].value)
+           //     }
+           //     setFilter((old)=>({
+           //         ...old,
+           //         [eve[0].extraInfo]:eve[0].value
+           //     }))
+           // }
+           if(eve.length!=1){
+           if(eve[0].extraInfo=="emp_id"){
+               // Sub(0)
+               for(let i=0;i<eve.length;i++){
+                   empVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       empVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:empVals,
+                       // sub_id:""
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+      
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+     
+   }}
+   
+   const deptInfoCollect=(eve)=>{
+     if(eve.length==0){
+       setFilter((old)=>({
+         ...old,
+         dept_id:""
+     }))
+     }else{
+   
+     const label = eve.label
+     const value = eve.value
+     const extraInfo = eve.extraInfo
+   
+     let isArray = Array.isArray(eve);
+     // alert(JSON.stringify(eve))
+     if(eve.length==1){
+         if(eve[0].extraInfo=="dept_id"){
+             // alert(eve[0].value)
+             fetchFac(eve[0].value)
+         }
+         if(typeof eve[0].value === 'string'){
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:eve[0].value
+             }))
+         }else{
+         setFilter((old)=>({
+             ...old,
+             [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+         }))}
+     }
+     if(isArray){
+         // if(eve.length==1){
+         //     if(eve[0].extraInfo=="major_id"){
+         //         Sub(eve[0].value)
+         //     }
+         //     setFilter((old)=>({
+         //         ...old,
+         //         [eve[0].extraInfo]:eve[0].value
+         //     }))
+         // }
+         if(eve.length!=1){
+         if(eve[0].extraInfo=="dept_id"){
+             fetchFac(0)
+             for(let i=0;i<eve.length;i++){
+                 deptVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     deptVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:deptVals,
+                     emp_id:""
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     if(eve[0].extraInfo=="acdyr_id"){
+         
+             // alert(JSON.stringify(eve))
+             for(let i=0;i<eve.length;i++){
+                 // alert(JSON.stringify(eve[i].value))
+                 AcdVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     AcdVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:AcdVals
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     }
+     }
+     else if(extraInfo=="sem_id"){
+         setSelectedSem(value)
+         // handleChange(value)
+         setFilter((old)=>({
+             ...old,
+             [extraInfo]:JSON.stringify(value)
+         }))
+     }
+     
+   }}
+    
+      const Acad=async()=>{
+        const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+       //  alert(JSON.stringify(t.data.result))
+        setYear(t.data.result)
+    }
+    const years = year.map((val) => ({
+     value: val.acd_yr_id,
+     label: val.acd_yr,
+     extraInfo: "acdyr_id"
+     }));
+    useEffect(()=>{
+      Acad()
+      fetchFac()
+      fetchDept()
+    },[])
+  
+    const semester = [
+      {sem_id:1,sem:"Odd"},
+      {sem_id:2,sem:"Even"},
+      {sem_id:3,sem:"Both"},
+    ]
+    let sems = semester.map((val)=>({
+      value: val.sem_id,
+      label: val.sem,
+      extraInfo: "sem_id"
+    }))
+
+     // const fetchFac=async(dId)=>{
+     //   await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`)
+     //           .then((response) => {
+     //           console.log(response);
+     //           setEmp(response.data.rows);
+     //           })
+     //   }
+
+     const fetchFac = async (dId) => {
+       try {
+         const response = await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`);
+         console.log(response);
+         setEmp(response.data.rows);
+       } catch (error) {
+         if (error.response) {
+           // The request was made and the server responded with a status code
+           // that falls out of the range of 2xx
+           console.error('Response error:', error.response.data);
+           console.error('Response status:', error.response.status);
+           console.error('Response headers:', error.response.headers);
+         } else if (error.request) {
+           // The request was made but no response was received
+           console.error('Request error:', error.request);
+         } else {
+           // Something happened in setting up the request that triggered an Error
+           console.error('Error', error.message);
+         }
+         console.error('Config error:', error.config);
+       }
+     };
+       const facs=emp.map((val)=>({
+         value: val.faculty_id,
+         label: val.faculty_name,
+         extraInfo: "emp_id"
+         }))
+    
+     const[dept,setDept]=useState([])
+ const fetchDept=async()=>{
+     const t = await axios.get("http://localhost:1234/ecrFilter/getDeptList")
+     // alert(JSON.stringify(t.data.result))
+     setDept(t.data.result)
+ }
+ const depts = dept.map((val) => ({
+     value: val.dept_id,
+     label: val.dept,
+     extraInfo: "dept_id"
+     }));
+
+    const onClickFilter=async()=>{
+     alert("clicked")
+     alert(JSON.stringify(filter))
+     try{
+         // alert("hi")
+         const logged=JSON.parse(sessionStorage.getItem("person"))
+         const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/principal/data_setaf_workshop_seminar_fdps_sdpa_participation`,filter)
+         setWorkshopRecs(filteredRecords.data.resultArray)
+         console.log(filteredRecords.data)
+         setCurrentRecords(filteredRecords.data.resultArray)
+     }
+     catch(err){
+         alert("No Reports in the selected filter")
+         console.log(err)
+     }
+ 
+   }
+
+//fetch   
 
   const [workshopRecs,setWorkshopRecs]=useState([])
   useEffect(()=>{
@@ -1005,29 +1952,115 @@ export const WorkshopPrincipalDashboard=()=>{
   }
   return(
       <>
-       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%"}}>
+
+<div> <p>&nbsp;</p>
+        <p>&nbsp;</p>
+
+        </div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',marginTop:"120px",alignItems:'center',marginLeft:'7px',justifyContent:'center'}}>
+        <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+<label for="dept_id">Department : </label>
+  <Select
+        closeMenuOnSelect={false}
+        components={{ ClearIndicator }}
+        styles={{ clearIndicator: ClearIndicatorStyles }}
+        defaultValue={[]}
+        name="emp_id"
+        onChange={deptInfoCollect}
+        isSearchable
+        isMulti
+        options={depts}
+      />
+      
+      <label for="emp_id">Faculty : </label>
+<Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="emp_id"
+      onChange={facInfoCollect}
+      isSearchable
+      isMulti
+      options={facs}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+</div>
+       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-50px"}}>
        <div class="report-header">
        <h1 class="recent-Articles">Your Reports</h1>
           </div>
        <table className='table table-striped '>
         <thead>
         <tr>
-                          <th>Report ID</th>
+        <th>Report ID</th>
+                          <th>Name of the Faculty</th>
+                          <th>Academic Year</th>
+                          <th>Semester</th>
                           <th>Designation</th>
                           <th>Nature of the program</th>
                           <th>Title of the program</th>
                           <th>Duration From (Date)</th>
-                          <th>Duration To (DAte)</th>
+                          <th>Duration To (Date)</th>
                           <th>Participation</th>
                           <th>Name of the Organization and Place</th>
-                          <th>Location of Organization</th> 
-                          <th>Download PDF</th>    
+                          <th>Download PDF</th>      
         </tr>
         {             
                       workshopRecs.length>0?   
                       workshopRecs.map((val)=>(
                           <tr>
                               <td>{val.report_id}</td>
+                              <td>{val.name_of_the_faculty}</td>
+                              <td>{val.acd_yr}</td>
+                              <td>{val.sem}</td>
                               <td>{val.designation}</td>
                               <td>{val.nature_of_the_program}</td>
                               <td>{val.title_of_the_program}</td>
@@ -1035,7 +2068,6 @@ export const WorkshopPrincipalDashboard=()=>{
                               <td>{val.duration_to}</td>
                               <td>{val.participation}</td>
                               <td>{val.name_of_the_organization_and_place}</td>
-                              <td>{val.location_of_organization}</td>
                               <th><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></th>
                               
                           </tr>
@@ -1053,27 +2085,7 @@ export const WorkshopPrincipalDashboard=()=>{
 //////////////////////////////Tech talk//////////////////////////
 
 export const TechtalPrincipalView=()=>{
-  const [techtalkRecs,setTechtalksRecs]=useState([])
-  useEffect(()=>{
-      fetchTechtalkRecords()
-  },[])
-  const logged=JSON.parse(sessionStorage.getItem("person"))
 
-
-  const fetchTechtalkRecords=async()=>{
-      try{
-          const temp = await techtalkPrincipalView()
-      // console.log(temp.data)
-      setTechtalksRecs(temp.data)
-      }
-      catch(e){
-          console.log(e)
-      }
-
-  }
-
-
-  ///////////////////////pdf view code///////////////////
   const log=JSON.parse(sessionStorage.getItem('person'));
 
   const generatePDF = async (report_id)=> {
@@ -1213,10 +2225,6 @@ export const TechtalPrincipalView=()=>{
         catch(e){
           console.log(e);
         }
-  
-
-  
-      // Generate a data URI for the PDF
       const pdfDataUri = doc.output('datauristring');
     
       // Open the PDF in a new tab or window
@@ -1228,40 +2236,564 @@ export const TechtalPrincipalView=()=>{
       console.log(e);
     }
     }
-/////////// 
 
+      /////////////////////filter options
+      const[year,setYear]=useState([])
+      const [currentRecords, setCurrentRecords] = useState([]);
+      let [AcdVals,setAcdVals]=useState("")
+      const[selectedSem,setSelectedSem]=useState([])
+      let [empVals,setEmpVals]=useState("")
+      const [emp,setEmp]=useState([])
+      let [deptVals,setDeptVals]=useState("")
+
+      
+      const[filter,setFilter]=useState({
+       "acdyr_id":"",
+       "sem_id":"",
+       "emp_id":""
+   })
+   console.log(filter)
+      const CustomClearText = () => <>X</>;
+ 
+      const ClearIndicator =(props) =>{
+        const {
+          children = <CustomClearText />,
+          getStyles,
+          innerProps: {ref, ...restInnerProps },
+        }= props;
+        return(
+          <div
+            {...restInnerProps}
+            ref={ref}
+            style={getStyles('clearIndicator', props)}
+          >
+            <div style={{padding: '0px 5px'}}>{children}</div>
+          </div>
+        )
+      }
+    
+      const ClearIndicatorStyles = (base, state) => ({
+        ...base,
+        cursor: 'pointer',
+        color: state.isFocused ? 'blue' : 'black',
+      });
+    
+      const acdInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           acdyr_id:""
+       }))
+       }else{
+     
+         const label = eve.label
+         const value = eve.value
+         const extraInfo = eve.extraInfo
+     
+         let isArray = Array.isArray(eve);
+         // alert(JSON.stringify(eve))
+         if(eve.length==1){
+             if(typeof eve[0].value === 'string'){
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[0].extraInfo]:eve[0].value
+                 }))
+             }else{
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+             }))}
+         }
+         if(isArray){
+             // if(eve.length==1){
+             //     if(eve[0].extraInfo=="major_id"){
+             //         Sub(eve[0].value)
+             //     }
+             //     setFilter((old)=>({
+             //         ...old,
+             //         [eve[0].extraInfo]:eve[0].value
+             //     }))
+             // }
+             if(eve.length!=1){
+             
+         if(eve[0].extraInfo=="acdyr_id"){
+             
+                 // alert(JSON.stringify(eve))
+                 for(let i=0;i<eve.length;i++){
+                     // alert(JSON.stringify(eve[i].value))
+                     AcdVals+=eve[i].value
+                     if(i!=eve.length-1){
+                         AcdVals+=","
+                     }
+                     setFilter((old)=>({
+                         ...old,
+                         [eve[i].extraInfo]:AcdVals
+                     }))
+                 }
+                 // alert(majorVals)
+             
+         }
+         }
+         }
+         else if(extraInfo=="sem_id"){
+             setSelectedSem(value)
+             // handleChange(value)
+             setFilter((old)=>({
+                 ...old,
+                 [extraInfo]:JSON.stringify(value)
+             }))
+         }
+       
+     }
+     }
+ 
+     const semInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           sem_id:""
+       }))
+       }else{
+     
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+     
+       let isArray = Array.isArray(eve);
+       
+       if(isArray){
+           
+           if(eve.length!=1){
+           
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+       
+     }}
+
+     const facInfoCollect=(eve)=>{
+       if(eve.length==0){
+       setFilter((old)=>({
+           ...old,
+           emp_id:""
+       }))
+       }else{
+   
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+   
+       let isArray = Array.isArray(eve);
+       // alert(JSON.stringify(eve))
+       if(eve.length==1){
+          
+           if(typeof eve[0].value === 'string'){
+               setFilter((old)=>({
+                   ...old,
+                   [eve[0].extraInfo]:eve[0].value
+               }))
+           }else{
+           setFilter((old)=>({
+               ...old,
+               [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+           }))}
+       }
+       if(isArray){
+           // if(eve.length==1){
+           //     if(eve[0].extraInfo=="major_id"){
+           //         Sub(eve[0].value)
+           //     }
+           //     setFilter((old)=>({
+           //         ...old,
+           //         [eve[0].extraInfo]:eve[0].value
+           //     }))
+           // }
+           if(eve.length!=1){
+           if(eve[0].extraInfo=="emp_id"){
+               // Sub(0)
+               for(let i=0;i<eve.length;i++){
+                   empVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       empVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:empVals,
+                       // sub_id:""
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+      
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+     
+   }}
+   
+   const deptInfoCollect=(eve)=>{
+     if(eve.length==0){
+       setFilter((old)=>({
+         ...old,
+         dept_id:""
+     }))
+     }else{
+   
+     const label = eve.label
+     const value = eve.value
+     const extraInfo = eve.extraInfo
+   
+     let isArray = Array.isArray(eve);
+     // alert(JSON.stringify(eve))
+     if(eve.length==1){
+         if(eve[0].extraInfo=="dept_id"){
+             // alert(eve[0].value)
+             fetchFac(eve[0].value)
+         }
+         if(typeof eve[0].value === 'string'){
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:eve[0].value
+             }))
+         }else{
+         setFilter((old)=>({
+             ...old,
+             [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+         }))}
+     }
+     if(isArray){
+         // if(eve.length==1){
+         //     if(eve[0].extraInfo=="major_id"){
+         //         Sub(eve[0].value)
+         //     }
+         //     setFilter((old)=>({
+         //         ...old,
+         //         [eve[0].extraInfo]:eve[0].value
+         //     }))
+         // }
+         if(eve.length!=1){
+         if(eve[0].extraInfo=="dept_id"){
+             fetchFac(0)
+             for(let i=0;i<eve.length;i++){
+                 deptVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     deptVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:deptVals,
+                     emp_id:""
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     if(eve[0].extraInfo=="acdyr_id"){
+         
+             // alert(JSON.stringify(eve))
+             for(let i=0;i<eve.length;i++){
+                 // alert(JSON.stringify(eve[i].value))
+                 AcdVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     AcdVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:AcdVals
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     }
+     }
+     else if(extraInfo=="sem_id"){
+         setSelectedSem(value)
+         // handleChange(value)
+         setFilter((old)=>({
+             ...old,
+             [extraInfo]:JSON.stringify(value)
+         }))
+     }
+     
+   }}
+    
+      const Acad=async()=>{
+        const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+       //  alert(JSON.stringify(t.data.result))
+        setYear(t.data.result)
+    }
+    const years = year.map((val) => ({
+     value: val.acd_yr_id,
+     label: val.acd_yr,
+     extraInfo: "acdyr_id"
+     }));
+    useEffect(()=>{
+      Acad()
+      fetchFac()
+      fetchDept()
+    },[])
+  
+    const semester = [
+      {sem_id:1,sem:"Odd"},
+      {sem_id:2,sem:"Even"},
+      {sem_id:3,sem:"Both"},
+    ]
+    let sems = semester.map((val)=>({
+      value: val.sem_id,
+      label: val.sem,
+      extraInfo: "sem_id"
+    }))
+
+     // const fetchFac=async(dId)=>{
+     //   await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`)
+     //           .then((response) => {
+     //           console.log(response);
+     //           setEmp(response.data.rows);
+     //           })
+     //   }
+
+     const fetchFac = async (dId) => {
+       try {
+         const response = await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`);
+         console.log(response);
+         setEmp(response.data.rows);
+       } catch (error) {
+         if (error.response) {
+           // The request was made and the server responded with a status code
+           // that falls out of the range of 2xx
+           console.error('Response error:', error.response.data);
+           console.error('Response status:', error.response.status);
+           console.error('Response headers:', error.response.headers);
+         } else if (error.request) {
+           // The request was made but no response was received
+           console.error('Request error:', error.request);
+         } else {
+           // Something happened in setting up the request that triggered an Error
+           console.error('Error', error.message);
+         }
+         console.error('Config error:', error.config);
+       }
+     };
+       const facs=emp.map((val)=>({
+         value: val.faculty_id,
+         label: val.faculty_name,
+         extraInfo: "emp_id"
+         }))
+    
+     const[dept,setDept]=useState([])
+ const fetchDept=async()=>{
+     const t = await axios.get("http://localhost:1234/ecrFilter/getDeptList")
+     // alert(JSON.stringify(t.data.result))
+     setDept(t.data.result)
+ }
+ const depts = dept.map((val) => ({
+     value: val.dept_id,
+     label: val.dept,
+     extraInfo: "dept_id"
+     }));
+
+    const onClickFilter=async()=>{
+     alert("clicked")
+     alert(JSON.stringify(filter))
+     try{
+         // alert("hi")
+         const logged=JSON.parse(sessionStorage.getItem("person"))
+         const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/principal/data_setaf_tech_talks`,filter)
+         setTechtalksRecs(filteredRecords.data.resultArray)
+         console.log(filteredRecords.data)
+         setCurrentRecords(filteredRecords.data.resultArray)
+     }
+     catch(err){
+         alert("No Reports in the selected filter")
+         console.log(err)
+     }
+ 
+   }
+    
+    //fetch
+    const [techtalkRecs,setTechtalksRecs]=useState([])
+    useEffect(()=>{
+        fetchTechtalkRecords()
+    },[])
+    const logged=JSON.parse(sessionStorage.getItem("person"))
+  
+  
+    const fetchTechtalkRecords=async()=>{
+        try{
+            const temp = await techtalkPrincipalView()
+        // console.log(temp.data)
+        setTechtalksRecs(temp.data)
+        }
+        catch(e){
+            console.log(e)
+        }
+  
+    }
   return(
       <>
+
+<div> <p>&nbsp;</p>
+        <p>&nbsp;</p>
+
+        </div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',marginTop:"120px",alignItems:'center',marginLeft:'-5%',justifyContent:'center'}}>
+        <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+<label for="dept_id">Department : </label>
+  <Select
+        closeMenuOnSelect={false}
+        components={{ ClearIndicator }}
+        styles={{ clearIndicator: ClearIndicatorStyles }}
+        defaultValue={[]}
+        name="emp_id"
+        onChange={deptInfoCollect}
+        isSearchable
+        isMulti
+        options={depts}
+      />
+      
+      <label for="emp_id">Faculty : </label>
+<Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="emp_id"
+      onChange={facInfoCollect}
+      isSearchable
+      isMulti
+      options={facs}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+</div>
        <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%"}}>
        <div class="report-header">
        <h1 class="recent-Articles">Tech Talk to be delivered Multidisciplinary Lectures</h1>   </div>
        <table className='table table-striped '>
         <thead>
-        <tr>
+        <tr>  
+                          <th>Report ID</th>
+                          <th>Name of the Faculty</th>
+                          <th>Academic Year</th>
+                          <th>Semester</th>
                           <th>MuDiL naumber</th>
                           <th>Lecture delivered to branch</th>
-                          <th>Semester</th>
                           <th>Section</th>
                           <th>Data of lecture delivered</th>
                           <th>Topic of discussion</th>
                           <th>No of beneficiaries</th>
-                          <th>Outcome of the discussion</th>
-                          <th>Outcome of the activity</th>
                           <th>Download PDF</th>
         </tr>
         {             
                       techtalkRecs.length>0?  
                       techtalkRecs.map((val)=>(
                           <tr>  
+                              <td>{val.report_id}</td>
+                              <td>{val.name_of_the_faculty}</td>
+                              <td>{val.acd_yr}</td>
+                              <td>{val.sem}</td>
                               <td>{val.MuDiL_number}</td>
-                              <td>{val.dept}</td>
-                              <td>{val.semester}</td>
+                              <td>{val.lecture_delivered_to_branch}</td>
                               <td>{val.section}</td>
                               <td>{dateFormat(val.data_of_lecture_delivered,'dd-mm-yyyy')}</td>
                               <td>{val.topic_of_discussion}</td>
                               <td>{val.no_of_beneficiaries}</td>
-                              <td>{val.outcome_of_the_discussion}</td>
-                              <td>{val.outcome_of_the_activity}</td>
                               <td><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></td>
                               
                           </tr>
@@ -1394,6 +2926,428 @@ export const FacultyGuestTalkPrincipalDashboard=()=>{
   }
 
 
+      /////////////////////filter options
+      const[year,setYear]=useState([])
+      const [currentRecords, setCurrentRecords] = useState([]);
+      let [AcdVals,setAcdVals]=useState("")
+      const[selectedSem,setSelectedSem]=useState([])
+      let [empVals,setEmpVals]=useState("")
+      const [emp,setEmp]=useState([])
+      let [deptVals,setDeptVals]=useState("")
+
+      
+      const[filter,setFilter]=useState({
+       "acdyr_id":"",
+       "sem_id":"",
+       "emp_id":""
+   })
+   console.log(filter)
+      const CustomClearText = () => <>X</>;
+ 
+      const ClearIndicator =(props) =>{
+        const {
+          children = <CustomClearText />,
+          getStyles,
+          innerProps: {ref, ...restInnerProps },
+        }= props;
+        return(
+          <div
+            {...restInnerProps}
+            ref={ref}
+            style={getStyles('clearIndicator', props)}
+          >
+            <div style={{padding: '0px 5px'}}>{children}</div>
+          </div>
+        )
+      }
+    
+      const ClearIndicatorStyles = (base, state) => ({
+        ...base,
+        cursor: 'pointer',
+        color: state.isFocused ? 'blue' : 'black',
+      });
+    
+      const acdInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           acdyr_id:""
+       }))
+       }else{
+     
+         const label = eve.label
+         const value = eve.value
+         const extraInfo = eve.extraInfo
+     
+         let isArray = Array.isArray(eve);
+         // alert(JSON.stringify(eve))
+         if(eve.length==1){
+             if(typeof eve[0].value === 'string'){
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[0].extraInfo]:eve[0].value
+                 }))
+             }else{
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+             }))}
+         }
+         if(isArray){
+             // if(eve.length==1){
+             //     if(eve[0].extraInfo=="major_id"){
+             //         Sub(eve[0].value)
+             //     }
+             //     setFilter((old)=>({
+             //         ...old,
+             //         [eve[0].extraInfo]:eve[0].value
+             //     }))
+             // }
+             if(eve.length!=1){
+             
+         if(eve[0].extraInfo=="acdyr_id"){
+             
+                 // alert(JSON.stringify(eve))
+                 for(let i=0;i<eve.length;i++){
+                     // alert(JSON.stringify(eve[i].value))
+                     AcdVals+=eve[i].value
+                     if(i!=eve.length-1){
+                         AcdVals+=","
+                     }
+                     setFilter((old)=>({
+                         ...old,
+                         [eve[i].extraInfo]:AcdVals
+                     }))
+                 }
+                 // alert(majorVals)
+             
+         }
+         }
+         }
+         else if(extraInfo=="sem_id"){
+             setSelectedSem(value)
+             // handleChange(value)
+             setFilter((old)=>({
+                 ...old,
+                 [extraInfo]:JSON.stringify(value)
+             }))
+         }
+       
+     }
+     }
+ 
+     const semInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           sem_id:""
+       }))
+       }else{
+     
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+     
+       let isArray = Array.isArray(eve);
+       
+       if(isArray){
+           
+           if(eve.length!=1){
+           
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+       
+     }}
+
+     const facInfoCollect=(eve)=>{
+       if(eve.length==0){
+       setFilter((old)=>({
+           ...old,
+           emp_id:""
+       }))
+       }else{
+   
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+   
+       let isArray = Array.isArray(eve);
+       // alert(JSON.stringify(eve))
+       if(eve.length==1){
+          
+           if(typeof eve[0].value === 'string'){
+               setFilter((old)=>({
+                   ...old,
+                   [eve[0].extraInfo]:eve[0].value
+               }))
+           }else{
+           setFilter((old)=>({
+               ...old,
+               [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+           }))}
+       }
+       if(isArray){
+           // if(eve.length==1){
+           //     if(eve[0].extraInfo=="major_id"){
+           //         Sub(eve[0].value)
+           //     }
+           //     setFilter((old)=>({
+           //         ...old,
+           //         [eve[0].extraInfo]:eve[0].value
+           //     }))
+           // }
+           if(eve.length!=1){
+           if(eve[0].extraInfo=="emp_id"){
+               // Sub(0)
+               for(let i=0;i<eve.length;i++){
+                   empVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       empVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:empVals,
+                       // sub_id:""
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+      
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+     
+   }}
+   
+   const deptInfoCollect=(eve)=>{
+     if(eve.length==0){
+       setFilter((old)=>({
+         ...old,
+         dept_id:""
+     }))
+     }else{
+   
+     const label = eve.label
+     const value = eve.value
+     const extraInfo = eve.extraInfo
+   
+     let isArray = Array.isArray(eve);
+     // alert(JSON.stringify(eve))
+     if(eve.length==1){
+         if(eve[0].extraInfo=="dept_id"){
+             // alert(eve[0].value)
+             fetchFac(eve[0].value)
+         }
+         if(typeof eve[0].value === 'string'){
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:eve[0].value
+             }))
+         }else{
+         setFilter((old)=>({
+             ...old,
+             [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+         }))}
+     }
+     if(isArray){
+         // if(eve.length==1){
+         //     if(eve[0].extraInfo=="major_id"){
+         //         Sub(eve[0].value)
+         //     }
+         //     setFilter((old)=>({
+         //         ...old,
+         //         [eve[0].extraInfo]:eve[0].value
+         //     }))
+         // }
+         if(eve.length!=1){
+         if(eve[0].extraInfo=="dept_id"){
+             fetchFac(0)
+             for(let i=0;i<eve.length;i++){
+                 deptVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     deptVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:deptVals,
+                     emp_id:""
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     if(eve[0].extraInfo=="acdyr_id"){
+         
+             // alert(JSON.stringify(eve))
+             for(let i=0;i<eve.length;i++){
+                 // alert(JSON.stringify(eve[i].value))
+                 AcdVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     AcdVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:AcdVals
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     }
+     }
+     else if(extraInfo=="sem_id"){
+         setSelectedSem(value)
+         // handleChange(value)
+         setFilter((old)=>({
+             ...old,
+             [extraInfo]:JSON.stringify(value)
+         }))
+     }
+     
+   }}
+    
+      const Acad=async()=>{
+        const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+       //  alert(JSON.stringify(t.data.result))
+        setYear(t.data.result)
+    }
+    const years = year.map((val) => ({
+     value: val.acd_yr_id,
+     label: val.acd_yr,
+     extraInfo: "acdyr_id"
+     }));
+    useEffect(()=>{
+      Acad()
+      fetchFac()
+      fetchDept()
+    },[])
+  
+    const semester = [
+      {sem_id:1,sem:"Odd"},
+      {sem_id:2,sem:"Even"},
+      {sem_id:3,sem:"Both"},
+    ]
+    let sems = semester.map((val)=>({
+      value: val.sem_id,
+      label: val.sem,
+      extraInfo: "sem_id"
+    }))
+
+     // const fetchFac=async(dId)=>{
+     //   await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`)
+     //           .then((response) => {
+     //           console.log(response);
+     //           setEmp(response.data.rows);
+     //           })
+     //   }
+
+     const fetchFac = async (dId) => {
+       try {
+         const response = await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`);
+         console.log(response);
+         setEmp(response.data.rows);
+       } catch (error) {
+         if (error.response) {
+           // The request was made and the server responded with a status code
+           // that falls out of the range of 2xx
+           console.error('Response error:', error.response.data);
+           console.error('Response status:', error.response.status);
+           console.error('Response headers:', error.response.headers);
+         } else if (error.request) {
+           // The request was made but no response was received
+           console.error('Request error:', error.request);
+         } else {
+           // Something happened in setting up the request that triggered an Error
+           console.error('Error', error.message);
+         }
+         console.error('Config error:', error.config);
+       }
+     };
+       const facs=emp.map((val)=>({
+         value: val.faculty_id,
+         label: val.faculty_name,
+         extraInfo: "emp_id"
+         }))
+    
+     const[dept,setDept]=useState([])
+ const fetchDept=async()=>{
+     const t = await axios.get("http://localhost:1234/ecrFilter/getDeptList")
+     // alert(JSON.stringify(t.data.result))
+     setDept(t.data.result)
+ }
+ const depts = dept.map((val) => ({
+     value: val.dept_id,
+     label: val.dept,
+     extraInfo: "dept_id"
+     }));
+
+    const onClickFilter=async()=>{
+     alert("clicked")
+     alert(JSON.stringify(filter))
+     try{
+         // alert("hi")
+         const logged=JSON.parse(sessionStorage.getItem("person"))
+         const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/principal/data_setaf_faculty_guest_talk_in_other_institution`,filter)
+         setFacultyRecs(filteredRecords.data.resultArray)
+         console.log(filteredRecords.data)
+         setCurrentRecords(filteredRecords.data.resultArray)
+     }
+     catch(err){
+         alert("No Reports in the selected filter")
+         console.log(err)
+     }
+ 
+   }
 
 
 //////////////////////facultyView page fetch code/////////////////////
@@ -1415,6 +3369,86 @@ export const FacultyGuestTalkPrincipalDashboard=()=>{
   }
   return(
       <>
+      <div> <p>&nbsp;</p>
+        <p>&nbsp;</p>
+
+        </div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',marginTop:"120px",alignItems:'center',marginLeft:'-5%',justifyContent:'center'}}>
+        <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+<label for="dept_id">Department : </label>
+  <Select
+        closeMenuOnSelect={false}
+        components={{ ClearIndicator }}
+        styles={{ clearIndicator: ClearIndicatorStyles }}
+        defaultValue={[]}
+        name="emp_id"
+        onChange={deptInfoCollect}
+        isSearchable
+        isMulti
+        options={depts}
+      />
+      
+      <label for="emp_id">Faculty : </label>
+<Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="emp_id"
+      onChange={facInfoCollect}
+      isSearchable
+      isMulti
+      options={facs}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+</div>
        <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%"}}>
        <div class="report-header">
        <h1 class="recent-Articles">Your Reports</h1>
@@ -1425,6 +3459,7 @@ export const FacultyGuestTalkPrincipalDashboard=()=>{
                           <th>Report ID</th>
                           <th>Name of the Faculty</th>
                           <th>Academic Year</th>
+                          <th>Semester</th>
                           <th>Date</th>
                           <th>Topic of the Guest Talk</th>
                           <th>Name of the Institution or Industry</th>
@@ -1440,6 +3475,7 @@ export const FacultyGuestTalkPrincipalDashboard=()=>{
                               <td>{val.report_id}</td>
                               <td>{val.name_of_the_faculty}</td>
                               <td>{val.acd_yr}</td>
+                              <td>{val.sem}</td>
                               <td>{dateFormat(val.date,'dd-mm-yyyy')}</td>
                               <td>{val.topic_of_guest_talk}</td>
                               <td>{val.name_of_institution_or_industry}</td>
@@ -1462,6 +3498,8 @@ export const FacultyGuestTalkPrincipalDashboard=()=>{
   )
 }
 
+
+//NPTEL 
 export const NptelprincipalDashboard=()=>{
 
     
@@ -1577,8 +3615,430 @@ export const NptelprincipalDashboard=()=>{
   }
 }
 
+      /////////////////////filter options
+      const[year,setYear]=useState([])
+      const [currentRecords, setCurrentRecords] = useState([]);
+      let [AcdVals,setAcdVals]=useState("")
+      const[selectedSem,setSelectedSem]=useState([])
+      let [empVals,setEmpVals]=useState("")
+      const [emp,setEmp]=useState([])
+      let [deptVals,setDeptVals]=useState("")
 
-            ///////////////NPTEL fetch code///////////////
+      
+      const[filter,setFilter]=useState({
+       "acdyr_id":"",
+       "sem_id":"",
+       "emp_id":""
+   })
+   console.log(filter)
+      const CustomClearText = () => <>X</>;
+ 
+      const ClearIndicator =(props) =>{
+        const {
+          children = <CustomClearText />,
+          getStyles,
+          innerProps: {ref, ...restInnerProps },
+        }= props;
+        return(
+          <div
+            {...restInnerProps}
+            ref={ref}
+            style={getStyles('clearIndicator', props)}
+          >
+            <div style={{padding: '0px 5px'}}>{children}</div>
+          </div>
+        )
+      }
+    
+      const ClearIndicatorStyles = (base, state) => ({
+        ...base,
+        cursor: 'pointer',
+        color: state.isFocused ? 'blue' : 'black',
+      });
+    
+      const acdInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           acdyr_id:""
+       }))
+       }else{
+     
+         const label = eve.label
+         const value = eve.value
+         const extraInfo = eve.extraInfo
+     
+         let isArray = Array.isArray(eve);
+         // alert(JSON.stringify(eve))
+         if(eve.length==1){
+             if(typeof eve[0].value === 'string'){
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[0].extraInfo]:eve[0].value
+                 }))
+             }else{
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+             }))}
+         }
+         if(isArray){
+             // if(eve.length==1){
+             //     if(eve[0].extraInfo=="major_id"){
+             //         Sub(eve[0].value)
+             //     }
+             //     setFilter((old)=>({
+             //         ...old,
+             //         [eve[0].extraInfo]:eve[0].value
+             //     }))
+             // }
+             if(eve.length!=1){
+             
+         if(eve[0].extraInfo=="acdyr_id"){
+             
+                 // alert(JSON.stringify(eve))
+                 for(let i=0;i<eve.length;i++){
+                     // alert(JSON.stringify(eve[i].value))
+                     AcdVals+=eve[i].value
+                     if(i!=eve.length-1){
+                         AcdVals+=","
+                     }
+                     setFilter((old)=>({
+                         ...old,
+                         [eve[i].extraInfo]:AcdVals
+                     }))
+                 }
+                 // alert(majorVals)
+             
+         }
+         }
+         }
+         else if(extraInfo=="sem_id"){
+             setSelectedSem(value)
+             // handleChange(value)
+             setFilter((old)=>({
+                 ...old,
+                 [extraInfo]:JSON.stringify(value)
+             }))
+         }
+       
+     }
+     }
+ 
+     const semInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           sem_id:""
+       }))
+       }else{
+     
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+     
+       let isArray = Array.isArray(eve);
+       
+       if(isArray){
+           
+           if(eve.length!=1){
+           
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+       
+     }}
+
+     const facInfoCollect=(eve)=>{
+       if(eve.length==0){
+       setFilter((old)=>({
+           ...old,
+           emp_id:""
+       }))
+       }else{
+   
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+   
+       let isArray = Array.isArray(eve);
+       // alert(JSON.stringify(eve))
+       if(eve.length==1){
+          
+           if(typeof eve[0].value === 'string'){
+               setFilter((old)=>({
+                   ...old,
+                   [eve[0].extraInfo]:eve[0].value
+               }))
+           }else{
+           setFilter((old)=>({
+               ...old,
+               [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+           }))}
+       }
+       if(isArray){
+           // if(eve.length==1){
+           //     if(eve[0].extraInfo=="major_id"){
+           //         Sub(eve[0].value)
+           //     }
+           //     setFilter((old)=>({
+           //         ...old,
+           //         [eve[0].extraInfo]:eve[0].value
+           //     }))
+           // }
+           if(eve.length!=1){
+           if(eve[0].extraInfo=="emp_id"){
+               // Sub(0)
+               for(let i=0;i<eve.length;i++){
+                   empVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       empVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:empVals,
+                       // sub_id:""
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+      
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+     
+   }}
+   
+   const deptInfoCollect=(eve)=>{
+     if(eve.length==0){
+       setFilter((old)=>({
+         ...old,
+         dept_id:""
+     }))
+     }else{
+   
+     const label = eve.label
+     const value = eve.value
+     const extraInfo = eve.extraInfo
+   
+     let isArray = Array.isArray(eve);
+     // alert(JSON.stringify(eve))
+     if(eve.length==1){
+         if(eve[0].extraInfo=="dept_id"){
+             // alert(eve[0].value)
+             fetchFac(eve[0].value)
+         }
+         if(typeof eve[0].value === 'string'){
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:eve[0].value
+             }))
+         }else{
+         setFilter((old)=>({
+             ...old,
+             [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+         }))}
+     }
+     if(isArray){
+         // if(eve.length==1){
+         //     if(eve[0].extraInfo=="major_id"){
+         //         Sub(eve[0].value)
+         //     }
+         //     setFilter((old)=>({
+         //         ...old,
+         //         [eve[0].extraInfo]:eve[0].value
+         //     }))
+         // }
+         if(eve.length!=1){
+         if(eve[0].extraInfo=="dept_id"){
+             fetchFac(0)
+             for(let i=0;i<eve.length;i++){
+                 deptVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     deptVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:deptVals,
+                     emp_id:""
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     if(eve[0].extraInfo=="acdyr_id"){
+         
+             // alert(JSON.stringify(eve))
+             for(let i=0;i<eve.length;i++){
+                 // alert(JSON.stringify(eve[i].value))
+                 AcdVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     AcdVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:AcdVals
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     }
+     }
+     else if(extraInfo=="sem_id"){
+         setSelectedSem(value)
+         // handleChange(value)
+         setFilter((old)=>({
+             ...old,
+             [extraInfo]:JSON.stringify(value)
+         }))
+     }
+     
+   }}
+    
+      const Acad=async()=>{
+        const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+       //  alert(JSON.stringify(t.data.result))
+        setYear(t.data.result)
+    }
+    const years = year.map((val) => ({
+     value: val.acd_yr_id,
+     label: val.acd_yr,
+     extraInfo: "acdyr_id"
+     }));
+    useEffect(()=>{
+      Acad()
+      fetchFac()
+      fetchDept()
+    },[])
+  
+    const semester = [
+      {sem_id:1,sem:"Odd"},
+      {sem_id:2,sem:"Even"},
+      {sem_id:3,sem:"Both"},
+    ]
+    let sems = semester.map((val)=>({
+      value: val.sem_id,
+      label: val.sem,
+      extraInfo: "sem_id"
+    }))
+
+     // const fetchFac=async(dId)=>{
+     //   await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`)
+     //           .then((response) => {
+     //           console.log(response);
+     //           setEmp(response.data.rows);
+     //           })
+     //   }
+
+     const fetchFac = async (dId) => {
+       try {
+         const response = await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`);
+         console.log(response);
+         setEmp(response.data.rows);
+       } catch (error) {
+         if (error.response) {
+           // The request was made and the server responded with a status code
+           // that falls out of the range of 2xx
+           console.error('Response error:', error.response.data);
+           console.error('Response status:', error.response.status);
+           console.error('Response headers:', error.response.headers);
+         } else if (error.request) {
+           // The request was made but no response was received
+           console.error('Request error:', error.request);
+         } else {
+           // Something happened in setting up the request that triggered an Error
+           console.error('Error', error.message);
+         }
+         console.error('Config error:', error.config);
+       }
+     };
+       const facs=emp.map((val)=>({
+         value: val.faculty_id,
+         label: val.faculty_name,
+         extraInfo: "emp_id"
+         }))
+    
+     const[dept,setDept]=useState([])
+ const fetchDept=async()=>{
+     const t = await axios.get("http://localhost:1234/ecrFilter/getDeptList")
+     // alert(JSON.stringify(t.data.result))
+     setDept(t.data.result)
+ }
+ const depts = dept.map((val) => ({
+     value: val.dept_id,
+     label: val.dept,
+     extraInfo: "dept_id"
+     }));
+
+    const onClickFilter=async()=>{
+     alert("clicked")
+     alert(JSON.stringify(filter))
+     try{
+         // alert("hi")
+         const logged=JSON.parse(sessionStorage.getItem("person"))
+         const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/principal/data_setaf_nptel_certification`,filter)
+         setnptelRecs(filteredRecords.data.resultArray)
+         console.log(filteredRecords.data)
+         setCurrentRecords(filteredRecords.data.resultArray)
+     }
+     catch(err){
+         alert("No Reports in the selected filter")
+         console.log(err)
+     }
+ 
+   }
+
+ ///////////////NPTEL fetch code///////////////
   const [nptelRecs,setnptelRecs]=useState([])
   useEffect(()=>{
       fetchNptelRecords()
@@ -1600,7 +4060,88 @@ export const NptelprincipalDashboard=()=>{
 
   return(
       <>
-       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%"}}>
+
+<div> <p>&nbsp;</p>
+        <p>&nbsp;</p>
+
+        </div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',marginTop:"120px",alignItems:'center',marginLeft:'8px',justifyContent:'center'}}>
+        <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+<label for="dept_id">Department : </label>
+  <Select
+        closeMenuOnSelect={false}
+        components={{ ClearIndicator }}
+        styles={{ clearIndicator: ClearIndicatorStyles }}
+        defaultValue={[]}
+        name="emp_id"
+        onChange={deptInfoCollect}
+        isSearchable
+        isMulti
+        options={depts}
+      />
+      
+      <label for="emp_id">Faculty : </label>
+<Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="emp_id"
+      onChange={facInfoCollect}
+      isSearchable
+      isMulti
+      options={facs}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+</div>
+       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-50px"}}>
        <div class="report-header">
        <h1 class="recent-Articles">Your Reports</h1>
        {/* <a className="topic-headings" href="Setaf/SetafForms/nptelform"><button style={{top:"27.5px",right:"50px"}} class="views" id="addButton">+ Add</button></a> */}
@@ -1608,6 +4149,8 @@ export const NptelprincipalDashboard=()=>{
        <table className='table table-striped'>
         <thead>
         <tr>
+                          <th>Report ID</th>
+                          <th>Faculty Name</th>
                           <th>Academic year</th>
                           <th>Semster</th>
                           <th>Name of the faculty</th>
@@ -1622,18 +4165,19 @@ export const NptelprincipalDashboard=()=>{
         {               
                       nptelRecs.length>0?
                       nptelRecs.map((val)=>(
-                          <tr>
-                              <td>{val.acd_yr}</td>
-                              <td>{val.semesters}</td>
-                              <td>{val.name_of_the_faculty}</td>
-                              <td>{val.year}</td>
-                              <td>{val.session}</td>
-                              <td>{val.course_name}</td>
-                              <td>{val.score_obtained}</td>
-                              <td>{val.certificate_type}</td>
-                              
-                              <th><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></th>
-                          </tr>
+                        <tr>
+                        <td>{val.report_id}</td>
+                        <td>{val.name_of_the_faculty}</td>
+                        <td>{val.acd_yr}</td>
+                        <td>{val.sem}</td>
+                        <td>{val.name_of_the_faculty}</td>
+                        <td>{val.year}</td>
+                        <td>{val.session}</td>
+                        <td>{val.course_name}</td>
+                        <td>{val.score_obtained}</td>
+                        <td>{val.certificate_type}</td>
+                        <th><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></th>
+                    </tr>
                       ))
                   :
                   <tr> 
@@ -1652,8 +4196,8 @@ export const NptelprincipalDashboard=()=>{
 
         }
        
-                /////Taste Principal Dashboard///////////
-        export const TasteprincipalDashboard=()=>{
+////Taste Principal Dashboard///////////
+ export const TasteprincipalDashboard=()=>{
 
           const generatePDF = async (report_id)=> {
               try{
@@ -1764,7 +4308,428 @@ export const NptelprincipalDashboard=()=>{
             }
           }
       
-      
+            /////////////////////filter options
+            const[year,setYear]=useState([])
+            const [currentRecords, setCurrentRecords] = useState([]);
+            let [AcdVals,setAcdVals]=useState("")
+            const[selectedSem,setSelectedSem]=useState([])
+            let [empVals,setEmpVals]=useState("")
+            const [emp,setEmp]=useState([])
+            let [deptVals,setDeptVals]=useState("")
+     
+            
+            const[filter,setFilter]=useState({
+             "acdyr_id":"",
+             "sem_id":"",
+             "emp_id":""
+         })
+         console.log(filter)
+            const CustomClearText = () => <>X</>;
+       
+            const ClearIndicator =(props) =>{
+              const {
+                children = <CustomClearText />,
+                getStyles,
+                innerProps: {ref, ...restInnerProps },
+              }= props;
+              return(
+                <div
+                  {...restInnerProps}
+                  ref={ref}
+                  style={getStyles('clearIndicator', props)}
+                >
+                  <div style={{padding: '0px 5px'}}>{children}</div>
+                </div>
+              )
+            }
+          
+            const ClearIndicatorStyles = (base, state) => ({
+              ...base,
+              cursor: 'pointer',
+              color: state.isFocused ? 'blue' : 'black',
+            });
+          
+            const acdInfoCollect=(eve)=>{
+             if(eve.length==0){
+               setFilter((old)=>({
+                 ...old,
+                 acdyr_id:""
+             }))
+             }else{
+           
+               const label = eve.label
+               const value = eve.value
+               const extraInfo = eve.extraInfo
+           
+               let isArray = Array.isArray(eve);
+               // alert(JSON.stringify(eve))
+               if(eve.length==1){
+                   if(typeof eve[0].value === 'string'){
+                       setFilter((old)=>({
+                           ...old,
+                           [eve[0].extraInfo]:eve[0].value
+                       }))
+                   }else{
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+                   }))}
+               }
+               if(isArray){
+                   // if(eve.length==1){
+                   //     if(eve[0].extraInfo=="major_id"){
+                   //         Sub(eve[0].value)
+                   //     }
+                   //     setFilter((old)=>({
+                   //         ...old,
+                   //         [eve[0].extraInfo]:eve[0].value
+                   //     }))
+                   // }
+                   if(eve.length!=1){
+                   
+               if(eve[0].extraInfo=="acdyr_id"){
+                   
+                       // alert(JSON.stringify(eve))
+                       for(let i=0;i<eve.length;i++){
+                           // alert(JSON.stringify(eve[i].value))
+                           AcdVals+=eve[i].value
+                           if(i!=eve.length-1){
+                               AcdVals+=","
+                           }
+                           setFilter((old)=>({
+                               ...old,
+                               [eve[i].extraInfo]:AcdVals
+                           }))
+                       }
+                       // alert(majorVals)
+                   
+               }
+               }
+               }
+               else if(extraInfo=="sem_id"){
+                   setSelectedSem(value)
+                   // handleChange(value)
+                   setFilter((old)=>({
+                       ...old,
+                       [extraInfo]:JSON.stringify(value)
+                   }))
+               }
+             
+           }
+           }
+       
+           const semInfoCollect=(eve)=>{
+             if(eve.length==0){
+               setFilter((old)=>({
+                 ...old,
+                 sem_id:""
+             }))
+             }else{
+           
+             const label = eve.label
+             const value = eve.value
+             const extraInfo = eve.extraInfo
+           
+             let isArray = Array.isArray(eve);
+             
+             if(isArray){
+                 
+                 if(eve.length!=1){
+                 
+             if(eve[0].extraInfo=="acdyr_id"){
+                 
+                     // alert(JSON.stringify(eve))
+                     for(let i=0;i<eve.length;i++){
+                         // alert(JSON.stringify(eve[i].value))
+                         AcdVals+=eve[i].value
+                         if(i!=eve.length-1){
+                             AcdVals+=","
+                         }
+                         setFilter((old)=>({
+                             ...old,
+                             [eve[i].extraInfo]:AcdVals
+                         }))
+                     }
+                     // alert(majorVals)
+                 
+             }
+             }
+             }
+             else if(extraInfo=="sem_id"){
+                 setSelectedSem(value)
+                 // handleChange(value)
+                 setFilter((old)=>({
+                     ...old,
+                     [extraInfo]:JSON.stringify(value)
+                 }))
+             }
+             
+           }}
+     
+           const facInfoCollect=(eve)=>{
+             if(eve.length==0){
+             setFilter((old)=>({
+                 ...old,
+                 emp_id:""
+             }))
+             }else{
+         
+             const label = eve.label
+             const value = eve.value
+             const extraInfo = eve.extraInfo
+         
+             let isArray = Array.isArray(eve);
+             // alert(JSON.stringify(eve))
+             if(eve.length==1){
+                
+                 if(typeof eve[0].value === 'string'){
+                     setFilter((old)=>({
+                         ...old,
+                         [eve[0].extraInfo]:eve[0].value
+                     }))
+                 }else{
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+                 }))}
+             }
+             if(isArray){
+                 // if(eve.length==1){
+                 //     if(eve[0].extraInfo=="major_id"){
+                 //         Sub(eve[0].value)
+                 //     }
+                 //     setFilter((old)=>({
+                 //         ...old,
+                 //         [eve[0].extraInfo]:eve[0].value
+                 //     }))
+                 // }
+                 if(eve.length!=1){
+                 if(eve[0].extraInfo=="emp_id"){
+                     // Sub(0)
+                     for(let i=0;i<eve.length;i++){
+                         empVals+=eve[i].value
+                         if(i!=eve.length-1){
+                             empVals+=","
+                         }
+                         setFilter((old)=>({
+                             ...old,
+                             [eve[i].extraInfo]:empVals,
+                             // sub_id:""
+                         }))
+                     }
+                     // alert(majorVals)
+                 
+             }
+             if(eve[0].extraInfo=="acdyr_id"){
+                 
+                     // alert(JSON.stringify(eve))
+                     for(let i=0;i<eve.length;i++){
+                         // alert(JSON.stringify(eve[i].value))
+                         AcdVals+=eve[i].value
+                         if(i!=eve.length-1){
+                             AcdVals+=","
+                         }
+                         setFilter((old)=>({
+                             ...old,
+                             [eve[i].extraInfo]:AcdVals
+                         }))
+                     }
+                     // alert(majorVals)
+                 
+             }
+            
+             }
+             }
+             else if(extraInfo=="sem_id"){
+                 setSelectedSem(value)
+                 // handleChange(value)
+                 setFilter((old)=>({
+                     ...old,
+                     [extraInfo]:JSON.stringify(value)
+                 }))
+             }
+           
+         }}
+         
+         const deptInfoCollect=(eve)=>{
+           if(eve.length==0){
+             setFilter((old)=>({
+               ...old,
+               dept_id:""
+           }))
+           }else{
+         
+           const label = eve.label
+           const value = eve.value
+           const extraInfo = eve.extraInfo
+         
+           let isArray = Array.isArray(eve);
+           // alert(JSON.stringify(eve))
+           if(eve.length==1){
+               if(eve[0].extraInfo=="dept_id"){
+                   // alert(eve[0].value)
+                   fetchFac(eve[0].value)
+               }
+               if(typeof eve[0].value === 'string'){
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[0].extraInfo]:eve[0].value
+                   }))
+               }else{
+               setFilter((old)=>({
+                   ...old,
+                   [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+               }))}
+           }
+           if(isArray){
+               // if(eve.length==1){
+               //     if(eve[0].extraInfo=="major_id"){
+               //         Sub(eve[0].value)
+               //     }
+               //     setFilter((old)=>({
+               //         ...old,
+               //         [eve[0].extraInfo]:eve[0].value
+               //     }))
+               // }
+               if(eve.length!=1){
+               if(eve[0].extraInfo=="dept_id"){
+                   fetchFac(0)
+                   for(let i=0;i<eve.length;i++){
+                       deptVals+=eve[i].value
+                       if(i!=eve.length-1){
+                           deptVals+=","
+                       }
+                       setFilter((old)=>({
+                           ...old,
+                           [eve[i].extraInfo]:deptVals,
+                           emp_id:""
+                       }))
+                   }
+                   // alert(majorVals)
+               
+           }
+           if(eve[0].extraInfo=="acdyr_id"){
+               
+                   // alert(JSON.stringify(eve))
+                   for(let i=0;i<eve.length;i++){
+                       // alert(JSON.stringify(eve[i].value))
+                       AcdVals+=eve[i].value
+                       if(i!=eve.length-1){
+                           AcdVals+=","
+                       }
+                       setFilter((old)=>({
+                           ...old,
+                           [eve[i].extraInfo]:AcdVals
+                       }))
+                   }
+                   // alert(majorVals)
+               
+           }
+           }
+           }
+           else if(extraInfo=="sem_id"){
+               setSelectedSem(value)
+               // handleChange(value)
+               setFilter((old)=>({
+                   ...old,
+                   [extraInfo]:JSON.stringify(value)
+               }))
+           }
+           
+         }}
+          
+            const Acad=async()=>{
+              const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+             //  alert(JSON.stringify(t.data.result))
+              setYear(t.data.result)
+          }
+          const years = year.map((val) => ({
+           value: val.acd_yr_id,
+           label: val.acd_yr,
+           extraInfo: "acdyr_id"
+           }));
+          useEffect(()=>{
+            Acad()
+            fetchFac()
+            fetchDept()
+          },[])
+        
+          const semester = [
+            {sem_id:1,sem:"Odd"},
+            {sem_id:2,sem:"Even"},
+            {sem_id:3,sem:"Both"},
+          ]
+          let sems = semester.map((val)=>({
+            value: val.sem_id,
+            label: val.sem,
+            extraInfo: "sem_id"
+          }))
+     
+           // const fetchFac=async(dId)=>{
+           //   await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`)
+           //           .then((response) => {
+           //           console.log(response);
+           //           setEmp(response.data.rows);
+           //           })
+           //   }
+     
+           const fetchFac = async (dId) => {
+             try {
+               const response = await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`);
+               console.log(response);
+               setEmp(response.data.rows);
+             } catch (error) {
+               if (error.response) {
+                 // The request was made and the server responded with a status code
+                 // that falls out of the range of 2xx
+                 console.error('Response error:', error.response.data);
+                 console.error('Response status:', error.response.status);
+                 console.error('Response headers:', error.response.headers);
+               } else if (error.request) {
+                 // The request was made but no response was received
+                 console.error('Request error:', error.request);
+               } else {
+                 // Something happened in setting up the request that triggered an Error
+                 console.error('Error', error.message);
+               }
+               console.error('Config error:', error.config);
+             }
+           };
+             const facs=emp.map((val)=>({
+               value: val.faculty_id,
+               label: val.faculty_name,
+               extraInfo: "emp_id"
+               }))
+          
+           const[dept,setDept]=useState([])
+       const fetchDept=async()=>{
+           const t = await axios.get("http://localhost:1234/ecrFilter/getDeptList")
+           // alert(JSON.stringify(t.data.result))
+           setDept(t.data.result)
+       }
+       const depts = dept.map((val) => ({
+           value: val.dept_id,
+           label: val.dept,
+           extraInfo: "dept_id"
+           }));
+     
+          const onClickFilter=async()=>{
+           alert("clicked")
+           alert(JSON.stringify(filter))
+           try{
+               // alert("hi")
+               const logged=JSON.parse(sessionStorage.getItem("person"))
+               const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/principal/data_setaf_participation_in_taste`,filter)
+               setTasteRecs(filteredRecords.data.resultArray)
+               console.log(filteredRecords.data)
+               setCurrentRecords(filteredRecords.data.resultArray)
+           }
+           catch(err){
+               alert("No Reports in the selected filter")
+               console.log(err)
+           }
+       
+         }
       
       //////TASTE fetch Code////
           const [tasteRecs,setTasteRecs]=useState([])
@@ -1786,7 +4751,88 @@ export const NptelprincipalDashboard=()=>{
           }
           return(
               <>
-               <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%"}}>
+
+<div> <p>&nbsp;</p>
+        <p>&nbsp;</p>
+
+        </div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',marginTop:"120px",alignItems:'center',marginLeft:'8px',justifyContent:'center'}}>
+        <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+<label for="dept_id">Department : </label>
+  <Select
+        closeMenuOnSelect={false}
+        components={{ ClearIndicator }}
+        styles={{ clearIndicator: ClearIndicatorStyles }}
+        defaultValue={[]}
+        name="emp_id"
+        onChange={deptInfoCollect}
+        isSearchable
+        isMulti
+        options={depts}
+      />
+      
+      <label for="emp_id">Faculty : </label>
+<Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="emp_id"
+      onChange={facInfoCollect}
+      isSearchable
+      isMulti
+      options={facs}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+</div>
+               <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-50px"}}>
                <div class="report-header">
                <h1 class="recent-Articles">Your Reports</h1>
                {/* <a className="topic-headings" href="Setaf/SetafForms/tastefront"><button style={{top:"27.5px",right:"50px"}} class="views" id="addButton">+ Add</button></a> */}
@@ -1794,11 +4840,14 @@ export const NptelprincipalDashboard=()=>{
                <table className='table table-striped'>
                 <thead>
                 <tr>
+                                  <th>Report ID</th>
+                                  <th>Academic Year</th>
+                                  <th>Semester</th>
                                   <th>Name of the faculty</th>
                                   <th>date</th>
                                   <th>Taste Number</th>
                                   <th>Seminar Topic</th>
-                                  <th>Resource Person Name</th>
+                                  <th>Respirce Person Name</th>
                                   <th>Outcome of the Activity</th>
                                   <th>Download PDF</th>
                                   
@@ -1806,6 +4855,9 @@ export const NptelprincipalDashboard=()=>{
                 {             tasteRecs.length>0?
                               tasteRecs.map((val)=>(
                                   <tr>
+                                      <td>{val.report_id}</td>
+                                      <td>{val.acd_yr}</td>
+                                      <td>{val.sem}</td>
                                       <td>{val.name_of_the_faculty}</td>
                                       <td>{dateFormat(val.date,'dd-mm-yyyy')}</td>
                                       <td>{val.taste_number}</td>
@@ -1813,7 +4865,6 @@ export const NptelprincipalDashboard=()=>{
                                       <td>{val.resource_person_name}</td>
                                       <td>{val.outcome_of_the_activity}</td>
                                       <td><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></td>
-                  
                                   </tr>
                               ))
                               :
@@ -1939,6 +4990,429 @@ export const SeedPrincipalDashboard=()=>{
     }
   }
 
+      /////////////////////filter options
+      const[year,setYear]=useState([])
+      const [currentRecords, setCurrentRecords] = useState([]);
+      let [AcdVals,setAcdVals]=useState("")
+      const[selectedSem,setSelectedSem]=useState([])
+      let [empVals,setEmpVals]=useState("")
+      const [emp,setEmp]=useState([])
+      let [deptVals,setDeptVals]=useState("")
+
+      
+      const[filter,setFilter]=useState({
+       "acdyr_id":"",
+       "sem_id":"",
+       "emp_id":""
+   })
+   console.log(filter)
+      const CustomClearText = () => <>X</>;
+ 
+      const ClearIndicator =(props) =>{
+        const {
+          children = <CustomClearText />,
+          getStyles,
+          innerProps: {ref, ...restInnerProps },
+        }= props;
+        return(
+          <div
+            {...restInnerProps}
+            ref={ref}
+            style={getStyles('clearIndicator', props)}
+          >
+            <div style={{padding: '0px 5px'}}>{children}</div>
+          </div>
+        )
+      }
+    
+      const ClearIndicatorStyles = (base, state) => ({
+        ...base,
+        cursor: 'pointer',
+        color: state.isFocused ? 'blue' : 'black',
+      });
+    
+      const acdInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           acdyr_id:""
+       }))
+       }else{
+     
+         const label = eve.label
+         const value = eve.value
+         const extraInfo = eve.extraInfo
+     
+         let isArray = Array.isArray(eve);
+         // alert(JSON.stringify(eve))
+         if(eve.length==1){
+             if(typeof eve[0].value === 'string'){
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[0].extraInfo]:eve[0].value
+                 }))
+             }else{
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+             }))}
+         }
+         if(isArray){
+             // if(eve.length==1){
+             //     if(eve[0].extraInfo=="major_id"){
+             //         Sub(eve[0].value)
+             //     }
+             //     setFilter((old)=>({
+             //         ...old,
+             //         [eve[0].extraInfo]:eve[0].value
+             //     }))
+             // }
+             if(eve.length!=1){
+             
+         if(eve[0].extraInfo=="acdyr_id"){
+             
+                 // alert(JSON.stringify(eve))
+                 for(let i=0;i<eve.length;i++){
+                     // alert(JSON.stringify(eve[i].value))
+                     AcdVals+=eve[i].value
+                     if(i!=eve.length-1){
+                         AcdVals+=","
+                     }
+                     setFilter((old)=>({
+                         ...old,
+                         [eve[i].extraInfo]:AcdVals
+                     }))
+                 }
+                 // alert(majorVals)
+             
+         }
+         }
+         }
+         else if(extraInfo=="sem_id"){
+             setSelectedSem(value)
+             // handleChange(value)
+             setFilter((old)=>({
+                 ...old,
+                 [extraInfo]:JSON.stringify(value)
+             }))
+         }
+       
+     }
+     }
+ 
+     const semInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           sem_id:""
+       }))
+       }else{
+     
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+     
+       let isArray = Array.isArray(eve);
+       
+       if(isArray){
+           
+           if(eve.length!=1){
+           
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+       
+     }}
+
+     const facInfoCollect=(eve)=>{
+       if(eve.length==0){
+       setFilter((old)=>({
+           ...old,
+           emp_id:""
+       }))
+       }else{
+   
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+   
+       let isArray = Array.isArray(eve);
+       // alert(JSON.stringify(eve))
+       if(eve.length==1){
+          
+           if(typeof eve[0].value === 'string'){
+               setFilter((old)=>({
+                   ...old,
+                   [eve[0].extraInfo]:eve[0].value
+               }))
+           }else{
+           setFilter((old)=>({
+               ...old,
+               [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+           }))}
+       }
+       if(isArray){
+           // if(eve.length==1){
+           //     if(eve[0].extraInfo=="major_id"){
+           //         Sub(eve[0].value)
+           //     }
+           //     setFilter((old)=>({
+           //         ...old,
+           //         [eve[0].extraInfo]:eve[0].value
+           //     }))
+           // }
+           if(eve.length!=1){
+           if(eve[0].extraInfo=="emp_id"){
+               // Sub(0)
+               for(let i=0;i<eve.length;i++){
+                   empVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       empVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:empVals,
+                       // sub_id:""
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+      
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+     
+   }}
+   
+   const deptInfoCollect=(eve)=>{
+     if(eve.length==0){
+       setFilter((old)=>({
+         ...old,
+         dept_id:""
+     }))
+     }else{
+   
+     const label = eve.label
+     const value = eve.value
+     const extraInfo = eve.extraInfo
+   
+     let isArray = Array.isArray(eve);
+     // alert(JSON.stringify(eve))
+     if(eve.length==1){
+         if(eve[0].extraInfo=="dept_id"){
+             // alert(eve[0].value)
+             fetchFac(eve[0].value)
+         }
+         if(typeof eve[0].value === 'string'){
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:eve[0].value
+             }))
+         }else{
+         setFilter((old)=>({
+             ...old,
+             [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+         }))}
+     }
+     if(isArray){
+         // if(eve.length==1){
+         //     if(eve[0].extraInfo=="major_id"){
+         //         Sub(eve[0].value)
+         //     }
+         //     setFilter((old)=>({
+         //         ...old,
+         //         [eve[0].extraInfo]:eve[0].value
+         //     }))
+         // }
+         if(eve.length!=1){
+         if(eve[0].extraInfo=="dept_id"){
+             fetchFac(0)
+             for(let i=0;i<eve.length;i++){
+                 deptVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     deptVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:deptVals,
+                     emp_id:""
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     if(eve[0].extraInfo=="acdyr_id"){
+         
+             // alert(JSON.stringify(eve))
+             for(let i=0;i<eve.length;i++){
+                 // alert(JSON.stringify(eve[i].value))
+                 AcdVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     AcdVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:AcdVals
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     }
+     }
+     else if(extraInfo=="sem_id"){
+         setSelectedSem(value)
+         // handleChange(value)
+         setFilter((old)=>({
+             ...old,
+             [extraInfo]:JSON.stringify(value)
+         }))
+     }
+     
+   }}
+    
+      const Acad=async()=>{
+        const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+       //  alert(JSON.stringify(t.data.result))
+        setYear(t.data.result)
+    }
+    const years = year.map((val) => ({
+     value: val.acd_yr_id,
+     label: val.acd_yr,
+     extraInfo: "acdyr_id"
+     }));
+    useEffect(()=>{
+      Acad()
+      fetchFac()
+      fetchDept()
+    },[])
+  
+    const semester = [
+      {sem_id:1,sem:"Odd"},
+      {sem_id:2,sem:"Even"},
+      {sem_id:3,sem:"Both"},
+    ]
+    let sems = semester.map((val)=>({
+      value: val.sem_id,
+      label: val.sem,
+      extraInfo: "sem_id"
+    }))
+
+     // const fetchFac=async(dId)=>{
+     //   await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`)
+     //           .then((response) => {
+     //           console.log(response);
+     //           setEmp(response.data.rows);
+     //           })
+     //   }
+
+     const fetchFac = async (dId) => {
+       try {
+         const response = await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`);
+         console.log(response);
+         setEmp(response.data.rows);
+       } catch (error) {
+         if (error.response) {
+           // The request was made and the server responded with a status code
+           // that falls out of the range of 2xx
+           console.error('Response error:', error.response.data);
+           console.error('Response status:', error.response.status);
+           console.error('Response headers:', error.response.headers);
+         } else if (error.request) {
+           // The request was made but no response was received
+           console.error('Request error:', error.request);
+         } else {
+           // Something happened in setting up the request that triggered an Error
+           console.error('Error', error.message);
+         }
+         console.error('Config error:', error.config);
+       }
+     };
+       const facs=emp.map((val)=>({
+         value: val.faculty_id,
+         label: val.faculty_name,
+         extraInfo: "emp_id"
+         }))
+    
+     const[dept,setDept]=useState([])
+ const fetchDept=async()=>{
+     const t = await axios.get("http://localhost:1234/ecrFilter/getDeptList")
+     // alert(JSON.stringify(t.data.result))
+     setDept(t.data.result)
+ }
+ const depts = dept.map((val) => ({
+     value: val.dept_id,
+     label: val.dept,
+     extraInfo: "dept_id"
+     }));
+
+    const onClickFilter=async()=>{
+     alert("clicked")
+     alert(JSON.stringify(filter))
+     try{
+         // alert("hi")
+         const logged=JSON.parse(sessionStorage.getItem("person"))
+         const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/principal/data_setaf_seed_money_proposal_for_research`,filter)
+         setSeedRecs(filteredRecords.data.resultArray)
+         console.log(filteredRecords.data)
+         setCurrentRecords(filteredRecords.data.resultArray)
+     }
+     catch(err){
+         alert("No Reports in the selected filter")
+         console.log(err)
+     }
+ 
+   }
+
 ///seed fetch code////
   const [seedRecs,setSeedRecs]=useState([])
   useEffect(()=>{
@@ -1959,17 +5433,98 @@ export const SeedPrincipalDashboard=()=>{
   }
   return(
       <>
-       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%"}}>
+      <div> <p>&nbsp;</p>
+        <p>&nbsp;</p>
+
+        </div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',marginTop:"120px",alignItems:'center',marginLeft:'5px',justifyContent:'center'}}>
+        <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+<label for="dept_id">Department : </label>
+  <Select
+        closeMenuOnSelect={false}
+        components={{ ClearIndicator }}
+        styles={{ clearIndicator: ClearIndicatorStyles }}
+        defaultValue={[]}
+        name="emp_id"
+        onChange={deptInfoCollect}
+        isSearchable
+        isMulti
+        options={depts}
+      />
+      
+      <label for="emp_id">Faculty : </label>
+<Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="emp_id"
+      onChange={facInfoCollect}
+      isSearchable
+      isMulti
+      options={facs}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+
+</div>
+       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-50px"}}>
        <div class="report-header">
        <h1 class="recent-Articles">Your Reports</h1>
-       {/* <a className="topic-headings" href="/Setaf/SetafForms/seedfront"><button style={{top:"27.5px",right:"50px"}} class="views" id="addButton">+ Add</button></a> */}
        </div>
        <table className='table table-striped'>
         <thead>
         <tr>
+                          <th>Report ID</th>
+                          <th>Name of the Faculty</th>
                           <th>Accademic Year</th>
                           <th>Semester</th>
-                          <th>Name of the Faculty</th>
                           <th>Title of the Research Project</th>
                           <th>Amount of Seed Money</th>
                           <th>Year of Receiving</th>
@@ -1978,14 +5533,14 @@ export const SeedPrincipalDashboard=()=>{
         {               
                       seedRecs.map((val)=>(
                           <tr>
-                              <td>{val.acd_yr}</td>
-                              <td>{val.semester}</td>
+                              <td>{val.report_id}</td>
                               <td>{val.name_of_the_faculty}</td>
+                              <td>{val.acd_yr}</td>
+                              <td>{val.sem}</td>
                               <td>{val.title_of_the_research_project}</td>
                               <td>{val.amount_of_seed_money}</td>
                               <td>{val.year_of_receiving}</td>
                               <th><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></th>
-          
                           </tr>
                       ))
                   }
@@ -2000,25 +5555,8 @@ export const SeedPrincipalDashboard=()=>{
 
 /////////////////////////////////////////////consultancy//////////////////////////////////////////////////////
 
-
 export const ConsultancyPrincipalDashboard =()=>{
 
-  const [consultancyRecs,setconsultancyRecs]=useState([])
- 
-   useEffect(()=>{
-      fetchconsultancyRecords()
-  },[])
-  const logged=JSON.parse(sessionStorage.getItem("person"))
-
-
-  const fetchconsultancyRecords=async()=>{
-      const temp = await consultancyPrincipalView()
-      // console.log(temp.data)
-      setconsultancyRecs(temp.data)
-      // alert(JSON.stringify(temp.data))
-  }
-
-//////////////////////////////////////////////////////////////////////////////PDF VIWE //////////////////////////////
 const generatePDF = async (report_id)=> {
   try{
       // alert(report_id)
@@ -2139,46 +5677,561 @@ catch(e)
 }
 } 
 
+      /////////////////////filter options
+      const[year,setYear]=useState([])
+      const [currentRecords, setCurrentRecords] = useState([]);
+      let [AcdVals,setAcdVals]=useState("")
+      const[selectedSem,setSelectedSem]=useState([])
+      let [empVals,setEmpVals]=useState("")
+      const [emp,setEmp]=useState([])
+      let [deptVals,setDeptVals]=useState("")
+
+      
+      const[filter,setFilter]=useState({
+       "acdyr_id":"",
+       "sem_id":"",
+       "emp_id":""
+   })
+   console.log(filter)
+      const CustomClearText = () => <>X</>;
  
+      const ClearIndicator =(props) =>{
+        const {
+          children = <CustomClearText />,
+          getStyles,
+          innerProps: {ref, ...restInnerProps },
+        }= props;
+        return(
+          <div
+            {...restInnerProps}
+            ref={ref}
+            style={getStyles('clearIndicator', props)}
+          >
+            <div style={{padding: '0px 5px'}}>{children}</div>
+          </div>
+        )
+      }
+    
+      const ClearIndicatorStyles = (base, state) => ({
+        ...base,
+        cursor: 'pointer',
+        color: state.isFocused ? 'blue' : 'black',
+      });
+    
+      const acdInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           acdyr_id:""
+       }))
+       }else{
+     
+         const label = eve.label
+         const value = eve.value
+         const extraInfo = eve.extraInfo
+     
+         let isArray = Array.isArray(eve);
+         // alert(JSON.stringify(eve))
+         if(eve.length==1){
+             if(typeof eve[0].value === 'string'){
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[0].extraInfo]:eve[0].value
+                 }))
+             }else{
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+             }))}
+         }
+         if(isArray){
+             // if(eve.length==1){
+             //     if(eve[0].extraInfo=="major_id"){
+             //         Sub(eve[0].value)
+             //     }
+             //     setFilter((old)=>({
+             //         ...old,
+             //         [eve[0].extraInfo]:eve[0].value
+             //     }))
+             // }
+             if(eve.length!=1){
+             
+         if(eve[0].extraInfo=="acdyr_id"){
+             
+                 // alert(JSON.stringify(eve))
+                 for(let i=0;i<eve.length;i++){
+                     // alert(JSON.stringify(eve[i].value))
+                     AcdVals+=eve[i].value
+                     if(i!=eve.length-1){
+                         AcdVals+=","
+                     }
+                     setFilter((old)=>({
+                         ...old,
+                         [eve[i].extraInfo]:AcdVals
+                     }))
+                 }
+                 // alert(majorVals)
+             
+         }
+         }
+         }
+         else if(extraInfo=="sem_id"){
+             setSelectedSem(value)
+             // handleChange(value)
+             setFilter((old)=>({
+                 ...old,
+                 [extraInfo]:JSON.stringify(value)
+             }))
+         }
+       
+     }
+     }
+ 
+     const semInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           sem_id:""
+       }))
+       }else{
+     
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+     
+       let isArray = Array.isArray(eve);
+       
+       if(isArray){
+           
+           if(eve.length!=1){
+           
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+       
+     }}
+
+     const facInfoCollect=(eve)=>{
+       if(eve.length==0){
+       setFilter((old)=>({
+           ...old,
+           emp_id:""
+       }))
+       }else{
+   
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+   
+       let isArray = Array.isArray(eve);
+       // alert(JSON.stringify(eve))
+       if(eve.length==1){
+          
+           if(typeof eve[0].value === 'string'){
+               setFilter((old)=>({
+                   ...old,
+                   [eve[0].extraInfo]:eve[0].value
+               }))
+           }else{
+           setFilter((old)=>({
+               ...old,
+               [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+           }))}
+       }
+       if(isArray){
+           // if(eve.length==1){
+           //     if(eve[0].extraInfo=="major_id"){
+           //         Sub(eve[0].value)
+           //     }
+           //     setFilter((old)=>({
+           //         ...old,
+           //         [eve[0].extraInfo]:eve[0].value
+           //     }))
+           // }
+           if(eve.length!=1){
+           if(eve[0].extraInfo=="emp_id"){
+               // Sub(0)
+               for(let i=0;i<eve.length;i++){
+                   empVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       empVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:empVals,
+                       // sub_id:""
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+      
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+     
+   }}
+   
+   const deptInfoCollect=(eve)=>{
+     if(eve.length==0){
+       setFilter((old)=>({
+         ...old,
+         dept_id:""
+     }))
+     }else{
+   
+     const label = eve.label
+     const value = eve.value
+     const extraInfo = eve.extraInfo
+   
+     let isArray = Array.isArray(eve);
+     // alert(JSON.stringify(eve))
+     if(eve.length==1){
+         if(eve[0].extraInfo=="dept_id"){
+             // alert(eve[0].value)
+             fetchFac(eve[0].value)
+         }
+         if(typeof eve[0].value === 'string'){
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:eve[0].value
+             }))
+         }else{
+         setFilter((old)=>({
+             ...old,
+             [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+         }))}
+     }
+     if(isArray){
+         // if(eve.length==1){
+         //     if(eve[0].extraInfo=="major_id"){
+         //         Sub(eve[0].value)
+         //     }
+         //     setFilter((old)=>({
+         //         ...old,
+         //         [eve[0].extraInfo]:eve[0].value
+         //     }))
+         // }
+         if(eve.length!=1){
+         if(eve[0].extraInfo=="dept_id"){
+             fetchFac(0)
+             for(let i=0;i<eve.length;i++){
+                 deptVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     deptVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:deptVals,
+                     emp_id:""
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     if(eve[0].extraInfo=="acdyr_id"){
+         
+             // alert(JSON.stringify(eve))
+             for(let i=0;i<eve.length;i++){
+                 // alert(JSON.stringify(eve[i].value))
+                 AcdVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     AcdVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:AcdVals
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     }
+     }
+     else if(extraInfo=="sem_id"){
+         setSelectedSem(value)
+         // handleChange(value)
+         setFilter((old)=>({
+             ...old,
+             [extraInfo]:JSON.stringify(value)
+         }))
+     }
+     
+   }}
+    
+      const Acad=async()=>{
+        const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+       //  alert(JSON.stringify(t.data.result))
+        setYear(t.data.result)
+    }
+    const years = year.map((val) => ({
+     value: val.acd_yr_id,
+     label: val.acd_yr,
+     extraInfo: "acdyr_id"
+     }));
+    useEffect(()=>{
+      Acad()
+      fetchFac()
+      fetchDept()
+    },[])
+  
+    const semester = [
+      {sem_id:1,sem:"Odd"},
+      {sem_id:2,sem:"Even"},
+      {sem_id:3,sem:"Both"},
+    ]
+    let sems = semester.map((val)=>({
+      value: val.sem_id,
+      label: val.sem,
+      extraInfo: "sem_id"
+    }))
+
+     // const fetchFac=async(dId)=>{
+     //   await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`)
+     //           .then((response) => {
+     //           console.log(response);
+     //           setEmp(response.data.rows);
+     //           })
+     //   }
+
+     const fetchFac = async (dId) => {
+       try {
+         const response = await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`);
+         console.log(response);
+         setEmp(response.data.rows);
+       } catch (error) {
+         if (error.response) {
+           // The request was made and the server responded with a status code
+           // that falls out of the range of 2xx
+           console.error('Response error:', error.response.data);
+           console.error('Response status:', error.response.status);
+           console.error('Response headers:', error.response.headers);
+         } else if (error.request) {
+           // The request was made but no response was received
+           console.error('Request error:', error.request);
+         } else {
+           // Something happened in setting up the request that triggered an Error
+           console.error('Error', error.message);
+         }
+         console.error('Config error:', error.config);
+       }
+     };
+       const facs=emp.map((val)=>({
+         value: val.faculty_id,
+         label: val.faculty_name,
+         extraInfo: "emp_id"
+         }))
+    
+     const[dept,setDept]=useState([])
+ const fetchDept=async()=>{
+     const t = await axios.get("http://localhost:1234/ecrFilter/getDeptList")
+     // alert(JSON.stringify(t.data.result))
+     setDept(t.data.result)
+ }
+ const depts = dept.map((val) => ({
+     value: val.dept_id,
+     label: val.dept,
+     extraInfo: "dept_id"
+     }));
+
+    const onClickFilter=async()=>{
+     alert("clicked")
+     alert(JSON.stringify(filter))
+     try{
+         // alert("hi")
+         const logged=JSON.parse(sessionStorage.getItem("person"))
+         const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/principal/data_setaf_consultancy_and_corporate_training`,filter)
+         setconsultancyRecs(filteredRecords.data.resultArray)
+         console.log(filteredRecords.data)
+         setCurrentRecords(filteredRecords.data.resultArray)
+     }
+     catch(err){
+         alert("No Reports in the selected filter")
+         console.log(err)
+     }
+ 
+   }
+
+ ////fetch
+const [consultancyRecs,setconsultancyRecs]=useState([])
+ 
+useEffect(()=>{
+   fetchconsultancyRecords()
+},[])
+const logged=JSON.parse(sessionStorage.getItem("person"))
+
+const fetchconsultancyRecords=async()=>{
+   const temp = await consultancyPrincipalView()
+   setconsultancyRecs(temp.data)
+}
+
   return(
       <>
       
       <div>
-       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%"}}>
+      <div> <p>&nbsp;</p>
+        <p>&nbsp;</p>
+
+        </div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',marginTop:"120px",alignItems:'center',marginLeft:'-5px',justifyContent:'center'}}>
+        <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+<label for="dept_id">Department : </label>
+  <Select
+        closeMenuOnSelect={false}
+        components={{ ClearIndicator }}
+        styles={{ clearIndicator: ClearIndicatorStyles }}
+        defaultValue={[]}
+        name="emp_id"
+        onChange={deptInfoCollect}
+        isSearchable
+        isMulti
+        options={depts}
+      />
+      
+      <label for="emp_id">Faculty : </label>
+<Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="emp_id"
+      onChange={facInfoCollect}
+      isSearchable
+      isMulti
+      options={facs}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+</div>
+       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-50px"}}>
        <div class="report-header">
        <h1 class="recent-Articles">Your Reports</h1>
        </div>
        <table className='table table-striped '>
        <thead >
        <tr className="table-active">
-          <th>Academic Year/Semester</th>
-          {/* <th style={{width:"120px"}}>Semester</th> */}
-          <th  style={{width:"150px"}}>Name of the faculty</th>
-          <th>Name of consultancy project</th>
-          <th>Sponsoring agency details</th>
-          <th>Sponsoring agency contact details</th>
-          <th style={{width:"120px"}}>Date</th>
-          <th>Revenue Generated</th>
-          <th>Number of Trainees</th>
-          {/* <th>enclose_proof_pdf</th> */}
-          <th>REPORT VIEW</th>
-       {/* <th>Journal First Page - PDF</th> */}
+                  <th>Report ID</th>
+                  <th>Name of the faculty</th>
+                  <th>Academic Year</th>
+                  <th>Semester</th>
+                  <th>Name of consultancy project</th>
+                  <th>Sponsoring agency details</th>
+                  <th>Sponsoring agency contact details</th>
+                  <th>Date</th>
+                  <th>Revenue Generated</th>
+                  <th>Number of Trainees</th>
+                  <th>REPORT VIEW</th>
        </tr>
        {               
                       consultancyRecs.length>0? 
                       consultancyRecs.map((val)=>(
-                          <tr className="table-striped">
-                              <td>{val.acd_yr}/{val.semester}</td>
-                              <td>{val.name_of_the_faculty}</td>
-                              <td>{val.name_of_consultancy_project}</td>
-                              <td>{val.sponsoring_agency_details}</td>
-                              <td>{val.sponsoring_agency_contact_details  }</td>
-                              <td>{dateFormat(val.date,'dd-mm-yyyy')}</td>
-                              <td>{val.revenue_generated}</td>
-                              <td>{val.number_to_trainees}</td>
-                              {/* <th>{val.enclose_proof_pdf}</th> */}
-                              <td><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></td>
-                          </tr>
+                        <tr className="table-striped">
+                        <td>{val.report_id}</td>
+                        <td>{val.name_of_the_faculty}</td>
+                        <td>{val.acd_yr}</td>
+                        <td>{val.sem}</td>
+                        <td>{val.name_of_consultancy_project}</td>
+                        <td>{val.sponsoring_agency_details}</td>
+                        <td>{val.sponsoring_agency_contact_details  }</td>
+                        <td>{dateFormat(val.date,'dd-mm-yyyy')}</td>
+                        <td>{val.revenue_generated}</td>
+                        <td>{val.number_to_trainees}</td>
+                        <td><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></td>
+                    </tr>
                       ))
                       :
                       <tr>No records</tr>
@@ -2197,22 +6250,7 @@ catch(e)
 
 export const PatentsfilledPrincipalDashboard=()=>{
 
-  const [patentRecs,setpatentRecs]=useState([])
-  useEffect(()=>{
-      fetchpatentRecords()
-  },[])
 
-  const fetchpatentRecords=async()=>{
-     try{
-      const temp = await patentPrincipalView()
-      // console.log(temp.data)
-      setpatentRecs(temp.data)
-     }
-     catch(e){
-        console.log(e)
-     }
-
-  }
        ////////////////////////PDF////////////////////////////////////////
      const generatePDF = async (report_id)=> {
       try{
@@ -2333,38 +6371,561 @@ export const PatentsfilledPrincipalDashboard=()=>{
   {
     console.log(e);
   }
-    }
+}
 
+      /////////////////////filter options
+      const[year,setYear]=useState([])
+      const [currentRecords, setCurrentRecords] = useState([]);
+      let [AcdVals,setAcdVals]=useState("")
+      const[selectedSem,setSelectedSem]=useState([])
+      let [empVals,setEmpVals]=useState("")
+      const [emp,setEmp]=useState([])
+      let [deptVals,setDeptVals]=useState("")
+
+      
+      const[filter,setFilter]=useState({
+       "acdyr_id":"",
+       "sem_id":"",
+       "emp_id":""
+   })
+   console.log(filter)
+      const CustomClearText = () => <>X</>;
+ 
+      const ClearIndicator =(props) =>{
+        const {
+          children = <CustomClearText />,
+          getStyles,
+          innerProps: {ref, ...restInnerProps },
+        }= props;
+        return(
+          <div
+            {...restInnerProps}
+            ref={ref}
+            style={getStyles('clearIndicator', props)}
+          >
+            <div style={{padding: '0px 5px'}}>{children}</div>
+          </div>
+        )
+      }
+    
+      const ClearIndicatorStyles = (base, state) => ({
+        ...base,
+        cursor: 'pointer',
+        color: state.isFocused ? 'blue' : 'black',
+      });
+    
+      const acdInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           acdyr_id:""
+       }))
+       }else{
+     
+         const label = eve.label
+         const value = eve.value
+         const extraInfo = eve.extraInfo
+     
+         let isArray = Array.isArray(eve);
+         // alert(JSON.stringify(eve))
+         if(eve.length==1){
+             if(typeof eve[0].value === 'string'){
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[0].extraInfo]:eve[0].value
+                 }))
+             }else{
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+             }))}
+         }
+         if(isArray){
+             // if(eve.length==1){
+             //     if(eve[0].extraInfo=="major_id"){
+             //         Sub(eve[0].value)
+             //     }
+             //     setFilter((old)=>({
+             //         ...old,
+             //         [eve[0].extraInfo]:eve[0].value
+             //     }))
+             // }
+             if(eve.length!=1){
+             
+         if(eve[0].extraInfo=="acdyr_id"){
+             
+                 // alert(JSON.stringify(eve))
+                 for(let i=0;i<eve.length;i++){
+                     // alert(JSON.stringify(eve[i].value))
+                     AcdVals+=eve[i].value
+                     if(i!=eve.length-1){
+                         AcdVals+=","
+                     }
+                     setFilter((old)=>({
+                         ...old,
+                         [eve[i].extraInfo]:AcdVals
+                     }))
+                 }
+                 // alert(majorVals)
+             
+         }
+         }
+         }
+         else if(extraInfo=="sem_id"){
+             setSelectedSem(value)
+             // handleChange(value)
+             setFilter((old)=>({
+                 ...old,
+                 [extraInfo]:JSON.stringify(value)
+             }))
+         }
+       
+     }
+     }
+ 
+     const semInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           sem_id:""
+       }))
+       }else{
+     
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+     
+       let isArray = Array.isArray(eve);
+       
+       if(isArray){
+           
+           if(eve.length!=1){
+           
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+       
+     }}
+
+     const facInfoCollect=(eve)=>{
+       if(eve.length==0){
+       setFilter((old)=>({
+           ...old,
+           emp_id:""
+       }))
+       }else{
+   
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+   
+       let isArray = Array.isArray(eve);
+       // alert(JSON.stringify(eve))
+       if(eve.length==1){
+          
+           if(typeof eve[0].value === 'string'){
+               setFilter((old)=>({
+                   ...old,
+                   [eve[0].extraInfo]:eve[0].value
+               }))
+           }else{
+           setFilter((old)=>({
+               ...old,
+               [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+           }))}
+       }
+       if(isArray){
+           // if(eve.length==1){
+           //     if(eve[0].extraInfo=="major_id"){
+           //         Sub(eve[0].value)
+           //     }
+           //     setFilter((old)=>({
+           //         ...old,
+           //         [eve[0].extraInfo]:eve[0].value
+           //     }))
+           // }
+           if(eve.length!=1){
+           if(eve[0].extraInfo=="emp_id"){
+               // Sub(0)
+               for(let i=0;i<eve.length;i++){
+                   empVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       empVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:empVals,
+                       // sub_id:""
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+      
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+     
+   }}
+   
+   const deptInfoCollect=(eve)=>{
+     if(eve.length==0){
+       setFilter((old)=>({
+         ...old,
+         dept_id:""
+     }))
+     }else{
+   
+     const label = eve.label
+     const value = eve.value
+     const extraInfo = eve.extraInfo
+   
+     let isArray = Array.isArray(eve);
+     // alert(JSON.stringify(eve))
+     if(eve.length==1){
+         if(eve[0].extraInfo=="dept_id"){
+             // alert(eve[0].value)
+             fetchFac(eve[0].value)
+         }
+         if(typeof eve[0].value === 'string'){
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:eve[0].value
+             }))
+         }else{
+         setFilter((old)=>({
+             ...old,
+             [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+         }))}
+     }
+     if(isArray){
+         // if(eve.length==1){
+         //     if(eve[0].extraInfo=="major_id"){
+         //         Sub(eve[0].value)
+         //     }
+         //     setFilter((old)=>({
+         //         ...old,
+         //         [eve[0].extraInfo]:eve[0].value
+         //     }))
+         // }
+         if(eve.length!=1){
+         if(eve[0].extraInfo=="dept_id"){
+             fetchFac(0)
+             for(let i=0;i<eve.length;i++){
+                 deptVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     deptVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:deptVals,
+                     emp_id:""
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     if(eve[0].extraInfo=="acdyr_id"){
+         
+             // alert(JSON.stringify(eve))
+             for(let i=0;i<eve.length;i++){
+                 // alert(JSON.stringify(eve[i].value))
+                 AcdVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     AcdVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:AcdVals
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     }
+     }
+     else if(extraInfo=="sem_id"){
+         setSelectedSem(value)
+         // handleChange(value)
+         setFilter((old)=>({
+             ...old,
+             [extraInfo]:JSON.stringify(value)
+         }))
+     }
+     
+   }}
+    
+      const Acad=async()=>{
+        const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+       //  alert(JSON.stringify(t.data.result))
+        setYear(t.data.result)
+    }
+    const years = year.map((val) => ({
+     value: val.acd_yr_id,
+     label: val.acd_yr,
+     extraInfo: "acdyr_id"
+     }));
+    useEffect(()=>{
+      Acad()
+      fetchFac()
+      fetchDept()
+    },[])
+  
+    const semester = [
+      {sem_id:1,sem:"Odd"},
+      {sem_id:2,sem:"Even"},
+      {sem_id:3,sem:"Both"},
+    ]
+    let sems = semester.map((val)=>({
+      value: val.sem_id,
+      label: val.sem,
+      extraInfo: "sem_id"
+    }))
+
+     // const fetchFac=async(dId)=>{
+     //   await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`)
+     //           .then((response) => {
+     //           console.log(response);
+     //           setEmp(response.data.rows);
+     //           })
+     //   }
+
+     const fetchFac = async (dId) => {
+       try {
+         const response = await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`);
+         console.log(response);
+         setEmp(response.data.rows);
+       } catch (error) {
+         if (error.response) {
+           // The request was made and the server responded with a status code
+           // that falls out of the range of 2xx
+           console.error('Response error:', error.response.data);
+           console.error('Response status:', error.response.status);
+           console.error('Response headers:', error.response.headers);
+         } else if (error.request) {
+           // The request was made but no response was received
+           console.error('Request error:', error.request);
+         } else {
+           // Something happened in setting up the request that triggered an Error
+           console.error('Error', error.message);
+         }
+         console.error('Config error:', error.config);
+       }
+     };
+       const facs=emp.map((val)=>({
+         value: val.faculty_id,
+         label: val.faculty_name,
+         extraInfo: "emp_id"
+         }))
+    
+     const[dept,setDept]=useState([])
+ const fetchDept=async()=>{
+     const t = await axios.get("http://localhost:1234/ecrFilter/getDeptList")
+     // alert(JSON.stringify(t.data.result))
+     setDept(t.data.result)
+ }
+ const depts = dept.map((val) => ({
+     value: val.dept_id,
+     label: val.dept,
+     extraInfo: "dept_id"
+     }));
+
+    const onClickFilter=async()=>{
+     alert("clicked")
+     alert(JSON.stringify(filter))
+     try{
+         // alert("hi")
+         const logged=JSON.parse(sessionStorage.getItem("person"))
+         const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/principal/data_setaf_patents_filled`,filter)
+         setpatentRecs(filteredRecords.data.resultArray)
+         console.log(filteredRecords.data)
+         setCurrentRecords(filteredRecords.data.resultArray)
+     }
+     catch(err){
+         alert("No Reports in the selected filter")
+         console.log(err)
+     }
+ 
+   }
+
+//fetch
+const [patentRecs,setpatentRecs]=useState([])
+useEffect(()=>{
+    fetchpatentRecords()
+},[])
+
+const fetchpatentRecords=async()=>{
+   try{
+    const temp = await patentPrincipalView()
+    setpatentRecs(temp.data)
+   }
+   catch(e){
+      console.log(e)
+   }
+
+}
 
   return(
       <>
-       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%"}}>
+      <div> <p>&nbsp;</p>
+        <p>&nbsp;</p>
+
+        </div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',marginTop:"120px",alignItems:'center',marginLeft:'5px',justifyContent:'center'}}>
+        <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+<label for="dept_id">Department : </label>
+  <Select
+        closeMenuOnSelect={false}
+        components={{ ClearIndicator }}
+        styles={{ clearIndicator: ClearIndicatorStyles }}
+        defaultValue={[]}
+        name="emp_id"
+        onChange={deptInfoCollect}
+        isSearchable
+        isMulti
+        options={depts}
+      />
+      
+      <label for="emp_id">Faculty : </label>
+<Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="emp_id"
+      onChange={facInfoCollect}
+      isSearchable
+      isMulti
+      options={facs}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+</div>
+       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-50px"}}>
        <div class="report-header">
        <h1 class="recent-Articles">Your Reports</h1>    
        </div>
        <table className='table table-striped'>
         <thead>
         <tr className="table-active">
-                     <th>Academic Year/Semester</th>
+                     <th>Report ID</th>
                      <th>Name of the Faculty</th>
+                     <th>Academic Year</th>
+                     <th>Semester</th>
                      <th>Title of the patent</th>
                      <th>Application_No</th>
                      <th>Date of application</th>
                      <th>Date of publication</th>
-                     <th>REPORT VIEW</th>
+                     <th>Download PDF</th>
         </tr>
        {              
                       patentRecs.length>0? 
                       patentRecs.map((val)=>(
-                          <tr>
-                              <td>{val.acd_yr}/{val.semester}</td>
-                              <td>{val.name_of_the_faculty}</td>
-                              <td>{val.title_of_the_patent}</td>
-                              <td>{val.application_no }</td>
-                              <td>{dateFormat(val.date_of_application, "dd-mm-yyyy")}</td> 
-                              <td>{dateFormat(val.date_of_publication,"dd-mm-yyyy")}</td>
-                              <td><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></td>
-                          </tr>
+                      <tr>
+                        <td>{val.report_id}</td>
+                        <td>{val.name_of_the_faculty}</td>
+                        <td>{val.acd_yr}</td>
+                        <td>{val.sem}</td>
+                        <td>{val.title_of_the_patent}</td>
+                        <td>{val.application_no }</td>
+                        <td>{dateFormat(val.date_of_application, "dd-mm-yyyy")}</td> 
+                        <td>{dateFormat(val.date_of_publication,"dd-mm-yyyy")}</td>
+                        <td><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></td>
+                    </tr>
                       ))
                       :
                       <tr>No records</tr>
@@ -2381,20 +6942,6 @@ export const PatentsfilledPrincipalDashboard=()=>{
 //////////////////////////////////////e-content//////////////////////////////////////////////////////////////
 
 export const Econtent_principal=()=>{
-
-  const [EcontentRecs,setEcontentRecs]=useState([])
-  useEffect(()=>{
-     fetchecontentRecords()
-  },[])
-  const logged=JSON.parse(sessionStorage.getItem("person"))
-
-  const fetchecontentRecords=async()=>{
-      const temp = await econtentprincipalView()
-      // console.log(temp.data)
-      setEcontentRecs(temp.data)
-
-  }
-
   const generatePDF = async (report_id)=> {
       try{
           // alert(report_id)
@@ -2458,14 +7005,9 @@ export const Econtent_principal=()=>{
       doc.setFont("times", "");
       doc.rect(90, 116, 112, 12).stroke();
       doc.text(`${data.link_to_the_module_developed}`, 100, 123);
-        
-    
-      
-      // Generate a data URI for the PDF
+
       const pdfDataUri = doc.output('datauristring');
-    
-      // Open the PDF in a new tab or window
-      const newWindow = window.open();
+          const newWindow = window.open();
       newWindow.document.write(`<iframe width='100%' height='100%' src='${pdfDataUri}'></iframe>`);
     }
     catch(e)
@@ -2473,9 +7015,526 @@ export const Econtent_principal=()=>{
       console.log(e);
     }
     }
+
+      /////////////////////filter options
+      const[year,setYear]=useState([])
+      const [currentRecords, setCurrentRecords] = useState([]);
+      let [AcdVals,setAcdVals]=useState("")
+      const[selectedSem,setSelectedSem]=useState([])
+      let [empVals,setEmpVals]=useState("")
+      const [emp,setEmp]=useState([])
+      let [deptVals,setDeptVals]=useState("")
+
+      
+      const[filter,setFilter]=useState({
+       "acdyr_id":"",
+       "sem_id":"",
+       "emp_id":""
+   })
+   console.log(filter)
+      const CustomClearText = () => <>X</>;
+ 
+      const ClearIndicator =(props) =>{
+        const {
+          children = <CustomClearText />,
+          getStyles,
+          innerProps: {ref, ...restInnerProps },
+        }= props;
+        return(
+          <div
+            {...restInnerProps}
+            ref={ref}
+            style={getStyles('clearIndicator', props)}
+          >
+            <div style={{padding: '0px 5px'}}>{children}</div>
+          </div>
+        )
+      }
+    
+      const ClearIndicatorStyles = (base, state) => ({
+        ...base,
+        cursor: 'pointer',
+        color: state.isFocused ? 'blue' : 'black',
+      });
+    
+      const acdInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           acdyr_id:""
+       }))
+       }else{
+     
+         const label = eve.label
+         const value = eve.value
+         const extraInfo = eve.extraInfo
+     
+         let isArray = Array.isArray(eve);
+         // alert(JSON.stringify(eve))
+         if(eve.length==1){
+             if(typeof eve[0].value === 'string'){
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[0].extraInfo]:eve[0].value
+                 }))
+             }else{
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+             }))}
+         }
+         if(isArray){
+             // if(eve.length==1){
+             //     if(eve[0].extraInfo=="major_id"){
+             //         Sub(eve[0].value)
+             //     }
+             //     setFilter((old)=>({
+             //         ...old,
+             //         [eve[0].extraInfo]:eve[0].value
+             //     }))
+             // }
+             if(eve.length!=1){
+             
+         if(eve[0].extraInfo=="acdyr_id"){
+             
+                 // alert(JSON.stringify(eve))
+                 for(let i=0;i<eve.length;i++){
+                     // alert(JSON.stringify(eve[i].value))
+                     AcdVals+=eve[i].value
+                     if(i!=eve.length-1){
+                         AcdVals+=","
+                     }
+                     setFilter((old)=>({
+                         ...old,
+                         [eve[i].extraInfo]:AcdVals
+                     }))
+                 }
+                 // alert(majorVals)
+             
+         }
+         }
+         }
+         else if(extraInfo=="sem_id"){
+             setSelectedSem(value)
+             // handleChange(value)
+             setFilter((old)=>({
+                 ...old,
+                 [extraInfo]:JSON.stringify(value)
+             }))
+         }
+       
+     }
+     }
+ 
+     const semInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           sem_id:""
+       }))
+       }else{
+     
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+     
+       let isArray = Array.isArray(eve);
+       
+       if(isArray){
+           
+           if(eve.length!=1){
+           
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+       
+     }}
+
+     const facInfoCollect=(eve)=>{
+       if(eve.length==0){
+       setFilter((old)=>({
+           ...old,
+           emp_id:""
+       }))
+       }else{
+   
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+   
+       let isArray = Array.isArray(eve);
+       // alert(JSON.stringify(eve))
+       if(eve.length==1){
+          
+           if(typeof eve[0].value === 'string'){
+               setFilter((old)=>({
+                   ...old,
+                   [eve[0].extraInfo]:eve[0].value
+               }))
+           }else{
+           setFilter((old)=>({
+               ...old,
+               [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+           }))}
+       }
+       if(isArray){
+           // if(eve.length==1){
+           //     if(eve[0].extraInfo=="major_id"){
+           //         Sub(eve[0].value)
+           //     }
+           //     setFilter((old)=>({
+           //         ...old,
+           //         [eve[0].extraInfo]:eve[0].value
+           //     }))
+           // }
+           if(eve.length!=1){
+           if(eve[0].extraInfo=="emp_id"){
+               // Sub(0)
+               for(let i=0;i<eve.length;i++){
+                   empVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       empVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:empVals,
+                       // sub_id:""
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+      
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+     
+   }}
+   
+   const deptInfoCollect=(eve)=>{
+     if(eve.length==0){
+       setFilter((old)=>({
+         ...old,
+         dept_id:""
+     }))
+     }else{
+   
+     const label = eve.label
+     const value = eve.value
+     const extraInfo = eve.extraInfo
+   
+     let isArray = Array.isArray(eve);
+     // alert(JSON.stringify(eve))
+     if(eve.length==1){
+         if(eve[0].extraInfo=="dept_id"){
+             // alert(eve[0].value)
+             fetchFac(eve[0].value)
+         }
+         if(typeof eve[0].value === 'string'){
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:eve[0].value
+             }))
+         }else{
+         setFilter((old)=>({
+             ...old,
+             [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+         }))}
+     }
+     if(isArray){
+         // if(eve.length==1){
+         //     if(eve[0].extraInfo=="major_id"){
+         //         Sub(eve[0].value)
+         //     }
+         //     setFilter((old)=>({
+         //         ...old,
+         //         [eve[0].extraInfo]:eve[0].value
+         //     }))
+         // }
+         if(eve.length!=1){
+         if(eve[0].extraInfo=="dept_id"){
+             fetchFac(0)
+             for(let i=0;i<eve.length;i++){
+                 deptVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     deptVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:deptVals,
+                     emp_id:""
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     if(eve[0].extraInfo=="acdyr_id"){
+         
+             // alert(JSON.stringify(eve))
+             for(let i=0;i<eve.length;i++){
+                 // alert(JSON.stringify(eve[i].value))
+                 AcdVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     AcdVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:AcdVals
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     }
+     }
+     else if(extraInfo=="sem_id"){
+         setSelectedSem(value)
+         // handleChange(value)
+         setFilter((old)=>({
+             ...old,
+             [extraInfo]:JSON.stringify(value)
+         }))
+     }
+     
+   }}
+    
+      const Acad=async()=>{
+        const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+       //  alert(JSON.stringify(t.data.result))
+        setYear(t.data.result)
+    }
+    const years = year.map((val) => ({
+     value: val.acd_yr_id,
+     label: val.acd_yr,
+     extraInfo: "acdyr_id"
+     }));
+    useEffect(()=>{
+      Acad()
+      fetchFac()
+      fetchDept()
+    },[])
+  
+    const semester = [
+      {sem_id:1,sem:"Odd"},
+      {sem_id:2,sem:"Even"},
+      {sem_id:3,sem:"Both"},
+    ]
+    let sems = semester.map((val)=>({
+      value: val.sem_id,
+      label: val.sem,
+      extraInfo: "sem_id"
+    }))
+
+     // const fetchFac=async(dId)=>{
+     //   await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`)
+     //           .then((response) => {
+     //           console.log(response);
+     //           setEmp(response.data.rows);
+     //           })
+     //   }
+
+     const fetchFac = async (dId) => {
+       try {
+         const response = await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`);
+         console.log(response);
+         setEmp(response.data.rows);
+       } catch (error) {
+         if (error.response) {
+           // The request was made and the server responded with a status code
+           // that falls out of the range of 2xx
+           console.error('Response error:', error.response.data);
+           console.error('Response status:', error.response.status);
+           console.error('Response headers:', error.response.headers);
+         } else if (error.request) {
+           // The request was made but no response was received
+           console.error('Request error:', error.request);
+         } else {
+           // Something happened in setting up the request that triggered an Error
+           console.error('Error', error.message);
+         }
+         console.error('Config error:', error.config);
+       }
+     };
+       const facs=emp.map((val)=>({
+         value: val.faculty_id,
+         label: val.faculty_name,
+         extraInfo: "emp_id"
+         }))
+    
+     const[dept,setDept]=useState([])
+ const fetchDept=async()=>{
+     const t = await axios.get("http://localhost:1234/ecrFilter/getDeptList")
+     // alert(JSON.stringify(t.data.result))
+     setDept(t.data.result)
+ }
+ const depts = dept.map((val) => ({
+     value: val.dept_id,
+     label: val.dept,
+     extraInfo: "dept_id"
+     }));
+
+    const onClickFilter=async()=>{
+     alert("clicked")
+     alert(JSON.stringify(filter))
+     try{
+         // alert("hi")
+         const logged=JSON.parse(sessionStorage.getItem("person"))
+         const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/principal/data_setaf_e_content`,filter)
+         setEcontentRecs(filteredRecords.data.resultArray)
+         console.log(filteredRecords.data)
+         setCurrentRecords(filteredRecords.data.resultArray)
+     }
+     catch(err){
+         alert("No Reports in the selected filter")
+         console.log(err)
+     }
+ 
+   }
+
+    //fetch
+    const [EcontentRecs,setEcontentRecs]=useState([])
+    useEffect(()=>{
+       fetchecontentRecords()
+    },[])
+    const logged=JSON.parse(sessionStorage.getItem("person"))
+  
+    const fetchecontentRecords=async()=>{
+        const temp = await econtentprincipalView()
+        // console.log(temp.data)
+        setEcontentRecs(temp.data)
+  
+    }
   return(
       <>
-       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%"}}>
+      <div> <p>&nbsp;</p>
+        <p>&nbsp;</p>
+
+        </div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',marginTop:"120px",alignItems:'center',marginLeft:'8px',justifyContent:'center'}}>
+        <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+<label for="dept_id">Department : </label>
+  <Select
+        closeMenuOnSelect={false}
+        components={{ ClearIndicator }}
+        styles={{ clearIndicator: ClearIndicatorStyles }}
+        defaultValue={[]}
+        name="emp_id"
+        onChange={deptInfoCollect}
+        isSearchable
+        isMulti
+        options={depts}
+      />
+      
+      <label for="emp_id">Faculty : </label>
+<Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="emp_id"
+      onChange={facInfoCollect}
+      isSearchable
+      isMulti
+      options={facs}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+</div>
+       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-50px"}}>
        <div class="report-header">
        <h1 class="recent-Articles">Your Reports</h1>
        {/* <a className="topic-headings" href="Setaf/SetafForms/Econtentfront"><button style={{top:"27.5px",right:"50px"}} class="views" id="addButton">+ Add</button></a> */}
@@ -2483,26 +7542,30 @@ export const Econtent_principal=()=>{
        <table className='table table-striped'>
         <thead>
         <tr>
+                          <th>Report ID</th>
+                          <th>Name of the Facylty</th>
                           <th>Academic Year</th>
-                          <th>Name of the Faculty</th>
+                          <th>Semester</th>
                           <th>Name of the Module Developed</th>
                           <th>Module of Platform</th>
                           <th>Date of launching e-Content</th>
                           <th>Link to the Module Developed</th>
-                          <th>Download PDF</th>        
+                          <th>Action</th>      
                           
         </tr>
         {              EcontentRecs.length>0?
                       EcontentRecs.map((val)=>(
-                          <tr>
-                              <td>{val.acd_yr}</td>
-                              <td>{val.name_of_the_faculty}</td>
-                              <td>{val.name_of_the_module_developed}</td>
-                              <td>{val.module_of_platform}</td>
-                              <td>{val.date_of_launching_e_content}</td>
-                              <td>{val.link_to_the_module_developed}</td> 
-                              <td><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></td> 
-                          </tr>
+                        <tr>
+                        <td>{val.report_id}</td>
+                        <td>{val.name_of_the_faculty}</td>
+                        <td>{val.acd_yr}</td>
+                        <td>{val.sem}</td>
+                        <td>{val.name_of_the_module_developed}</td>
+                        <td>{val.module_of_platform}</td>
+                        <td>{val.date_of_launching_e_content}</td>
+                        <td>{val.link_to_the_module_developed}</td> 
+                        <td><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></td> 
+                        </tr>
                       ))
                       :
                       <tr>No records</tr>
@@ -2521,23 +7584,6 @@ export const Econtent_principal=()=>{
 ///////////////////////proposal//////////////////////////////////////////////////////////////////
 export const ProposalPrincipaldashboard=()=>{
 
-  const [proposalRecs,setProposalRecs]=useState([])
-  useEffect(()=>{
-     fetchProposalRecords()
-  },[])
-  // const logged=JSON.parse(sessionStorage.getItem("person"))
-
-  const fetchProposalRecords=async()=>{
-    try{
-      const temp = await proposalPrincipalView()
-      // console.log(temp.data)
-      setProposalRecs(temp.data)
-    }
-  catch(e){
-    console.log(e)
-  }
-
-  }
 
   const generatePDF = async (report_id)=> {
     try{
@@ -2651,9 +7697,527 @@ export const ProposalPrincipaldashboard=()=>{
     console.log(e);
   }
 }
+
+      /////////////////////filter options
+      const[year,setYear]=useState([])
+      const [currentRecords, setCurrentRecords] = useState([]);
+      let [AcdVals,setAcdVals]=useState("")
+      const[selectedSem,setSelectedSem]=useState([])
+      let [empVals,setEmpVals]=useState("")
+      const [emp,setEmp]=useState([])
+      let [deptVals,setDeptVals]=useState("")
+
+      
+      const[filter,setFilter]=useState({
+       "acdyr_id":"",
+       "sem_id":"",
+       "emp_id":""
+   })
+   console.log(filter)
+      const CustomClearText = () => <>X</>;
+ 
+      const ClearIndicator =(props) =>{
+        const {
+          children = <CustomClearText />,
+          getStyles,
+          innerProps: {ref, ...restInnerProps },
+        }= props;
+        return(
+          <div
+            {...restInnerProps}
+            ref={ref}
+            style={getStyles('clearIndicator', props)}
+          >
+            <div style={{padding: '0px 5px'}}>{children}</div>
+          </div>
+        )
+      }
+    
+      const ClearIndicatorStyles = (base, state) => ({
+        ...base,
+        cursor: 'pointer',
+        color: state.isFocused ? 'blue' : 'black',
+      });
+    
+      const acdInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           acdyr_id:""
+       }))
+       }else{
+     
+         const label = eve.label
+         const value = eve.value
+         const extraInfo = eve.extraInfo
+     
+         let isArray = Array.isArray(eve);
+         // alert(JSON.stringify(eve))
+         if(eve.length==1){
+             if(typeof eve[0].value === 'string'){
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[0].extraInfo]:eve[0].value
+                 }))
+             }else{
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+             }))}
+         }
+         if(isArray){
+             // if(eve.length==1){
+             //     if(eve[0].extraInfo=="major_id"){
+             //         Sub(eve[0].value)
+             //     }
+             //     setFilter((old)=>({
+             //         ...old,
+             //         [eve[0].extraInfo]:eve[0].value
+             //     }))
+             // }
+             if(eve.length!=1){
+             
+         if(eve[0].extraInfo=="acdyr_id"){
+             
+                 // alert(JSON.stringify(eve))
+                 for(let i=0;i<eve.length;i++){
+                     // alert(JSON.stringify(eve[i].value))
+                     AcdVals+=eve[i].value
+                     if(i!=eve.length-1){
+                         AcdVals+=","
+                     }
+                     setFilter((old)=>({
+                         ...old,
+                         [eve[i].extraInfo]:AcdVals
+                     }))
+                 }
+                 // alert(majorVals)
+             
+         }
+         }
+         }
+         else if(extraInfo=="sem_id"){
+             setSelectedSem(value)
+             // handleChange(value)
+             setFilter((old)=>({
+                 ...old,
+                 [extraInfo]:JSON.stringify(value)
+             }))
+         }
+       
+     }
+     }
+ 
+     const semInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           sem_id:""
+       }))
+       }else{
+     
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+     
+       let isArray = Array.isArray(eve);
+       
+       if(isArray){
+           
+           if(eve.length!=1){
+           
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+       
+     }}
+
+     const facInfoCollect=(eve)=>{
+       if(eve.length==0){
+       setFilter((old)=>({
+           ...old,
+           emp_id:""
+       }))
+       }else{
+   
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+   
+       let isArray = Array.isArray(eve);
+       // alert(JSON.stringify(eve))
+       if(eve.length==1){
+          
+           if(typeof eve[0].value === 'string'){
+               setFilter((old)=>({
+                   ...old,
+                   [eve[0].extraInfo]:eve[0].value
+               }))
+           }else{
+           setFilter((old)=>({
+               ...old,
+               [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+           }))}
+       }
+       if(isArray){
+           // if(eve.length==1){
+           //     if(eve[0].extraInfo=="major_id"){
+           //         Sub(eve[0].value)
+           //     }
+           //     setFilter((old)=>({
+           //         ...old,
+           //         [eve[0].extraInfo]:eve[0].value
+           //     }))
+           // }
+           if(eve.length!=1){
+           if(eve[0].extraInfo=="emp_id"){
+               // Sub(0)
+               for(let i=0;i<eve.length;i++){
+                   empVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       empVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:empVals,
+                       // sub_id:""
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+      
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+     
+   }}
+   
+   const deptInfoCollect=(eve)=>{
+     if(eve.length==0){
+       setFilter((old)=>({
+         ...old,
+         dept_id:""
+     }))
+     }else{
+   
+     const label = eve.label
+     const value = eve.value
+     const extraInfo = eve.extraInfo
+   
+     let isArray = Array.isArray(eve);
+     // alert(JSON.stringify(eve))
+     if(eve.length==1){
+         if(eve[0].extraInfo=="dept_id"){
+             // alert(eve[0].value)
+             fetchFac(eve[0].value)
+         }
+         if(typeof eve[0].value === 'string'){
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:eve[0].value
+             }))
+         }else{
+         setFilter((old)=>({
+             ...old,
+             [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+         }))}
+     }
+     if(isArray){
+         // if(eve.length==1){
+         //     if(eve[0].extraInfo=="major_id"){
+         //         Sub(eve[0].value)
+         //     }
+         //     setFilter((old)=>({
+         //         ...old,
+         //         [eve[0].extraInfo]:eve[0].value
+         //     }))
+         // }
+         if(eve.length!=1){
+         if(eve[0].extraInfo=="dept_id"){
+             fetchFac(0)
+             for(let i=0;i<eve.length;i++){
+                 deptVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     deptVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:deptVals,
+                     emp_id:""
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     if(eve[0].extraInfo=="acdyr_id"){
+         
+             // alert(JSON.stringify(eve))
+             for(let i=0;i<eve.length;i++){
+                 // alert(JSON.stringify(eve[i].value))
+                 AcdVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     AcdVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:AcdVals
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     }
+     }
+     else if(extraInfo=="sem_id"){
+         setSelectedSem(value)
+         // handleChange(value)
+         setFilter((old)=>({
+             ...old,
+             [extraInfo]:JSON.stringify(value)
+         }))
+     }
+     
+   }}
+    
+      const Acad=async()=>{
+        const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+       //  alert(JSON.stringify(t.data.result))
+        setYear(t.data.result)
+    }
+    const years = year.map((val) => ({
+     value: val.acd_yr_id,
+     label: val.acd_yr,
+     extraInfo: "acdyr_id"
+     }));
+    useEffect(()=>{
+      Acad()
+      fetchFac()
+      fetchDept()
+    },[])
+  
+    const semester = [
+      {sem_id:1,sem:"Odd"},
+      {sem_id:2,sem:"Even"},
+      {sem_id:3,sem:"Both"},
+    ]
+    let sems = semester.map((val)=>({
+      value: val.sem_id,
+      label: val.sem,
+      extraInfo: "sem_id"
+    }))
+
+     // const fetchFac=async(dId)=>{
+     //   await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`)
+     //           .then((response) => {
+     //           console.log(response);
+     //           setEmp(response.data.rows);
+     //           })
+     //   }
+
+     const fetchFac = async (dId) => {
+       try {
+         const response = await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`);
+         console.log(response);
+         setEmp(response.data.rows);
+       } catch (error) {
+         if (error.response) {
+           // The request was made and the server responded with a status code
+           // that falls out of the range of 2xx
+           console.error('Response error:', error.response.data);
+           console.error('Response status:', error.response.status);
+           console.error('Response headers:', error.response.headers);
+         } else if (error.request) {
+           // The request was made but no response was received
+           console.error('Request error:', error.request);
+         } else {
+           // Something happened in setting up the request that triggered an Error
+           console.error('Error', error.message);
+         }
+         console.error('Config error:', error.config);
+       }
+     };
+       const facs=emp.map((val)=>({
+         value: val.faculty_id,
+         label: val.faculty_name,
+         extraInfo: "emp_id"
+         }))
+    
+     const[dept,setDept]=useState([])
+ const fetchDept=async()=>{
+     const t = await axios.get("http://localhost:1234/ecrFilter/getDeptList")
+     // alert(JSON.stringify(t.data.result))
+     setDept(t.data.result)
+ }
+ const depts = dept.map((val) => ({
+     value: val.dept_id,
+     label: val.dept,
+     extraInfo: "dept_id"
+     }));
+
+    const onClickFilter=async()=>{
+     alert("clicked")
+     alert(JSON.stringify(filter))
+     try{
+         // alert("hi")
+         const logged=JSON.parse(sessionStorage.getItem("person"))
+         const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/principal/data_setaf_proposal_submission_for_grants`,filter)
+         setProposalRecs(filteredRecords.data.resultArray)
+         console.log(filteredRecords.data)
+         setCurrentRecords(filteredRecords.data.resultArray)
+     }
+     catch(err){
+         alert("No Reports in the selected filter")
+         console.log(err)
+     }
+ 
+   }
+
+///fetch
+const [proposalRecs,setProposalRecs]=useState([])
+useEffect(()=>{
+   fetchProposalRecords()
+},[])
+const fetchProposalRecords=async()=>{
+  try{
+    const temp = await proposalPrincipalView()
+    setProposalRecs(temp.data)
+  }
+catch(e){
+  console.log(e)
+}
+}
+
   return(
       <>
-       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%"}}>
+      <div> <p>&nbsp;</p>
+        <p>&nbsp;</p>
+
+        </div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',marginTop:"120px",alignItems:'center',marginLeft:'5px',justifyContent:'center'}}>
+        <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+<label for="dept_id">Department : </label>
+  <Select
+        closeMenuOnSelect={false}
+        components={{ ClearIndicator }}
+        styles={{ clearIndicator: ClearIndicatorStyles }}
+        defaultValue={[]}
+        name="emp_id"
+        onChange={deptInfoCollect}
+        isSearchable
+        isMulti
+        options={depts}
+      />
+      
+      <label for="emp_id">Faculty : </label>
+<Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="emp_id"
+      onChange={facInfoCollect}
+      isSearchable
+      isMulti
+      options={facs}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+</div>
+       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-50px"}}>
        <div class="report-header">
        <h1 class="recent-Articles">Your Reports</h1>
        <a className="topic-headings" href="Setaf/SetafForms/proposalfront"><button style={{top:"27.5px",right:"50px"}} class="views" id="addButton">+ Add</button></a>
@@ -2661,9 +8225,10 @@ export const ProposalPrincipaldashboard=()=>{
        <table className='table table-striped'>
         <thead>
         <tr>
+        <th>Report ID</th>
+                          <th>Name of the Faculty</th>
                           <th>Academic Year</th>
                           <th>Semester</th>
-                          <th>Name of the Faculty</th>
                           <th>Name of the Funding Agency</th>
                           <th>Date of Submission</th>
                           <th>Type</th>
@@ -2671,23 +8236,24 @@ export const ProposalPrincipaldashboard=()=>{
                           <th>Duration</th>
                           <th>Amount Quoted(in lakhs)</th>
                           <th>Grant Sanctioned</th>
-                          <th>Viwe</th>    
+                          <th>Download PDF</th> 
         </tr>
         {               
                       proposalRecs.map((val)=>(
-                          <tr>
-                              <td>{val.academic_year}</td>
-                              <td>{val.semester}</td>
-                              <td>{val.name_of_the_faculty}</td>
-                              <td>{val.name_of_the_funding_agency}</td>
-                              <td>{dateFormat(val.date_of_submission,"dd-mm-yyyy")}</td>
-                              <td>{val.type}</td>
-                              <td>{val.title_of_the_proposal_submitted}</td>
-                              <td>{dateFormat(val.duration,"dd-mm-yyyy")}</td>
-                              <td>{val.amount_quoted_in_lakhs}</td>
-                              <td>{val.grant_sanctioned}</td>
-                              <td><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></td>
-                          </tr>
+                      <tr>
+                        <td>{val.report_id}</td>
+                        <td>{val.name_of_the_faculty}</td>
+                        <td>{val.acd_yr}</td>
+                        <td>{val.sem}</td>
+                        <td>{val.name_of_the_funding_agency}</td>
+                        <td>{dateFormat(val.date_of_submission,"dd-mm-yyyy")}</td>
+                        <td>{val.type}</td>
+                        <td>{val.title_of_the_proposal_submitted}</td>
+                        <td>{dateFormat(val.duration,"dd-mm-yyyy")}</td>
+                        <td>{val.amount_quoted_in_lakhs}</td>
+                        <td>{val.grant_sanctioned}</td>
+                        <td><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></td>
+                    </tr>
                       ))
                   }
         </thead>
@@ -2699,7 +8265,7 @@ export const ProposalPrincipaldashboard=()=>{
   )
 }
 
-
+//visit to industry
 
 export const IndustryPrincipalDashboard=()=>{
 
@@ -2879,7 +8445,430 @@ export const IndustryPrincipalDashboard=()=>{
   }
 }
 
+      /////////////////////filter options
+      const[year,setYear]=useState([])
+      const [currentRecords, setCurrentRecords] = useState([]);
+      let [AcdVals,setAcdVals]=useState("")
+      const[selectedSem,setSelectedSem]=useState([])
+      let [empVals,setEmpVals]=useState("")
+      const [emp,setEmp]=useState([])
+      let [deptVals,setDeptVals]=useState("")
 
+      
+      const[filter,setFilter]=useState({
+       "acdyr_id":"",
+       "sem_id":"",
+       "emp_id":""
+   })
+   console.log(filter)
+      const CustomClearText = () => <>X</>;
+ 
+      const ClearIndicator =(props) =>{
+        const {
+          children = <CustomClearText />,
+          getStyles,
+          innerProps: {ref, ...restInnerProps },
+        }= props;
+        return(
+          <div
+            {...restInnerProps}
+            ref={ref}
+            style={getStyles('clearIndicator', props)}
+          >
+            <div style={{padding: '0px 5px'}}>{children}</div>
+          </div>
+        )
+      }
+    
+      const ClearIndicatorStyles = (base, state) => ({
+        ...base,
+        cursor: 'pointer',
+        color: state.isFocused ? 'blue' : 'black',
+      });
+    
+      const acdInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           acdyr_id:""
+       }))
+       }else{
+     
+         const label = eve.label
+         const value = eve.value
+         const extraInfo = eve.extraInfo
+     
+         let isArray = Array.isArray(eve);
+         // alert(JSON.stringify(eve))
+         if(eve.length==1){
+             if(typeof eve[0].value === 'string'){
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[0].extraInfo]:eve[0].value
+                 }))
+             }else{
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+             }))}
+         }
+         if(isArray){
+             // if(eve.length==1){
+             //     if(eve[0].extraInfo=="major_id"){
+             //         Sub(eve[0].value)
+             //     }
+             //     setFilter((old)=>({
+             //         ...old,
+             //         [eve[0].extraInfo]:eve[0].value
+             //     }))
+             // }
+             if(eve.length!=1){
+             
+         if(eve[0].extraInfo=="acdyr_id"){
+             
+                 // alert(JSON.stringify(eve))
+                 for(let i=0;i<eve.length;i++){
+                     // alert(JSON.stringify(eve[i].value))
+                     AcdVals+=eve[i].value
+                     if(i!=eve.length-1){
+                         AcdVals+=","
+                     }
+                     setFilter((old)=>({
+                         ...old,
+                         [eve[i].extraInfo]:AcdVals
+                     }))
+                 }
+                 // alert(majorVals)
+             
+         }
+         }
+         }
+         else if(extraInfo=="sem_id"){
+             setSelectedSem(value)
+             // handleChange(value)
+             setFilter((old)=>({
+                 ...old,
+                 [extraInfo]:JSON.stringify(value)
+             }))
+         }
+       
+     }
+     }
+ 
+     const semInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           sem_id:""
+       }))
+       }else{
+     
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+     
+       let isArray = Array.isArray(eve);
+       
+       if(isArray){
+           
+           if(eve.length!=1){
+           
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+       
+     }}
+
+     const facInfoCollect=(eve)=>{
+       if(eve.length==0){
+       setFilter((old)=>({
+           ...old,
+           emp_id:""
+       }))
+       }else{
+   
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+   
+       let isArray = Array.isArray(eve);
+       // alert(JSON.stringify(eve))
+       if(eve.length==1){
+          
+           if(typeof eve[0].value === 'string'){
+               setFilter((old)=>({
+                   ...old,
+                   [eve[0].extraInfo]:eve[0].value
+               }))
+           }else{
+           setFilter((old)=>({
+               ...old,
+               [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+           }))}
+       }
+       if(isArray){
+           // if(eve.length==1){
+           //     if(eve[0].extraInfo=="major_id"){
+           //         Sub(eve[0].value)
+           //     }
+           //     setFilter((old)=>({
+           //         ...old,
+           //         [eve[0].extraInfo]:eve[0].value
+           //     }))
+           // }
+           if(eve.length!=1){
+           if(eve[0].extraInfo=="emp_id"){
+               // Sub(0)
+               for(let i=0;i<eve.length;i++){
+                   empVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       empVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:empVals,
+                       // sub_id:""
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+      
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+     
+   }}
+   
+   const deptInfoCollect=(eve)=>{
+     if(eve.length==0){
+       setFilter((old)=>({
+         ...old,
+         dept_id:""
+     }))
+     }else{
+   
+     const label = eve.label
+     const value = eve.value
+     const extraInfo = eve.extraInfo
+   
+     let isArray = Array.isArray(eve);
+     // alert(JSON.stringify(eve))
+     if(eve.length==1){
+         if(eve[0].extraInfo=="dept_id"){
+             // alert(eve[0].value)
+             fetchFac(eve[0].value)
+         }
+         if(typeof eve[0].value === 'string'){
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:eve[0].value
+             }))
+         }else{
+         setFilter((old)=>({
+             ...old,
+             [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+         }))}
+     }
+     if(isArray){
+         // if(eve.length==1){
+         //     if(eve[0].extraInfo=="major_id"){
+         //         Sub(eve[0].value)
+         //     }
+         //     setFilter((old)=>({
+         //         ...old,
+         //         [eve[0].extraInfo]:eve[0].value
+         //     }))
+         // }
+         if(eve.length!=1){
+         if(eve[0].extraInfo=="dept_id"){
+             fetchFac(0)
+             for(let i=0;i<eve.length;i++){
+                 deptVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     deptVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:deptVals,
+                     emp_id:""
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     if(eve[0].extraInfo=="acdyr_id"){
+         
+             // alert(JSON.stringify(eve))
+             for(let i=0;i<eve.length;i++){
+                 // alert(JSON.stringify(eve[i].value))
+                 AcdVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     AcdVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:AcdVals
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     }
+     }
+     else if(extraInfo=="sem_id"){
+         setSelectedSem(value)
+         // handleChange(value)
+         setFilter((old)=>({
+             ...old,
+             [extraInfo]:JSON.stringify(value)
+         }))
+     }
+     
+   }}
+    
+      const Acad=async()=>{
+        const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+       //  alert(JSON.stringify(t.data.result))
+        setYear(t.data.result)
+    }
+    const years = year.map((val) => ({
+     value: val.acd_yr_id,
+     label: val.acd_yr,
+     extraInfo: "acdyr_id"
+     }));
+    useEffect(()=>{
+      Acad()
+      fetchFac()
+      fetchDept()
+    },[])
+  
+    const semester = [
+      {sem_id:1,sem:"Odd"},
+      {sem_id:2,sem:"Even"},
+      {sem_id:3,sem:"Both"},
+    ]
+    let sems = semester.map((val)=>({
+      value: val.sem_id,
+      label: val.sem,
+      extraInfo: "sem_id"
+    }))
+
+     // const fetchFac=async(dId)=>{
+     //   await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`)
+     //           .then((response) => {
+     //           console.log(response);
+     //           setEmp(response.data.rows);
+     //           })
+     //   }
+
+     const fetchFac = async (dId) => {
+       try {
+         const response = await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`);
+         console.log(response);
+         setEmp(response.data.rows);
+       } catch (error) {
+         if (error.response) {
+           // The request was made and the server responded with a status code
+           // that falls out of the range of 2xx
+           console.error('Response error:', error.response.data);
+           console.error('Response status:', error.response.status);
+           console.error('Response headers:', error.response.headers);
+         } else if (error.request) {
+           // The request was made but no response was received
+           console.error('Request error:', error.request);
+         } else {
+           // Something happened in setting up the request that triggered an Error
+           console.error('Error', error.message);
+         }
+         console.error('Config error:', error.config);
+       }
+     };
+       const facs=emp.map((val)=>({
+         value: val.faculty_id,
+         label: val.faculty_name,
+         extraInfo: "emp_id"
+         }))
+    
+     const[dept,setDept]=useState([])
+ const fetchDept=async()=>{
+     const t = await axios.get("http://localhost:1234/ecrFilter/getDeptList")
+     // alert(JSON.stringify(t.data.result))
+     setDept(t.data.result)
+ }
+ const depts = dept.map((val) => ({
+     value: val.dept_id,
+     label: val.dept,
+     extraInfo: "dept_id"
+     }));
+
+    const onClickFilter=async()=>{
+     alert("clicked")
+     alert(JSON.stringify(filter))
+     try{
+         // alert("hi")
+         const logged=JSON.parse(sessionStorage.getItem("person"))
+         const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/principal/data_setaf_visit_to_industries_institution`,filter)
+         setIndustryRecs(filteredRecords.data.resultArray)
+         console.log(filteredRecords.data)
+         setCurrentRecords(filteredRecords.data.resultArray)
+     }
+     catch(err){
+         alert("No Reports in the selected filter")
+         console.log(err)
+     }
+ 
+   }
+
+//fetch
   const [industryRecs,setIndustryRecs]=useState([])
   useEffect(()=>{
      fetchIndustryRecords()
@@ -2899,7 +8888,88 @@ export const IndustryPrincipalDashboard=()=>{
   }
   return(
       <>
-       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%"}}>
+
+<div> <p>&nbsp;</p>
+        <p>&nbsp;</p>
+
+        </div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',marginTop:"120px",alignItems:'center',marginLeft:'8px',justifyContent:'center'}}>
+        <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+<label for="dept_id">Department : </label>
+  <Select
+        closeMenuOnSelect={false}
+        components={{ ClearIndicator }}
+        styles={{ clearIndicator: ClearIndicatorStyles }}
+        defaultValue={[]}
+        name="emp_id"
+        onChange={deptInfoCollect}
+        isSearchable
+        isMulti
+        options={depts}
+      />
+      
+      <label for="emp_id">Faculty : </label>
+<Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="emp_id"
+      onChange={facInfoCollect}
+      isSearchable
+      isMulti
+      options={facs}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+</div>
+       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-50px"}}>
        <div class="report-header">
        <h1 class="recent-Articles">Your Reports</h1>
        {/* <a className="topic-headings" href="/Setaf/visittoindustry"><button style={{top:"27.5px",right:"50px"}} class="views" >+ Add</button></a> */}
@@ -2907,34 +8977,31 @@ export const IndustryPrincipalDashboard=()=>{
        <table className='table table-striped'>
         <thead>
         <tr>
+                          <th>Report ID</th>
                           <th>Name of the faculty</th>
+                          <th>Academic Year</th>
+                          <th>Semester</th>
                           <th>Date of Visit</th>
-                          <th>Name of Industry/Institution Visited</th>
-                          <th>Location of Industry/Institution Visited</th>
-                          <th>Website Link of Industry Visited</th>
-                          <th>Name ofn Industry/Institution person Interacted</th>
+                          <th>Name of Industry</th>
+                          <th>Location of Industry</th>
+                          <th>Name of Institution person Interacted</th>
                           <th>Designation of Industry Person Interacted</th>
                           <th>Purpose of thee Visit</th>
-                          <th>Outcome of the Activity</th>
-                          {/* <th>Reports of Visit PDF</th>
-                          <th>Photo JPG</th>
-                          <th>Geotagged Photos JPG</th> */}                            
+                          <th>Download PDF</th>                              
         </tr>
         {               industryRecs.length>0?
                       industryRecs.map((val)=>(
                           <tr>
+                              <td>{val.report_id}</td>
                               <td>{val.faculty_name}</td>
+                              <td>{val.acd_yr}</td>
+                              <td>{val.sem}</td>
                               <td>{dateFormat(val.date_of_visit,'dd-mm-yyyy')}</td>
                               <td>{val.name_of_industry}</td>
                               <td>{val.location_of_industry}</td>
-                              <td>{val.website_link_of_industry}</td>
                               <td>{val.name_of_insdustry_instution_person_interacted}</td>
                               <td>{val.designation_of_industry_instution_person_interacted}</td>
                               <td>{val.purpose_of_the_visite}</td>
-                              <td>{val.outcome_of_the_activity}</td>
-                              {/* <th>{val.report_of_visite_pdf}</th>
-                              <th>{val.photo_jpg}</th>
-                              <th>{val.geotagged_photos_jpg}</th> */}
                               <th><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></th>
           
                           </tr>
@@ -2958,19 +9025,6 @@ export const IndustryPrincipalDashboard=()=>{
 //////////////////////////////////Visit to library////////////
 
 export const VisitToLibraryPrincipal=()=>{
-
-  const [VisittoLibrary,setVisitToLibrary]=useState([])
-  useEffect(()=>{
-     fetchvisittolibrary()
-  },[])
-  const logged=JSON.parse(sessionStorage.getItem("person"))
-
-  const fetchvisittolibrary=async()=>{
-      const temp = await visitToLibraryPrincipalView()
-      // console.log(temp.data)
-      setVisitToLibrary(temp.data)
-
-  }
 
   const generatePDF = async (report_id)=> {
       try{
@@ -3041,19 +9095,536 @@ export const VisitToLibraryPrincipal=()=>{
       console.log(e);
     }
     }
+   
+      /////////////////////filter options
+      const[year,setYear]=useState([])
+      const [currentRecords, setCurrentRecords] = useState([]);
+      let [AcdVals,setAcdVals]=useState("")
+      const[selectedSem,setSelectedSem]=useState([])
+      let [empVals,setEmpVals]=useState("")
+      const [emp,setEmp]=useState([])
+      let [deptVals,setDeptVals]=useState("")
+
+      
+      const[filter,setFilter]=useState({
+       "acdyr_id":"",
+       "sem_id":"",
+       "emp_id":""
+   })
+   console.log(filter)
+      const CustomClearText = () => <>X</>;
+ 
+      const ClearIndicator =(props) =>{
+        const {
+          children = <CustomClearText />,
+          getStyles,
+          innerProps: {ref, ...restInnerProps },
+        }= props;
+        return(
+          <div
+            {...restInnerProps}
+            ref={ref}
+            style={getStyles('clearIndicator', props)}
+          >
+            <div style={{padding: '0px 5px'}}>{children}</div>
+          </div>
+        )
+      }
+    
+      const ClearIndicatorStyles = (base, state) => ({
+        ...base,
+        cursor: 'pointer',
+        color: state.isFocused ? 'blue' : 'black',
+      });
+    
+      const acdInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           acdyr_id:""
+       }))
+       }else{
+     
+         const label = eve.label
+         const value = eve.value
+         const extraInfo = eve.extraInfo
+     
+         let isArray = Array.isArray(eve);
+         // alert(JSON.stringify(eve))
+         if(eve.length==1){
+             if(typeof eve[0].value === 'string'){
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[0].extraInfo]:eve[0].value
+                 }))
+             }else{
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+             }))}
+         }
+         if(isArray){
+             // if(eve.length==1){
+             //     if(eve[0].extraInfo=="major_id"){
+             //         Sub(eve[0].value)
+             //     }
+             //     setFilter((old)=>({
+             //         ...old,
+             //         [eve[0].extraInfo]:eve[0].value
+             //     }))
+             // }
+             if(eve.length!=1){
+             
+         if(eve[0].extraInfo=="acdyr_id"){
+             
+                 // alert(JSON.stringify(eve))
+                 for(let i=0;i<eve.length;i++){
+                     // alert(JSON.stringify(eve[i].value))
+                     AcdVals+=eve[i].value
+                     if(i!=eve.length-1){
+                         AcdVals+=","
+                     }
+                     setFilter((old)=>({
+                         ...old,
+                         [eve[i].extraInfo]:AcdVals
+                     }))
+                 }
+                 // alert(majorVals)
+             
+         }
+         }
+         }
+         else if(extraInfo=="sem_id"){
+             setSelectedSem(value)
+             // handleChange(value)
+             setFilter((old)=>({
+                 ...old,
+                 [extraInfo]:JSON.stringify(value)
+             }))
+         }
+       
+     }
+     }
+ 
+     const semInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           sem_id:""
+       }))
+       }else{
+     
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+     
+       let isArray = Array.isArray(eve);
+       
+       if(isArray){
+           
+           if(eve.length!=1){
+           
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+       
+     }}
+
+     const facInfoCollect=(eve)=>{
+       if(eve.length==0){
+       setFilter((old)=>({
+           ...old,
+           emp_id:""
+       }))
+       }else{
+   
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+   
+       let isArray = Array.isArray(eve);
+       // alert(JSON.stringify(eve))
+       if(eve.length==1){
+          
+           if(typeof eve[0].value === 'string'){
+               setFilter((old)=>({
+                   ...old,
+                   [eve[0].extraInfo]:eve[0].value
+               }))
+           }else{
+           setFilter((old)=>({
+               ...old,
+               [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+           }))}
+       }
+       if(isArray){
+           // if(eve.length==1){
+           //     if(eve[0].extraInfo=="major_id"){
+           //         Sub(eve[0].value)
+           //     }
+           //     setFilter((old)=>({
+           //         ...old,
+           //         [eve[0].extraInfo]:eve[0].value
+           //     }))
+           // }
+           if(eve.length!=1){
+           if(eve[0].extraInfo=="emp_id"){
+               // Sub(0)
+               for(let i=0;i<eve.length;i++){
+                   empVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       empVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:empVals,
+                       // sub_id:""
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+      
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+     
+   }}
+   
+   const deptInfoCollect=(eve)=>{
+     if(eve.length==0){
+       setFilter((old)=>({
+         ...old,
+         dept_id:""
+     }))
+     }else{
+   
+     const label = eve.label
+     const value = eve.value
+     const extraInfo = eve.extraInfo
+   
+     let isArray = Array.isArray(eve);
+     // alert(JSON.stringify(eve))
+     if(eve.length==1){
+         if(eve[0].extraInfo=="dept_id"){
+             // alert(eve[0].value)
+             fetchFac(eve[0].value)
+         }
+         if(typeof eve[0].value === 'string'){
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:eve[0].value
+             }))
+         }else{
+         setFilter((old)=>({
+             ...old,
+             [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+         }))}
+     }
+     if(isArray){
+         // if(eve.length==1){
+         //     if(eve[0].extraInfo=="major_id"){
+         //         Sub(eve[0].value)
+         //     }
+         //     setFilter((old)=>({
+         //         ...old,
+         //         [eve[0].extraInfo]:eve[0].value
+         //     }))
+         // }
+         if(eve.length!=1){
+         if(eve[0].extraInfo=="dept_id"){
+             fetchFac(0)
+             for(let i=0;i<eve.length;i++){
+                 deptVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     deptVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:deptVals,
+                     emp_id:""
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     if(eve[0].extraInfo=="acdyr_id"){
+         
+             // alert(JSON.stringify(eve))
+             for(let i=0;i<eve.length;i++){
+                 // alert(JSON.stringify(eve[i].value))
+                 AcdVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     AcdVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:AcdVals
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     }
+     }
+     else if(extraInfo=="sem_id"){
+         setSelectedSem(value)
+         // handleChange(value)
+         setFilter((old)=>({
+             ...old,
+             [extraInfo]:JSON.stringify(value)
+         }))
+     }
+     
+   }}
+    
+      const Acad=async()=>{
+        const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+       //  alert(JSON.stringify(t.data.result))
+        setYear(t.data.result)
+    }
+    const years = year.map((val) => ({
+     value: val.acd_yr_id,
+     label: val.acd_yr,
+     extraInfo: "acdyr_id"
+     }));
+    useEffect(()=>{
+      Acad()
+      fetchFac()
+      fetchDept()
+    },[])
+  
+    const semester = [
+      {sem_id:1,sem:"Odd"},
+      {sem_id:2,sem:"Even"},
+      {sem_id:3,sem:"Both"},
+    ]
+    let sems = semester.map((val)=>({
+      value: val.sem_id,
+      label: val.sem,
+      extraInfo: "sem_id"
+    }))
+
+     // const fetchFac=async(dId)=>{
+     //   await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`)
+     //           .then((response) => {
+     //           console.log(response);
+     //           setEmp(response.data.rows);
+     //           })
+     //   }
+
+     const fetchFac = async (dId) => {
+       try {
+         const response = await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`);
+         console.log(response);
+         setEmp(response.data.rows);
+       } catch (error) {
+         if (error.response) {
+           // The request was made and the server responded with a status code
+           // that falls out of the range of 2xx
+           console.error('Response error:', error.response.data);
+           console.error('Response status:', error.response.status);
+           console.error('Response headers:', error.response.headers);
+         } else if (error.request) {
+           // The request was made but no response was received
+           console.error('Request error:', error.request);
+         } else {
+           // Something happened in setting up the request that triggered an Error
+           console.error('Error', error.message);
+         }
+         console.error('Config error:', error.config);
+       }
+     };
+       const facs=emp.map((val)=>({
+         value: val.faculty_id,
+         label: val.faculty_name,
+         extraInfo: "emp_id"
+         }))
+    
+     const[dept,setDept]=useState([])
+ const fetchDept=async()=>{
+     const t = await axios.get("http://localhost:1234/ecrFilter/getDeptList")
+     // alert(JSON.stringify(t.data.result))
+     setDept(t.data.result)
+ }
+ const depts = dept.map((val) => ({
+     value: val.dept_id,
+     label: val.dept,
+     extraInfo: "dept_id"
+     }));
+
+    const onClickFilter=async()=>{
+     alert("clicked")
+     alert(JSON.stringify(filter))
+     try{
+         // alert("hi")
+         const logged=JSON.parse(sessionStorage.getItem("person"))
+         const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/principal/data_setaf_visit_to_library`,filter)
+         setVisitToLibrary(filteredRecords.data.resultArray)
+         console.log(filteredRecords.data)
+         setCurrentRecords(filteredRecords.data.resultArray)
+     }
+     catch(err){
+         alert("No Reports in the selected filter")
+         console.log(err)
+     }
+ 
+   }
+
+  //fetch
+  const [VisittoLibrary,setVisitToLibrary]=useState([])
+  useEffect(()=>{
+     fetchvisittolibrary()
+  },[])
+  const logged=JSON.parse(sessionStorage.getItem("person"))
+
+  const fetchvisittolibrary=async()=>{
+      const temp = await visitToLibraryPrincipalView()
+      setVisitToLibrary(temp.data)
+
+  }
+
   return(
       <>
-      <p>&nbsp;</p>
+      <div> <p>&nbsp;</p>
         <p>&nbsp;</p>
-       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-60px"}}>
+
+        </div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',marginTop:"120px",alignItems:'center',marginLeft:'5px',justifyContent:'center'}}>
+        <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+<label for="dept_id">Department : </label>
+  <Select
+        closeMenuOnSelect={false}
+        components={{ ClearIndicator }}
+        styles={{ clearIndicator: ClearIndicatorStyles }}
+        defaultValue={[]}
+        name="emp_id"
+        onChange={deptInfoCollect}
+        isSearchable
+        isMulti
+        options={depts}
+      />
+      
+      <label for="emp_id">Faculty : </label>
+<Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="emp_id"
+      onChange={facInfoCollect}
+      isSearchable
+      isMulti
+      options={facs}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+</div>
+       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-50px"}}>
        <div class="report-header">
        <h1 class="recent-Articles">Your Reports</h1>
        </div>
        <table className='table table-striped'>
         <thead>
         <tr  className="table table-active">
+        <th>Report ID</th>
                           <th>Name of the Faculty</th>
                           <th>Academic Year</th>
+                          <th>Semester</th>
                           <th>Date</th>
                           <th>Purpose of Visit</th>
                           <th>Download Pdf</th>
@@ -3061,13 +9632,15 @@ export const VisitToLibraryPrincipal=()=>{
         </tr>
         {              VisittoLibrary.length>0?
                       VisittoLibrary.map((val)=>(
-                          <tr>
-                              <td>{val.name_of_the_faculty}</td>
-                              <td>{val.acd_yr}</td>
-                              <td>{val.date}</td>
-                              <td>{val.purpose_of_visit}</td>
-                              <td><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></td> 
-                          </tr>
+                      <tr>
+                        <td>{val.report_id}</td>
+                        <td>{val.name_of_the_faculty}</td>
+                        <td>{val.acd_yr}</td>
+                        <td>{val.sem}</td>
+                        <td>{val.date}</td>
+                        <td>{val.purpose_of_visit}</td>
+                        <td><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></td> 
+                    </tr>
                       ))
                       :
                       <tr>No records</tr>
@@ -3207,8 +9780,430 @@ catch(e)
 }
 }
 
-  ////////////data fetch code/////////////////
+      /////////////////////filter options
+      const[year,setYear]=useState([])
+      const [currentRecords, setCurrentRecords] = useState([]);
+      let [AcdVals,setAcdVals]=useState("")
+      const[selectedSem,setSelectedSem]=useState([])
+      let [empVals,setEmpVals]=useState("")
+      const [emp,setEmp]=useState([])
+      let [deptVals,setDeptVals]=useState("")
 
+      
+      const[filter,setFilter]=useState({
+       "acdyr_id":"",
+       "sem_id":"",
+       "emp_id":""
+   })
+   console.log(filter)
+      const CustomClearText = () => <>X</>;
+ 
+      const ClearIndicator =(props) =>{
+        const {
+          children = <CustomClearText />,
+          getStyles,
+          innerProps: {ref, ...restInnerProps },
+        }= props;
+        return(
+          <div
+            {...restInnerProps}
+            ref={ref}
+            style={getStyles('clearIndicator', props)}
+          >
+            <div style={{padding: '0px 5px'}}>{children}</div>
+          </div>
+        )
+      }
+    
+      const ClearIndicatorStyles = (base, state) => ({
+        ...base,
+        cursor: 'pointer',
+        color: state.isFocused ? 'blue' : 'black',
+      });
+    
+      const acdInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           acdyr_id:""
+       }))
+       }else{
+     
+         const label = eve.label
+         const value = eve.value
+         const extraInfo = eve.extraInfo
+     
+         let isArray = Array.isArray(eve);
+         // alert(JSON.stringify(eve))
+         if(eve.length==1){
+             if(typeof eve[0].value === 'string'){
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[0].extraInfo]:eve[0].value
+                 }))
+             }else{
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+             }))}
+         }
+         if(isArray){
+             // if(eve.length==1){
+             //     if(eve[0].extraInfo=="major_id"){
+             //         Sub(eve[0].value)
+             //     }
+             //     setFilter((old)=>({
+             //         ...old,
+             //         [eve[0].extraInfo]:eve[0].value
+             //     }))
+             // }
+             if(eve.length!=1){
+             
+         if(eve[0].extraInfo=="acdyr_id"){
+             
+                 // alert(JSON.stringify(eve))
+                 for(let i=0;i<eve.length;i++){
+                     // alert(JSON.stringify(eve[i].value))
+                     AcdVals+=eve[i].value
+                     if(i!=eve.length-1){
+                         AcdVals+=","
+                     }
+                     setFilter((old)=>({
+                         ...old,
+                         [eve[i].extraInfo]:AcdVals
+                     }))
+                 }
+                 // alert(majorVals)
+             
+         }
+         }
+         }
+         else if(extraInfo=="sem_id"){
+             setSelectedSem(value)
+             // handleChange(value)
+             setFilter((old)=>({
+                 ...old,
+                 [extraInfo]:JSON.stringify(value)
+             }))
+         }
+       
+     }
+     }
+ 
+     const semInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           sem_id:""
+       }))
+       }else{
+     
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+     
+       let isArray = Array.isArray(eve);
+       
+       if(isArray){
+           
+           if(eve.length!=1){
+           
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+       
+     }}
+
+     const facInfoCollect=(eve)=>{
+       if(eve.length==0){
+       setFilter((old)=>({
+           ...old,
+           emp_id:""
+       }))
+       }else{
+   
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+   
+       let isArray = Array.isArray(eve);
+       // alert(JSON.stringify(eve))
+       if(eve.length==1){
+          
+           if(typeof eve[0].value === 'string'){
+               setFilter((old)=>({
+                   ...old,
+                   [eve[0].extraInfo]:eve[0].value
+               }))
+           }else{
+           setFilter((old)=>({
+               ...old,
+               [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+           }))}
+       }
+       if(isArray){
+           // if(eve.length==1){
+           //     if(eve[0].extraInfo=="major_id"){
+           //         Sub(eve[0].value)
+           //     }
+           //     setFilter((old)=>({
+           //         ...old,
+           //         [eve[0].extraInfo]:eve[0].value
+           //     }))
+           // }
+           if(eve.length!=1){
+           if(eve[0].extraInfo=="emp_id"){
+               // Sub(0)
+               for(let i=0;i<eve.length;i++){
+                   empVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       empVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:empVals,
+                       // sub_id:""
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+      
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+     
+   }}
+   
+   const deptInfoCollect=(eve)=>{
+     if(eve.length==0){
+       setFilter((old)=>({
+         ...old,
+         dept_id:""
+     }))
+     }else{
+   
+     const label = eve.label
+     const value = eve.value
+     const extraInfo = eve.extraInfo
+   
+     let isArray = Array.isArray(eve);
+     // alert(JSON.stringify(eve))
+     if(eve.length==1){
+         if(eve[0].extraInfo=="dept_id"){
+             // alert(eve[0].value)
+             fetchFac(eve[0].value)
+         }
+         if(typeof eve[0].value === 'string'){
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:eve[0].value
+             }))
+         }else{
+         setFilter((old)=>({
+             ...old,
+             [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+         }))}
+     }
+     if(isArray){
+         // if(eve.length==1){
+         //     if(eve[0].extraInfo=="major_id"){
+         //         Sub(eve[0].value)
+         //     }
+         //     setFilter((old)=>({
+         //         ...old,
+         //         [eve[0].extraInfo]:eve[0].value
+         //     }))
+         // }
+         if(eve.length!=1){
+         if(eve[0].extraInfo=="dept_id"){
+             fetchFac(0)
+             for(let i=0;i<eve.length;i++){
+                 deptVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     deptVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:deptVals,
+                     emp_id:""
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     if(eve[0].extraInfo=="acdyr_id"){
+         
+             // alert(JSON.stringify(eve))
+             for(let i=0;i<eve.length;i++){
+                 // alert(JSON.stringify(eve[i].value))
+                 AcdVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     AcdVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:AcdVals
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     }
+     }
+     else if(extraInfo=="sem_id"){
+         setSelectedSem(value)
+         // handleChange(value)
+         setFilter((old)=>({
+             ...old,
+             [extraInfo]:JSON.stringify(value)
+         }))
+     }
+     
+   }}
+    
+      const Acad=async()=>{
+        const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+       //  alert(JSON.stringify(t.data.result))
+        setYear(t.data.result)
+    }
+    const years = year.map((val) => ({
+     value: val.acd_yr_id,
+     label: val.acd_yr,
+     extraInfo: "acdyr_id"
+     }));
+    useEffect(()=>{
+      Acad()
+      fetchFac()
+      fetchDept()
+    },[])
+  
+    const semester = [
+      {sem_id:1,sem:"Odd"},
+      {sem_id:2,sem:"Even"},
+      {sem_id:3,sem:"Both"},
+    ]
+    let sems = semester.map((val)=>({
+      value: val.sem_id,
+      label: val.sem,
+      extraInfo: "sem_id"
+    }))
+
+     // const fetchFac=async(dId)=>{
+     //   await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`)
+     //           .then((response) => {
+     //           console.log(response);
+     //           setEmp(response.data.rows);
+     //           })
+     //   }
+
+     const fetchFac = async (dId) => {
+       try {
+         const response = await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`);
+         console.log(response);
+         setEmp(response.data.rows);
+       } catch (error) {
+         if (error.response) {
+           // The request was made and the server responded with a status code
+           // that falls out of the range of 2xx
+           console.error('Response error:', error.response.data);
+           console.error('Response status:', error.response.status);
+           console.error('Response headers:', error.response.headers);
+         } else if (error.request) {
+           // The request was made but no response was received
+           console.error('Request error:', error.request);
+         } else {
+           // Something happened in setting up the request that triggered an Error
+           console.error('Error', error.message);
+         }
+         console.error('Config error:', error.config);
+       }
+     };
+       const facs=emp.map((val)=>({
+         value: val.faculty_id,
+         label: val.faculty_name,
+         extraInfo: "emp_id"
+         }))
+    
+     const[dept,setDept]=useState([])
+ const fetchDept=async()=>{
+     const t = await axios.get("http://localhost:1234/ecrFilter/getDeptList")
+     // alert(JSON.stringify(t.data.result))
+     setDept(t.data.result)
+ }
+ const depts = dept.map((val) => ({
+     value: val.dept_id,
+     label: val.dept,
+     extraInfo: "dept_id"
+     }));
+
+    const onClickFilter=async()=>{
+     alert("clicked")
+     alert(JSON.stringify(filter))
+     try{
+         // alert("hi")
+         const logged=JSON.parse(sessionStorage.getItem("person"))
+         const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/principal/data_setaf_awards_at_national`,filter)
+         setAward(filteredRecords.data.resultArray)
+         console.log(filteredRecords.data)
+         setCurrentRecords(filteredRecords.data.resultArray)
+     }
+     catch(err){
+         alert("No Reports in the selected filter")
+         console.log(err)
+     }
+ 
+   }
+
+////////////data fetch code/////////////////
   const [Award,setAward]=useState([])
   useEffect(()=>{
       fetchAwardRecords()
@@ -3229,9 +10224,87 @@ catch(e)
 
   return(
       <>
-      <p>&nbsp;</p>
-      <p>&nbsp;</p>
-       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-60px"}}>
+      <div> <p>&nbsp;</p>
+        <p>&nbsp;</p>
+
+        </div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',marginTop:"120px",alignItems:'center',marginLeft:'5px',justifyContent:'center'}}>
+        <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+<label for="dept_id">Department : </label>
+  <Select
+        closeMenuOnSelect={false}
+        components={{ ClearIndicator }}
+        styles={{ clearIndicator: ClearIndicatorStyles }}
+        defaultValue={[]}
+        name="emp_id"
+        onChange={deptInfoCollect}
+        isSearchable
+        isMulti
+        options={depts}
+      />
+      
+      <label for="emp_id">Faculty : </label>
+<Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="emp_id"
+      onChange={facInfoCollect}
+      isSearchable
+      isMulti
+      options={facs}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+</div>
+       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-50px"}}>
        <div class="report-header">
        <h1 class="recent-Articles">Your Reports</h1>
        </div>
@@ -3239,9 +10312,9 @@ catch(e)
         <thead>
         <tr className="table-active">
                           <th>Report ID</th>
+                          <th>Name of the Faculty</th>
                           <th>Academic Year</th>
                           <th>Semester</th>
-                          <th>Name of the Faculty</th>
                           <th>Name of the Award</th>
                           <th>Category</th>
                           <th>Date of Award</th>
@@ -3251,17 +10324,17 @@ catch(e)
         {               
                      Award.length>0?
                      Award.map((val)=>(
-                          <tr>
-                              <td>{val.report_id}</td>
-                              <td>{val.acd_yr}</td>
-                              <td>{val.semester}</td>
-                              <td>{val.name_of_the_faculty}</td>
-                              <td>{val.name_of_the_award}</td>
-                              <td>{val.category}</td>
-                              <td>{dateFormat(val.date_of_award,'dd-mm-yyyy')}</td>
-                              <td>{val.name_of_awarding_organization}</td>
-                              <th><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></th>
-                          </tr>
+                    <tr>
+                      <td>{val.report_id}</td>
+                      <td>{val.name_of_the_faculty}</td>
+                      <td>{val.acd_yr}</td>
+                      <td>{val.sem}</td>
+                      <td>{val.name_of_the_award}</td>
+                      <td>{val.category}</td>
+                      <td>{dateFormat(val.date_of_award,'dd-mm-yyyy')}</td>
+                      <td>{val.name_of_awarding_organization}</td>
+                      <th><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></th>
+                  </tr>
                       ))
                       :
                       <tr>No Records</tr>
@@ -3275,10 +10348,9 @@ catch(e)
   )
 }
 
-
+//Books
 export const BooksPrincipalDashboard=()=>{
-  ///////pdf view///////////////
-  
+
 const generatePDF = async (report_id)=> {
   try{
       // alert(report_id)
@@ -3392,11 +10464,7 @@ const generatePDF = async (report_id)=> {
     catch(e){
       console.log(e);
     }
-
-  // Generate a data URI for the PDF
   const pdfDataUri = doc.output('datauristring');
-
-  // Open the PDF in a new tab or window
   const newWindow = window.open();
   newWindow.document.write(`<iframe width='100%' height='100%' src='${pdfDataUri}'></iframe>`);
 }
@@ -3406,8 +10474,430 @@ catch(e)
 }
 }
 
-  ////////////data fetch code/////////////////
+      /////////////////////filter options
+      const[year,setYear]=useState([])
+      const [currentRecords, setCurrentRecords] = useState([]);
+      let [AcdVals,setAcdVals]=useState("")
+      const[selectedSem,setSelectedSem]=useState([])
+      let [empVals,setEmpVals]=useState("")
+      const [emp,setEmp]=useState([])
+      let [deptVals,setDeptVals]=useState("")
 
+      
+      const[filter,setFilter]=useState({
+       "acdyr_id":"",
+       "sem_id":"",
+       "emp_id":""
+   })
+   console.log(filter)
+      const CustomClearText = () => <>X</>;
+ 
+      const ClearIndicator =(props) =>{
+        const {
+          children = <CustomClearText />,
+          getStyles,
+          innerProps: {ref, ...restInnerProps },
+        }= props;
+        return(
+          <div
+            {...restInnerProps}
+            ref={ref}
+            style={getStyles('clearIndicator', props)}
+          >
+            <div style={{padding: '0px 5px'}}>{children}</div>
+          </div>
+        )
+      }
+    
+      const ClearIndicatorStyles = (base, state) => ({
+        ...base,
+        cursor: 'pointer',
+        color: state.isFocused ? 'blue' : 'black',
+      });
+    
+      const acdInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           acdyr_id:""
+       }))
+       }else{
+     
+         const label = eve.label
+         const value = eve.value
+         const extraInfo = eve.extraInfo
+     
+         let isArray = Array.isArray(eve);
+         // alert(JSON.stringify(eve))
+         if(eve.length==1){
+             if(typeof eve[0].value === 'string'){
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[0].extraInfo]:eve[0].value
+                 }))
+             }else{
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+             }))}
+         }
+         if(isArray){
+             // if(eve.length==1){
+             //     if(eve[0].extraInfo=="major_id"){
+             //         Sub(eve[0].value)
+             //     }
+             //     setFilter((old)=>({
+             //         ...old,
+             //         [eve[0].extraInfo]:eve[0].value
+             //     }))
+             // }
+             if(eve.length!=1){
+             
+         if(eve[0].extraInfo=="acdyr_id"){
+             
+                 // alert(JSON.stringify(eve))
+                 for(let i=0;i<eve.length;i++){
+                     // alert(JSON.stringify(eve[i].value))
+                     AcdVals+=eve[i].value
+                     if(i!=eve.length-1){
+                         AcdVals+=","
+                     }
+                     setFilter((old)=>({
+                         ...old,
+                         [eve[i].extraInfo]:AcdVals
+                     }))
+                 }
+                 // alert(majorVals)
+             
+         }
+         }
+         }
+         else if(extraInfo=="sem_id"){
+             setSelectedSem(value)
+             // handleChange(value)
+             setFilter((old)=>({
+                 ...old,
+                 [extraInfo]:JSON.stringify(value)
+             }))
+         }
+       
+     }
+     }
+ 
+     const semInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           sem_id:""
+       }))
+       }else{
+     
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+     
+       let isArray = Array.isArray(eve);
+       
+       if(isArray){
+           
+           if(eve.length!=1){
+           
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+       
+     }}
+
+     const facInfoCollect=(eve)=>{
+       if(eve.length==0){
+       setFilter((old)=>({
+           ...old,
+           emp_id:""
+       }))
+       }else{
+   
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+   
+       let isArray = Array.isArray(eve);
+       // alert(JSON.stringify(eve))
+       if(eve.length==1){
+          
+           if(typeof eve[0].value === 'string'){
+               setFilter((old)=>({
+                   ...old,
+                   [eve[0].extraInfo]:eve[0].value
+               }))
+           }else{
+           setFilter((old)=>({
+               ...old,
+               [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+           }))}
+       }
+       if(isArray){
+           // if(eve.length==1){
+           //     if(eve[0].extraInfo=="major_id"){
+           //         Sub(eve[0].value)
+           //     }
+           //     setFilter((old)=>({
+           //         ...old,
+           //         [eve[0].extraInfo]:eve[0].value
+           //     }))
+           // }
+           if(eve.length!=1){
+           if(eve[0].extraInfo=="emp_id"){
+               // Sub(0)
+               for(let i=0;i<eve.length;i++){
+                   empVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       empVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:empVals,
+                       // sub_id:""
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+      
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+     
+   }}
+   
+   const deptInfoCollect=(eve)=>{
+     if(eve.length==0){
+       setFilter((old)=>({
+         ...old,
+         dept_id:""
+     }))
+     }else{
+   
+     const label = eve.label
+     const value = eve.value
+     const extraInfo = eve.extraInfo
+   
+     let isArray = Array.isArray(eve);
+     // alert(JSON.stringify(eve))
+     if(eve.length==1){
+         if(eve[0].extraInfo=="dept_id"){
+             // alert(eve[0].value)
+             fetchFac(eve[0].value)
+         }
+         if(typeof eve[0].value === 'string'){
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:eve[0].value
+             }))
+         }else{
+         setFilter((old)=>({
+             ...old,
+             [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+         }))}
+     }
+     if(isArray){
+         // if(eve.length==1){
+         //     if(eve[0].extraInfo=="major_id"){
+         //         Sub(eve[0].value)
+         //     }
+         //     setFilter((old)=>({
+         //         ...old,
+         //         [eve[0].extraInfo]:eve[0].value
+         //     }))
+         // }
+         if(eve.length!=1){
+         if(eve[0].extraInfo=="dept_id"){
+             fetchFac(0)
+             for(let i=0;i<eve.length;i++){
+                 deptVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     deptVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:deptVals,
+                     emp_id:""
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     if(eve[0].extraInfo=="acdyr_id"){
+         
+             // alert(JSON.stringify(eve))
+             for(let i=0;i<eve.length;i++){
+                 // alert(JSON.stringify(eve[i].value))
+                 AcdVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     AcdVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:AcdVals
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     }
+     }
+     else if(extraInfo=="sem_id"){
+         setSelectedSem(value)
+         // handleChange(value)
+         setFilter((old)=>({
+             ...old,
+             [extraInfo]:JSON.stringify(value)
+         }))
+     }
+     
+   }}
+    
+      const Acad=async()=>{
+        const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+       //  alert(JSON.stringify(t.data.result))
+        setYear(t.data.result)
+    }
+    const years = year.map((val) => ({
+     value: val.acd_yr_id,
+     label: val.acd_yr,
+     extraInfo: "acdyr_id"
+     }));
+    useEffect(()=>{
+      Acad()
+      fetchFac()
+      fetchDept()
+    },[])
+  
+    const semester = [
+      {sem_id:1,sem:"Odd"},
+      {sem_id:2,sem:"Even"},
+      {sem_id:3,sem:"Both"},
+    ]
+    let sems = semester.map((val)=>({
+      value: val.sem_id,
+      label: val.sem,
+      extraInfo: "sem_id"
+    }))
+
+     // const fetchFac=async(dId)=>{
+     //   await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`)
+     //           .then((response) => {
+     //           console.log(response);
+     //           setEmp(response.data.rows);
+     //           })
+     //   }
+
+     const fetchFac = async (dId) => {
+       try {
+         const response = await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`);
+         console.log(response);
+         setEmp(response.data.rows);
+       } catch (error) {
+         if (error.response) {
+           // The request was made and the server responded with a status code
+           // that falls out of the range of 2xx
+           console.error('Response error:', error.response.data);
+           console.error('Response status:', error.response.status);
+           console.error('Response headers:', error.response.headers);
+         } else if (error.request) {
+           // The request was made but no response was received
+           console.error('Request error:', error.request);
+         } else {
+           // Something happened in setting up the request that triggered an Error
+           console.error('Error', error.message);
+         }
+         console.error('Config error:', error.config);
+       }
+     };
+       const facs=emp.map((val)=>({
+         value: val.faculty_id,
+         label: val.faculty_name,
+         extraInfo: "emp_id"
+         }))
+    
+     const[dept,setDept]=useState([])
+ const fetchDept=async()=>{
+     const t = await axios.get("http://localhost:1234/ecrFilter/getDeptList")
+     // alert(JSON.stringify(t.data.result))
+     setDept(t.data.result)
+ }
+ const depts = dept.map((val) => ({
+     value: val.dept_id,
+     label: val.dept,
+     extraInfo: "dept_id"
+     }));
+
+    const onClickFilter=async()=>{
+     alert("clicked")
+     alert(JSON.stringify(filter))
+     try{
+         // alert("hi")
+         const logged=JSON.parse(sessionStorage.getItem("person"))
+         const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/principal/data_setaf_books_chapter_authorship`,filter)
+         setBooks(filteredRecords.data.resultArray)
+         console.log(filteredRecords.data)
+         setCurrentRecords(filteredRecords.data.resultArray)
+     }
+     catch(err){
+         alert("No Reports in the selected filter")
+         console.log(err)
+     }
+ 
+   }
+
+  ////////////data fetch code/////////////////
   const [books,setBooks]=useState([])
   useEffect(()=>{
       fetchBooksRecords()
@@ -3427,9 +10917,87 @@ catch(e)
 
   return(
       <>
-      <p>&nbsp;</p>
-      <p>&nbsp;</p>
-       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-60px"}}>
+      <div> <p>&nbsp;</p>
+        <p>&nbsp;</p>
+
+        </div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',marginTop:"120px",alignItems:'center',marginLeft:'5px',justifyContent:'center'}}>
+        <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+<label for="dept_id">Department : </label>
+  <Select
+        closeMenuOnSelect={false}
+        components={{ ClearIndicator }}
+        styles={{ clearIndicator: ClearIndicatorStyles }}
+        defaultValue={[]}
+        name="emp_id"
+        onChange={deptInfoCollect}
+        isSearchable
+        isMulti
+        options={depts}
+      />
+      
+      <label for="emp_id">Faculty : </label>
+<Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="emp_id"
+      onChange={facInfoCollect}
+      isSearchable
+      isMulti
+      options={facs}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+</div>
+       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-50px"}}>
        <div class="report-header">
        <h1 class="recent-Articles">Your Reports</h1>
        </div>
@@ -3437,9 +11005,9 @@ catch(e)
         <thead>
         <tr className="table-active">
                           <th>Report ID</th>
+                          <th>Name of the Faculty</th>
                           <th>Academic Year</th>
                           <th>Semester</th>
-                          <th>Name of the Faculty</th>
                           <th>Name of the Author</th>
                           <th>Title of the Books</th>
                           <th>Date of Publication</th>
@@ -3450,16 +11018,2794 @@ catch(e)
         {               
                      books.length>0?
                      books.map((val)=>(
+                     <tr>
+                      <td>{val.report_id}</td>
+                      <td>{val.name_of_the_faculty}</td>
+                      <td>{val.acd_yr}</td>
+                      <td>{val.sem}</td>
+                      <td>{val.name_of_the_authors}</td>
+                      <td>{val.title_of_the_book}</td>
+                      <td>{dateFormat(val.date_of_publication,'dd-mm-yyyy')}</td>
+                      <td>{val.isbn_number}</td>
+                      <td>{val.category}</td>
+                      <th><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></th>
+                  </tr>
+                      ))
+                      :
+                      <tr>No Records</tr>
+                  }
+        </thead>
+       </table>
+       </div>
+       
+                    
+      </>
+  )
+}
+export const CollabrativePrincipal=()=>{
+
+  const generatePDF = async (report_id)=> {
+    try{
+        // alert(report_id)
+    const res = await axios.get(`http://localhost:1234/setaf/collaborative_data/${report_id}`);
+    const data = res.data;
+    const doc = new jsPDF();
+
+    let pdfDocument;
+    try{
+        const pdfUrl = `/Journal_SETAF/${data.enclose_first_page_pdf}`;
+        const pdfResponse = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
+        const pdfData = pdfResponse.data;
+
+     pdfDocument = await getDocument({ data: pdfData }).promise;
+       }catch(e){
+        console.log(e)
+       }  
+       doc.addImage(Image, 'PNG', 10, 3, 20, 20);
+       doc.addImage(Image2, 'PNG', 12,23, 15, 15);
+       doc.addImage(Image3, 'JPG', 175, 3, 20, 15);
+       doc.addImage(Image4, 'JPG', 175, 20, 20, 15);
+  
+       doc.setFontSize(18);
+       doc.setFont("times", "bold");
+       doc.text('MUTHAYAMMAL ENGINEERING COLLEGE',35, 15);
+       doc.setFontSize(10);
+       doc.setFont("times", "");
+       doc.text('(An Autonomous Institution)', 80, 20);
+       doc.text('(Approved by AICTE, New Delhi, Accredited by NAAC & Affiliated to Anna University)', 35, 25);
+       doc.text('Rasipuram - 637 408, Namakkal Dist., Tamil Nadu', 65, 30);
+       doc.setFont("times", "bold");
+       
+       doc.setFont("times", "bold");
+    
+       doc.setFontSize(15); 
+       doc.rect(12, 54, 32, 11).stroke();
+       doc.text(`${data.dept}`,25,61)
+       doc.rect(90,38,32,11)
+       doc.text('SETAF', 97, 45);
+       doc.rect(68,54,84,11)
+       doc.text("COLLABRATIVE ACTIVITIES",72,61)
+       
+       doc.rect(168, 54, 28, 11).stroke();
+       doc.setFontSize(15); 
+       doc.text(`${data.acd_yr}`,172,61)
+  
+    doc.rect(12, 80, 75, 12).stroke();
+    doc.text('Name of the Faculty', 14, 88);
+    doc.setFont("times", "");
+    doc.rect(87, 80, 115, 12).stroke();
+    doc.text(`${data.name_of_the_faculty}`, 90, 88);
+
+    doc.setFont("times", "bold");
+    doc.rect(12, 92, 75, 12).stroke();
+    doc.text('Name of Faculty Co-ordinator', 14, 100);
+    doc.setFont("times", "");
+    doc.rect(87, 92, 115, 12).stroke();
+    doc.text(`${data.name_of_the_faculty_coordinator}`, 90, 100);
+    
+    doc.setFont("times", "bold");
+    doc.rect(12, 104, 75, 12).stroke();
+    doc.text('Nature of the Activity', 14, 112);
+    doc.setFont("times", "");
+    doc.rect(87, 104, 115, 12).stroke();
+    doc.text(`${data.nature_of_the_activity}`, 90, 112);
+
+    doc.setFont("times", "bold");
+    doc.rect(12, 116, 75, 12).stroke();
+    doc.text('Name of MoU Signed Industry', 14, 124);
+    doc.setFont("times", "");
+    doc.rect(87, 116, 115, 12).stroke();
+    doc.text(`${data.name_of_MoU_signed_industry_or_institution}`, 90 , 124);
+
+    doc.setFont("times", "bold");
+    doc.rect(12, 128, 75, 12).stroke();
+    doc.text('Title of the Activity', 14, 136);
+    doc.setFont("times", "");
+    doc.rect(87, 128, 115, 12).stroke();
+    doc.text(`${data.title_of_the_activity}`, 90, 136);
+
+    doc.setFont("times", "bold");
+    doc.rect(12, 140, 75, 12).stroke();
+    doc.text('Duration From', 14, 148);
+    doc.setFont("times", "");
+    doc.rect(87, 140, 115, 12).stroke();
+    doc.text(`${dateFormat(data.duration_from, "dd-mm-yyyy")}`, 90, 148);
+
+    doc.setFont("times", "bold");
+    doc.rect(12, 152, 75, 12).stroke();
+    doc.text('Duration To', 14, 160);
+    doc.setFont("times", "");
+    doc.rect(87, 152, 115, 12).stroke();
+    doc.text(`${dateFormat(data.duration_to, "dd-mm-yyyy")}`, 90, 160);
+
+    doc.setFont("times", "bold");
+    doc.rect(12, 164, 75, 12).stroke();
+    doc.text('Name of Resourse Person', 14, 172);
+    doc.setFont("times", "");
+    doc.rect(87, 164, 115, 12).stroke();
+    doc.text(`${data.name_of_resource_person}`, 90, 172);
+
+    doc.setFont("times", "bold");
+    doc.rect(12, 176, 75, 12).stroke();
+    doc.text('Designation of Resourse Person', 14, 184);
+    doc.setFont("times", "");
+    doc.rect(87, 176, 115, 12).stroke();
+    doc.text(`${data.designation_of_resource_person}`, 90, 184);
+  
+    try{ 
+        // Add pages from the original PDF
+        for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber++) {
+          const page = await pdfDocument.getPage(pageNumber);
+          const pdfWidth = page.view[2];
+          const pdfHeight = page.view[3];
+      
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          canvas.width = pdfWidth;
+          canvas.height = pdfHeight;
+      
+          await page.render({ canvasContext: context, viewport: page.getViewport({ scale: 1 }) }).promise;
+      
+          const imageDataUrl = canvas.toDataURL('image/jpeg');
+          try{doc.addPage();
+          doc.addImage(imageDataUrl, 'JPEG', 5, 0, 200, 300);
+          }catch(error){
+            console.error(error);
+          }
+        }
+      }
+      catch(e){
+        console.log(e);
+      }
+
+    // Generate a data URI for the PDF
+    const pdfDataUri = doc.output('datauristring');
+
+
+    // Open the PDF in a new tab or window
+    const newWindow = window.open();
+    newWindow.document.write(`<iframe width='100%' height='100%' src='${pdfDataUri}'></iframe>`);
+  }
+  catch(e)
+  {
+    console.log(e);
+  }
+}
+  
+        /////////////////////filter options
+        const[year,setYear]=useState([])
+        const [currentRecords, setCurrentRecords] = useState([]);
+        let [AcdVals,setAcdVals]=useState("")
+        const[selectedSem,setSelectedSem]=useState([])
+        let [empVals,setEmpVals]=useState("")
+        const [emp,setEmp]=useState([])
+        let [deptVals,setDeptVals]=useState("")
+  
+        
+        const[filter,setFilter]=useState({
+         "acdyr_id":"",
+         "sem_id":"",
+         "emp_id":""
+     })
+     console.log(filter)
+        const CustomClearText = () => <>X</>;
+   
+        const ClearIndicator =(props) =>{
+          const {
+            children = <CustomClearText />,
+            getStyles,
+            innerProps: {ref, ...restInnerProps },
+          }= props;
+          return(
+            <div
+              {...restInnerProps}
+              ref={ref}
+              style={getStyles('clearIndicator', props)}
+            >
+              <div style={{padding: '0px 5px'}}>{children}</div>
+            </div>
+          )
+        }
+      
+        const ClearIndicatorStyles = (base, state) => ({
+          ...base,
+          cursor: 'pointer',
+          color: state.isFocused ? 'blue' : 'black',
+        });
+      
+        const acdInfoCollect=(eve)=>{
+         if(eve.length==0){
+           setFilter((old)=>({
+             ...old,
+             acdyr_id:""
+         }))
+         }else{
+       
+           const label = eve.label
+           const value = eve.value
+           const extraInfo = eve.extraInfo
+       
+           let isArray = Array.isArray(eve);
+           // alert(JSON.stringify(eve))
+           if(eve.length==1){
+               if(typeof eve[0].value === 'string'){
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[0].extraInfo]:eve[0].value
+                   }))
+               }else{
+               setFilter((old)=>({
+                   ...old,
+                   [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+               }))}
+           }
+           if(isArray){
+               // if(eve.length==1){
+               //     if(eve[0].extraInfo=="major_id"){
+               //         Sub(eve[0].value)
+               //     }
+               //     setFilter((old)=>({
+               //         ...old,
+               //         [eve[0].extraInfo]:eve[0].value
+               //     }))
+               // }
+               if(eve.length!=1){
+               
+           if(eve[0].extraInfo=="acdyr_id"){
+               
+                   // alert(JSON.stringify(eve))
+                   for(let i=0;i<eve.length;i++){
+                       // alert(JSON.stringify(eve[i].value))
+                       AcdVals+=eve[i].value
+                       if(i!=eve.length-1){
+                           AcdVals+=","
+                       }
+                       setFilter((old)=>({
+                           ...old,
+                           [eve[i].extraInfo]:AcdVals
+                       }))
+                   }
+                   // alert(majorVals)
+               
+           }
+           }
+           }
+           else if(extraInfo=="sem_id"){
+               setSelectedSem(value)
+               // handleChange(value)
+               setFilter((old)=>({
+                   ...old,
+                   [extraInfo]:JSON.stringify(value)
+               }))
+           }
+         
+       }
+       }
+   
+       const semInfoCollect=(eve)=>{
+         if(eve.length==0){
+           setFilter((old)=>({
+             ...old,
+             sem_id:""
+         }))
+         }else{
+       
+         const label = eve.label
+         const value = eve.value
+         const extraInfo = eve.extraInfo
+       
+         let isArray = Array.isArray(eve);
+         
+         if(isArray){
+             
+             if(eve.length!=1){
+             
+         if(eve[0].extraInfo=="acdyr_id"){
+             
+                 // alert(JSON.stringify(eve))
+                 for(let i=0;i<eve.length;i++){
+                     // alert(JSON.stringify(eve[i].value))
+                     AcdVals+=eve[i].value
+                     if(i!=eve.length-1){
+                         AcdVals+=","
+                     }
+                     setFilter((old)=>({
+                         ...old,
+                         [eve[i].extraInfo]:AcdVals
+                     }))
+                 }
+                 // alert(majorVals)
+             
+         }
+         }
+         }
+         else if(extraInfo=="sem_id"){
+             setSelectedSem(value)
+             // handleChange(value)
+             setFilter((old)=>({
+                 ...old,
+                 [extraInfo]:JSON.stringify(value)
+             }))
+         }
+         
+       }}
+  
+       const facInfoCollect=(eve)=>{
+         if(eve.length==0){
+         setFilter((old)=>({
+             ...old,
+             emp_id:""
+         }))
+         }else{
+     
+         const label = eve.label
+         const value = eve.value
+         const extraInfo = eve.extraInfo
+     
+         let isArray = Array.isArray(eve);
+         // alert(JSON.stringify(eve))
+         if(eve.length==1){
+            
+             if(typeof eve[0].value === 'string'){
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[0].extraInfo]:eve[0].value
+                 }))
+             }else{
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+             }))}
+         }
+         if(isArray){
+             // if(eve.length==1){
+             //     if(eve[0].extraInfo=="major_id"){
+             //         Sub(eve[0].value)
+             //     }
+             //     setFilter((old)=>({
+             //         ...old,
+             //         [eve[0].extraInfo]:eve[0].value
+             //     }))
+             // }
+             if(eve.length!=1){
+             if(eve[0].extraInfo=="emp_id"){
+                 // Sub(0)
+                 for(let i=0;i<eve.length;i++){
+                     empVals+=eve[i].value
+                     if(i!=eve.length-1){
+                         empVals+=","
+                     }
+                     setFilter((old)=>({
+                         ...old,
+                         [eve[i].extraInfo]:empVals,
+                         // sub_id:""
+                     }))
+                 }
+                 // alert(majorVals)
+             
+         }
+         if(eve[0].extraInfo=="acdyr_id"){
+             
+                 // alert(JSON.stringify(eve))
+                 for(let i=0;i<eve.length;i++){
+                     // alert(JSON.stringify(eve[i].value))
+                     AcdVals+=eve[i].value
+                     if(i!=eve.length-1){
+                         AcdVals+=","
+                     }
+                     setFilter((old)=>({
+                         ...old,
+                         [eve[i].extraInfo]:AcdVals
+                     }))
+                 }
+                 // alert(majorVals)
+             
+         }
+        
+         }
+         }
+         else if(extraInfo=="sem_id"){
+             setSelectedSem(value)
+             // handleChange(value)
+             setFilter((old)=>({
+                 ...old,
+                 [extraInfo]:JSON.stringify(value)
+             }))
+         }
+       
+     }}
+     
+     const deptInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           dept_id:""
+       }))
+       }else{
+     
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+     
+       let isArray = Array.isArray(eve);
+       // alert(JSON.stringify(eve))
+       if(eve.length==1){
+           if(eve[0].extraInfo=="dept_id"){
+               // alert(eve[0].value)
+               fetchFac(eve[0].value)
+           }
+           if(typeof eve[0].value === 'string'){
+               setFilter((old)=>({
+                   ...old,
+                   [eve[0].extraInfo]:eve[0].value
+               }))
+           }else{
+           setFilter((old)=>({
+               ...old,
+               [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+           }))}
+       }
+       if(isArray){
+           // if(eve.length==1){
+           //     if(eve[0].extraInfo=="major_id"){
+           //         Sub(eve[0].value)
+           //     }
+           //     setFilter((old)=>({
+           //         ...old,
+           //         [eve[0].extraInfo]:eve[0].value
+           //     }))
+           // }
+           if(eve.length!=1){
+           if(eve[0].extraInfo=="dept_id"){
+               fetchFac(0)
+               for(let i=0;i<eve.length;i++){
+                   deptVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       deptVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:deptVals,
+                       emp_id:""
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+       
+     }}
+      
+        const Acad=async()=>{
+          const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+         //  alert(JSON.stringify(t.data.result))
+          setYear(t.data.result)
+      }
+      const years = year.map((val) => ({
+       value: val.acd_yr_id,
+       label: val.acd_yr,
+       extraInfo: "acdyr_id"
+       }));
+      useEffect(()=>{
+        Acad()
+        fetchFac()
+        fetchDept()
+      },[])
+    
+      const semester = [
+        {sem_id:1,sem:"Odd"},
+        {sem_id:2,sem:"Even"},
+        {sem_id:3,sem:"Both"},
+      ]
+      let sems = semester.map((val)=>({
+        value: val.sem_id,
+        label: val.sem,
+        extraInfo: "sem_id"
+      }))
+  
+       // const fetchFac=async(dId)=>{
+       //   await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`)
+       //           .then((response) => {
+       //           console.log(response);
+       //           setEmp(response.data.rows);
+       //           })
+       //   }
+  
+       const fetchFac = async (dId) => {
+         try {
+           const response = await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`);
+           console.log(response);
+           setEmp(response.data.rows);
+         } catch (error) {
+           if (error.response) {
+             // The request was made and the server responded with a status code
+             // that falls out of the range of 2xx
+             console.error('Response error:', error.response.data);
+             console.error('Response status:', error.response.status);
+             console.error('Response headers:', error.response.headers);
+           } else if (error.request) {
+             // The request was made but no response was received
+             console.error('Request error:', error.request);
+           } else {
+             // Something happened in setting up the request that triggered an Error
+             console.error('Error', error.message);
+           }
+           console.error('Config error:', error.config);
+         }
+       };
+         const facs=emp.map((val)=>({
+           value: val.faculty_id,
+           label: val.faculty_name,
+           extraInfo: "emp_id"
+           }))
+      
+       const[dept,setDept]=useState([])
+   const fetchDept=async()=>{
+       const t = await axios.get("http://localhost:1234/ecrFilter/getDeptList")
+       // alert(JSON.stringify(t.data.result))
+       setDept(t.data.result)
+   }
+   const depts = dept.map((val) => ({
+       value: val.dept_id,
+       label: val.dept,
+       extraInfo: "dept_id"
+       }));
+  
+      const onClickFilter=async()=>{
+       alert("clicked")
+       alert(JSON.stringify(filter))
+       try{
+           // alert("hi")
+           const logged=JSON.parse(sessionStorage.getItem("person"))
+           const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/principal/data_setaf_collabrative_activity_with_mou`,filter)
+           setcollabrativeRecs(filteredRecords.data.resultArray)
+           console.log(filteredRecords.data)
+           setCurrentRecords(filteredRecords.data.resultArray)
+       }
+       catch(err){
+           alert("No Reports in the selected filter")
+           console.log(err)
+       }
+   
+     }
+  
+    ////////////data fetch code/////////////////
+    const [collabrativeRecs,setcollabrativeRecs]=useState([])
+    useEffect(()=>{
+        fetchcollabrativeRecords()
+    },[])
+  
+    const logged=JSON.parse(sessionStorage.getItem("person"))
+    const fetchcollabrativeRecords=async()=>{
+        try{
+            const temp = await collaborativePrincipalView(`${logged.dept_id}`)
+        setcollabrativeRecs(temp.data)
+        }catch(e){
+            console.log(e)
+        }
+  
+    }
+  
+    return(
+        <>
+        <div> <p>&nbsp;</p>
+          <p>&nbsp;</p>
+  
+          </div>
+          <div className="filter-dropdowns" style={{width:'100%',display:'flex',marginTop:"120px",alignItems:'center',marginLeft:'5px',justifyContent:'center'}}>
+          <label for="acdyr_id">Academic Year : </label>
+         <Select
+               closeMenuOnSelect={false}
+               components={{ ClearIndicator }}
+               styles={{ clearIndicator: ClearIndicatorStyles }}
+               defaultValue={[]}
+               name="acdyr_id"
+               onChange={acdInfoCollect}
+               isSearchable
+               isMulti
+               options={years}
+             />
+  
+         
+         {/* Filter of Sem--------------------------------------------------------- */}
+         <label for="sem_id">Semester : </label>
+      <Select
+        closeMenuOnSelect={false}
+        components={{ ClearIndicator }}
+        styles={{ clearIndicator: ClearIndicatorStyles }}
+        defaultValue={[]}
+        name="sem_id"
+        onChange={semInfoCollect}
+        isSearchable
+        // isMulti
+        options={sems}
+      />
+  
+  <label for="dept_id">Department : </label>
+    <Select
+          closeMenuOnSelect={false}
+          components={{ ClearIndicator }}
+          styles={{ clearIndicator: ClearIndicatorStyles }}
+          defaultValue={[]}
+          name="emp_id"
+          onChange={deptInfoCollect}
+          isSearchable
+          isMulti
+          options={depts}
+        />
+        
+        <label for="emp_id">Faculty : </label>
+  <Select
+        closeMenuOnSelect={false}
+        components={{ ClearIndicator }}
+        styles={{ clearIndicator: ClearIndicatorStyles }}
+        defaultValue={[]}
+        name="emp_id"
+        onChange={facInfoCollect}
+        isSearchable
+        isMulti
+        options={facs}
+      />
+  
+             <input
+    className='filter-button'
+    type='button'
+    value="Filter"
+    onClick={onClickFilter}
+    style={{
+    
+      backgroundColor: '#4CAF50',
+      border: 'none',
+      color: 'white',
+      padding: '10px 15px',
+      textAlign: 'center',
+      textDecoration: 'none',
+      display: 'inline-block',
+      fontSize: '16px',
+      margin: '4px 2px',
+      cursor: 'pointer',
+      borderRadius: '12px'
+    }}
+  />
+  </div>
+         <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-50px"}}>
+         <div class="report-header">
+         <h1 class="recent-Articles">Your Reports</h1>
+         </div>
+         <table className='table table-striped '>                           
+          <thead>
+          <tr>
+                     <th>Report ID</th>
+                     <th>Name of the Faculty</th> 
+                     <th>Academic Year</th>
+                     <th>Semester</th>
+                     <th>Name of the Faculty Coordinator</th>
+                     <th>Nature of the activity</th>
+                     <th>Name of MoU signed industry or institution</th>
+                     <th>Title of the activity</th>
+                     <th>Name of Resource Person</th>
+                     <th>Designation of resource person</th>
+                     <th>REPORT VIEW</th>
+        </tr>
+       {              
+                      collabrativeRecs.length>0? 
+                      collabrativeRecs.map((val)=>(
+                          <tr>
+                              <td>{val.report_id}</td>
+                              <td>{val.name_of_the_faculty}</td>
+                              <td>{val.acd_yr}</td>
+                              <td>{val.sem}</td>
+                              <td>{val.name_of_the_faculty_coordinator}</td>
+                              <td>{val.nature_of_the_activity}</td>
+                              <td>{val.name_of_MoU_signed_industry_or_institution}</td>
+                              <td>{val.title_of_the_activity}</td>
+                              <td>{val.name_of_resource_person}</td>
+                              <td>{val.designation_of_resource_person}</td>
+                              <td><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></td>
+
+                          </tr>
+                      ))
+                      :
+                      <tr>No records</tr>
+                  }
+          </thead>
+         </table>
+         </div>
+         
+                      
+        </>
+    )
+  }
+
+/////////////////studentsmotivation//////////////
+export const MotivationPrincipalDashboard=()=>{
+  
+  const generatePDF = async (report_id)=> {
+    try{
+        // alert(report_id)
+    const res = await axios.get(`http://localhost:1234/setaf/data/motivation/${report_id}`);
+    const data = res.data;
+    const doc = new jsPDF();
+
+    let pdfDocument;
+    try{
+        const pdfUrl = `/Journal_SETAF/${data.certificate_PDF}`;
+        const pdfResponse = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
+        const pdfData = pdfResponse.data;
+
+     pdfDocument = await getDocument({ data: pdfData }).promise;
+       }catch(e){
+        console.log(e)
+       }  
+       doc.addImage(Image, 'PNG', 10, 3, 20, 20);
+       doc.addImage(Image2, 'PNG', 12,23, 15, 15);
+       doc.addImage(Image3, 'JPG', 175, 3, 20, 15);
+       doc.addImage(Image4, 'JPG', 175, 20, 20, 15);
+       doc.setFontSize(18);
+       doc.setFont("times", "bold");
+       doc.text('MUTHAYAMMAL ENGINEERING COLLEGE',35, 15);
+       doc.setFontSize(10);
+       doc.setFont("times", "");
+       doc.text('(An Autonomous Institution)', 80, 20);
+       doc.text('(Approved by AICTE, New Delhi, Accredited by NAAC & Affiliated to Anna University)', 35, 25);
+       doc.text('Rasipuram - 637 408, Namakkal Dist., Tamil Nadu', 65, 30);
+       doc.setFont("times", "bold");
+       
+       doc.setFontSize(15); 
+       doc.rect(12, 53, 32, 11).stroke();
+       doc.text(`${data.dept}`,25,60)
+       doc.rect(90,38,32,11)
+       doc.text('SETAF', 97, 45);
+       doc.rect(80,54,52,11)
+       doc.text("Student Motivation",83,61)
+       
+       doc.rect(168, 53, 30, 11).stroke();
+       doc.setFontSize(15); 
+       doc.text(`${data.acd_yr}`,173,60)
+       
+       doc.rect(12, 80, 50, 12).stroke();
+       doc.text('Name of the faculty', 14, 88);
+       doc.setFont("times", "");
+       doc.rect(62, 80, 140, 12).stroke();
+       doc.text(`${data.name_of_the_faculty}`, 65, 88);
+       
+       doc.setFont("times", "bold");
+       doc.rect(12, 92, 50, 12).stroke();
+       doc.text('Name of the student', 14, 100);
+       doc.setFont("times", "");
+       doc.rect(62, 92, 140, 12).stroke();
+       doc.text(`${data.name_of_the_student}`, 65, 100);
+       
+       doc.setFont("times", "bold");
+       doc.rect(12, 104, 50, 12).stroke();
+       doc.text('Paper Presentation', 14, 112);
+       doc.setFont("times", "");
+       doc.rect(62, 104, 140, 12).stroke();
+       doc.text(`${data.paper_presentation_project_submission_other_contest}`, 65, 112);
+ 
+       doc.setFont("times", "bold");
+       doc.rect(12, 116, 50, 12).stroke();
+       doc.text('No of beneficiaries', 14, 124);
+       doc.setFont("times", "");
+       doc.rect(62, 116, 140, 12).stroke();
+       doc.text(`${data.no_of_beneficiaries}`, 65, 124);
+ 
+    
+    try{ 
+        for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber++) {
+          const page = await pdfDocument.getPage(pageNumber);
+          const pdfWidth = page.view[2];
+          const pdfHeight = page.view[3];
+      
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          canvas.width = pdfWidth;
+          canvas.height = pdfHeight;
+      
+          await page.render({ canvasContext: context, viewport: page.getViewport({ scale: 1 }) }).promise;
+      
+          const imageDataUrl = canvas.toDataURL('image/jpeg');
+          try{doc.addPage();
+          doc.addImage(imageDataUrl, 'JPEG', 5, 0, 200, 300);
+          }catch(error){
+            console.error(error);
+          }
+        }
+      }
+      catch(e){
+        console.log(e);
+      }
+    const pdfDataUri = doc.output('datauristring');
+    const newWindow = window.open();
+    newWindow.document.write(`<iframe width='100%' height='100%' src='${pdfDataUri}'></iframe>`);
+  }
+  catch(e)
+  {
+    console.log(e);
+  }
+}
+
+      /////////////////////filter options
+      const[year,setYear]=useState([])
+      const [currentRecords, setCurrentRecords] = useState([]);
+      let [AcdVals,setAcdVals]=useState("")
+      const[selectedSem,setSelectedSem]=useState([])
+      let [empVals,setEmpVals]=useState("")
+      const [emp,setEmp]=useState([])
+      let [deptVals,setDeptVals]=useState("")
+
+      
+      const[filter,setFilter]=useState({
+       "acdyr_id":"",
+       "sem_id":"",
+       "emp_id":""
+   })
+   console.log(filter)
+      const CustomClearText = () => <>X</>;
+ 
+      const ClearIndicator =(props) =>{
+        const {
+          children = <CustomClearText />,
+          getStyles,
+          innerProps: {ref, ...restInnerProps },
+        }= props;
+        return(
+          <div
+            {...restInnerProps}
+            ref={ref}
+            style={getStyles('clearIndicator', props)}
+          >
+            <div style={{padding: '0px 5px'}}>{children}</div>
+          </div>
+        )
+      }
+    
+      const ClearIndicatorStyles = (base, state) => ({
+        ...base,
+        cursor: 'pointer',
+        color: state.isFocused ? 'blue' : 'black',
+      });
+    
+      const acdInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           acdyr_id:""
+       }))
+       }else{
+     
+         const label = eve.label
+         const value = eve.value
+         const extraInfo = eve.extraInfo
+     
+         let isArray = Array.isArray(eve);
+         // alert(JSON.stringify(eve))
+         if(eve.length==1){
+             if(typeof eve[0].value === 'string'){
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[0].extraInfo]:eve[0].value
+                 }))
+             }else{
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+             }))}
+         }
+         if(isArray){
+             // if(eve.length==1){
+             //     if(eve[0].extraInfo=="major_id"){
+             //         Sub(eve[0].value)
+             //     }
+             //     setFilter((old)=>({
+             //         ...old,
+             //         [eve[0].extraInfo]:eve[0].value
+             //     }))
+             // }
+             if(eve.length!=1){
+             
+         if(eve[0].extraInfo=="acdyr_id"){
+             
+                 // alert(JSON.stringify(eve))
+                 for(let i=0;i<eve.length;i++){
+                     // alert(JSON.stringify(eve[i].value))
+                     AcdVals+=eve[i].value
+                     if(i!=eve.length-1){
+                         AcdVals+=","
+                     }
+                     setFilter((old)=>({
+                         ...old,
+                         [eve[i].extraInfo]:AcdVals
+                     }))
+                 }
+                 // alert(majorVals)
+             
+         }
+         }
+         }
+         else if(extraInfo=="sem_id"){
+             setSelectedSem(value)
+             // handleChange(value)
+             setFilter((old)=>({
+                 ...old,
+                 [extraInfo]:JSON.stringify(value)
+             }))
+         }
+       
+     }
+     }
+ 
+     const semInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           sem_id:""
+       }))
+       }else{
+     
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+     
+       let isArray = Array.isArray(eve);
+       
+       if(isArray){
+           
+           if(eve.length!=1){
+           
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+       
+     }}
+
+     const facInfoCollect=(eve)=>{
+       if(eve.length==0){
+       setFilter((old)=>({
+           ...old,
+           emp_id:""
+       }))
+       }else{
+   
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+   
+       let isArray = Array.isArray(eve);
+       // alert(JSON.stringify(eve))
+       if(eve.length==1){
+          
+           if(typeof eve[0].value === 'string'){
+               setFilter((old)=>({
+                   ...old,
+                   [eve[0].extraInfo]:eve[0].value
+               }))
+           }else{
+           setFilter((old)=>({
+               ...old,
+               [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+           }))}
+       }
+       if(isArray){
+           // if(eve.length==1){
+           //     if(eve[0].extraInfo=="major_id"){
+           //         Sub(eve[0].value)
+           //     }
+           //     setFilter((old)=>({
+           //         ...old,
+           //         [eve[0].extraInfo]:eve[0].value
+           //     }))
+           // }
+           if(eve.length!=1){
+           if(eve[0].extraInfo=="emp_id"){
+               // Sub(0)
+               for(let i=0;i<eve.length;i++){
+                   empVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       empVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:empVals,
+                       // sub_id:""
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+      
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+     
+   }}
+   
+   const deptInfoCollect=(eve)=>{
+     if(eve.length==0){
+       setFilter((old)=>({
+         ...old,
+         dept_id:""
+     }))
+     }else{
+   
+     const label = eve.label
+     const value = eve.value
+     const extraInfo = eve.extraInfo
+   
+     let isArray = Array.isArray(eve);
+     // alert(JSON.stringify(eve))
+     if(eve.length==1){
+         if(eve[0].extraInfo=="dept_id"){
+             // alert(eve[0].value)
+             fetchFac(eve[0].value)
+         }
+         if(typeof eve[0].value === 'string'){
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:eve[0].value
+             }))
+         }else{
+         setFilter((old)=>({
+             ...old,
+             [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+         }))}
+     }
+     if(isArray){
+         // if(eve.length==1){
+         //     if(eve[0].extraInfo=="major_id"){
+         //         Sub(eve[0].value)
+         //     }
+         //     setFilter((old)=>({
+         //         ...old,
+         //         [eve[0].extraInfo]:eve[0].value
+         //     }))
+         // }
+         if(eve.length!=1){
+         if(eve[0].extraInfo=="dept_id"){
+             fetchFac(0)
+             for(let i=0;i<eve.length;i++){
+                 deptVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     deptVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:deptVals,
+                     emp_id:""
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     if(eve[0].extraInfo=="acdyr_id"){
+         
+             // alert(JSON.stringify(eve))
+             for(let i=0;i<eve.length;i++){
+                 // alert(JSON.stringify(eve[i].value))
+                 AcdVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     AcdVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:AcdVals
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     }
+     }
+     else if(extraInfo=="sem_id"){
+         setSelectedSem(value)
+         // handleChange(value)
+         setFilter((old)=>({
+             ...old,
+             [extraInfo]:JSON.stringify(value)
+         }))
+     }
+     
+   }}
+    
+      const Acad=async()=>{
+        const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+       //  alert(JSON.stringify(t.data.result))
+        setYear(t.data.result)
+    }
+    const years = year.map((val) => ({
+     value: val.acd_yr_id,
+     label: val.acd_yr,
+     extraInfo: "acdyr_id"
+     }));
+    useEffect(()=>{
+      Acad()
+      fetchFac()
+      fetchDept()
+    },[])
+  
+    const semester = [
+      {sem_id:1,sem:"Odd"},
+      {sem_id:2,sem:"Even"},
+      {sem_id:3,sem:"Both"},
+    ]
+    let sems = semester.map((val)=>({
+      value: val.sem_id,
+      label: val.sem,
+      extraInfo: "sem_id"
+    }))
+
+     // const fetchFac=async(dId)=>{
+     //   await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`)
+     //           .then((response) => {
+     //           console.log(response);
+     //           setEmp(response.data.rows);
+     //           })
+     //   }
+
+     const fetchFac = async (dId) => {
+       try {
+         const response = await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`);
+         console.log(response);
+         setEmp(response.data.rows);
+       } catch (error) {
+         if (error.response) {
+           // The request was made and the server responded with a status code
+           // that falls out of the range of 2xx
+           console.error('Response error:', error.response.data);
+           console.error('Response status:', error.response.status);
+           console.error('Response headers:', error.response.headers);
+         } else if (error.request) {
+           // The request was made but no response was received
+           console.error('Request error:', error.request);
+         } else {
+           // Something happened in setting up the request that triggered an Error
+           console.error('Error', error.message);
+         }
+         console.error('Config error:', error.config);
+       }
+     };
+       const facs=emp.map((val)=>({
+         value: val.faculty_id,
+         label: val.faculty_name,
+         extraInfo: "emp_id"
+         }))
+    
+     const[dept,setDept]=useState([])
+ const fetchDept=async()=>{
+     const t = await axios.get("http://localhost:1234/ecrFilter/getDeptList")
+     // alert(JSON.stringify(t.data.result))
+     setDept(t.data.result)
+ }
+ const depts = dept.map((val) => ({
+     value: val.dept_id,
+     label: val.dept,
+     extraInfo: "dept_id"
+     }));
+
+    const onClickFilter=async()=>{
+     alert("clicked")
+     alert(JSON.stringify(filter))
+     try{
+         // alert("hi")
+         const logged=JSON.parse(sessionStorage.getItem("person"))
+         const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/principal/data_setaf_students_motivation`,filter)
+         setMotivationRecs(filteredRecords.data.resultArray)
+         console.log(filteredRecords.data)
+         setCurrentRecords(filteredRecords.data.resultArray)
+     }
+     catch(err){
+         alert("No Reports in the selected filter")
+         console.log(err)
+     }
+ 
+   }
+
+  ////////////data fetch code/////////////////
+
+  const [MotivationRecs,setMotivationRecs]=useState([])
+  useEffect(()=>{
+      fetchMotivationRecords()
+  },[])
+  const logged=JSON.parse(sessionStorage.getItem("person"))
+  const fetchMotivationRecords=async()=>{
+      try{
+          const temp = await MotivationPrincipalView()
+      setMotivationRecs(temp.data)
+      }
+      catch(e){
+          console.log(e);
+      }
+  }
+
+  return(
+      <>
+      <div> <p>&nbsp;</p>
+        <p>&nbsp;</p>
+
+        </div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',marginTop:"120px",alignItems:'center',marginLeft:'-5%',justifyContent:'center'}}>
+        <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+<label for="dept_id">Department : </label>
+  <Select
+        closeMenuOnSelect={false}
+        components={{ ClearIndicator }}
+        styles={{ clearIndicator: ClearIndicatorStyles }}
+        defaultValue={[]}
+        name="emp_id"
+        onChange={deptInfoCollect}
+        isSearchable
+        isMulti
+        options={depts}
+      />
+      
+      <label for="emp_id">Faculty : </label>
+<Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="emp_id"
+      onChange={facInfoCollect}
+      isSearchable
+      isMulti
+      options={facs}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+</div>
+       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-50px"}}>
+       <div class="report-header">
+       <h1 class="recent-Articles">Your Reports</h1>
+       </div>
+       <table className='table table-striped '>                           
+        <thead>
+        <tr>
+                  <th>Report Id</th>
+                  <th>Name of the Faculty</th>
+                  <th>Academic Year</th>
+                  <th>Semester</th>
+                  <th>Name of the Student</th>
+                  <th>Paper Presentation/Project Submission</th>
+                  <th>Date</th>
+                  <th>No of beneficiaries</th>
+                  <th>Download PDF</th>
+       </tr>
+       
+       {               
+                      MotivationRecs.length>0?
+                      MotivationRecs.map((val)=>(
+                      <tr>
+                        <td>{val.report_id}</td>
+                        <td>{val.name_of_the_faculty}</td>
+                        <td>{val.acd_yr}</td>
+                        <td>{val.sem}</td>
+                        <td>{val.name_of_the_student}</td>
+                        <td>{val.paper_presentation_project_submission_other_contest}</td>
+                        <td>{val.date}</td>
+                        <td>{val.no_of_beneficiaries}</td>
+                        <th><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></th>
+                    </tr>
+                      ))
+                  :
+                  <tr> 
+                      
+                      No records
+                      
+                      </tr>}
+
+   
+        </thead>
+       </table>
+       </div>
+       
+                    
+      </>
+  )
+}
+
+/////////////////////professional society membership//////////////////////////
+
+export const ProfessionalPrincipalDashboard=()=>{
+
+  const generatePDF = async (report_id)=> {
+    try{
+        // alert(report_id)
+    const res = await axios.get(`http://localhost:1234/setaf/data/Professional${report_id}`);
+    const data = res.data;
+    const doc = new jsPDF();
+    let pdfDocument;
+    try{
+        const pdfUrl = `/Professional_SETAF/${data.professional_first_page_PDF}`;
+        const pdfResponse = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
+        const pdfData = pdfResponse.data;
+
+     pdfDocument = await getDocument({ data: pdfData }).promise;
+       }catch(e){
+        console.log(e)
+       }
+
+    doc.setFontSize(18);
+    doc.setFont("times", "bold");
+    doc.text('MUTHAYAMMAL ENGINEERING COLLEGE',35, 15);
+    doc.setFontSize(10);
+    doc.setFont("times", "");
+    doc.text('(An Autonomous Institution)', 80, 20);
+    doc.text('(Approved by AICTE, New Delhi, Accredited by NAAC & Affiliated to Anna University)', 35, 25);
+    doc.text('Rasipuram - 637 408, Namakkal Dist., Tamil Nadu', 65, 30);
+    
+    doc.setFont("times", "bold");
+    
+    doc.setFontSize(15); 
+    doc.rect(12, 48, 32, 11).stroke();
+    doc.text(`${data.department}`, 23, 55);
+    doc.rect(88, 48, 32, 11).stroke();
+    doc.text('SETAF', 95, 55);
+    
+    doc.rect(168, 48, 30, 11).stroke();
+    doc.setFontSize(15); 
+    doc.text(`${data.academic_year}`, 173, 55);
+    
+    doc.rect(12, 80, 50, 12).stroke();
+    doc.text('Semester', 14, 88);
+    doc.setFont("times", "");
+    doc.rect(62, 80, 140, 12).stroke();
+    doc.text(`${data.semester}`, 65, 88);
+    
+    doc.setFont("times", "bold");
+    doc.rect(12, 92, 50, 12).stroke();
+    doc.text('Name of the Faculity', 14, 100);
+    doc.setFont("times", "");
+    doc.rect(62, 92, 140, 12).stroke();
+    doc.text(`${data.name_of_faculity}`, 65, 100);
+    
+    doc.setFont("times", "bold");
+    doc.rect(12, 104, 50, 12).stroke();
+    doc.text('Date of Membership', 14, 112);
+    doc.setFont("times", "");
+    doc.rect(62, 104, 140, 12).stroke();
+    doc.text(`${data.date_of_membership}`, 65, 112);
+
+            
+    try{ 
+        // Add pages from the original PDF
+        for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber++) {
+          const page = await pdfDocument.getPage(pageNumber);
+          const pdfWidth = page.view[2];
+          const pdfHeight = page.view[3];
+      
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          canvas.width = pdfWidth;
+          canvas.height = pdfHeight;
+      
+          await page.render({ canvasContext: context, viewport: page.getViewport({ scale: 1 }) }).promise;
+      
+          const imageDataUrl = canvas.toDataURL('image/jpeg');
+          try{doc.addPage();
+          doc.addImage(imageDataUrl, 'JPEG', 5, 0, 200, 300);
+          }catch(error){
+            console.error(error);
+          }
+        }
+      }
+      catch(e){
+        console.log(e);
+      }
+
+
+    // Generate a data URI for the PDF
+    const pdfDataUri = doc.output('datauristring');
+
+    // Open the PDF in a new tab or window
+    const newWindow = window.open();
+    newWindow.document.write(`<iframe width='100%' height='100%' src='${pdfDataUri}'></iframe>`);
+  }
+  catch(e)
+  {
+    console.log(e);
+  }
+}
+ 
+/////////////////////filter options
+      const[year,setYear]=useState([])
+      const [currentRecords, setCurrentRecords] = useState([]);
+      let [AcdVals,setAcdVals]=useState("")
+      const[selectedSem,setSelectedSem]=useState([])
+      let [empVals,setEmpVals]=useState("")
+      const [emp,setEmp]=useState([])
+      let [deptVals,setDeptVals]=useState("")
+
+      
+      const[filter,setFilter]=useState({
+       "acdyr_id":"",
+       "sem_id":"",
+       "emp_id":""
+   })
+   console.log(filter)
+      const CustomClearText = () => <>X</>;
+ 
+      const ClearIndicator =(props) =>{
+        const {
+          children = <CustomClearText />,
+          getStyles,
+          innerProps: {ref, ...restInnerProps },
+        }= props;
+        return(
+          <div
+            {...restInnerProps}
+            ref={ref}
+            style={getStyles('clearIndicator', props)}
+          >
+            <div style={{padding: '0px 5px'}}>{children}</div>
+          </div>
+        )
+      }
+    
+      const ClearIndicatorStyles = (base, state) => ({
+        ...base,
+        cursor: 'pointer',
+        color: state.isFocused ? 'blue' : 'black',
+      });
+    
+      const acdInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           acdyr_id:""
+       }))
+       }else{
+     
+         const label = eve.label
+         const value = eve.value
+         const extraInfo = eve.extraInfo
+     
+         let isArray = Array.isArray(eve);
+         // alert(JSON.stringify(eve))
+         if(eve.length==1){
+             if(typeof eve[0].value === 'string'){
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[0].extraInfo]:eve[0].value
+                 }))
+             }else{
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+             }))}
+         }
+         if(isArray){
+             // if(eve.length==1){
+             //     if(eve[0].extraInfo=="major_id"){
+             //         Sub(eve[0].value)
+             //     }
+             //     setFilter((old)=>({
+             //         ...old,
+             //         [eve[0].extraInfo]:eve[0].value
+             //     }))
+             // }
+             if(eve.length!=1){
+             
+         if(eve[0].extraInfo=="acdyr_id"){
+             
+                 // alert(JSON.stringify(eve))
+                 for(let i=0;i<eve.length;i++){
+                     // alert(JSON.stringify(eve[i].value))
+                     AcdVals+=eve[i].value
+                     if(i!=eve.length-1){
+                         AcdVals+=","
+                     }
+                     setFilter((old)=>({
+                         ...old,
+                         [eve[i].extraInfo]:AcdVals
+                     }))
+                 }
+                 // alert(majorVals)
+             
+         }
+         }
+         }
+         else if(extraInfo=="sem_id"){
+             setSelectedSem(value)
+             // handleChange(value)
+             setFilter((old)=>({
+                 ...old,
+                 [extraInfo]:JSON.stringify(value)
+             }))
+         }
+       
+     }
+     }
+ 
+     const semInfoCollect=(eve)=>{
+       if(eve.length==0){
+         setFilter((old)=>({
+           ...old,
+           sem_id:""
+       }))
+       }else{
+     
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+     
+       let isArray = Array.isArray(eve);
+       
+       if(isArray){
+           
+           if(eve.length!=1){
+           
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+       
+     }}
+
+     const facInfoCollect=(eve)=>{
+       if(eve.length==0){
+       setFilter((old)=>({
+           ...old,
+           emp_id:""
+       }))
+       }else{
+   
+       const label = eve.label
+       const value = eve.value
+       const extraInfo = eve.extraInfo
+   
+       let isArray = Array.isArray(eve);
+       // alert(JSON.stringify(eve))
+       if(eve.length==1){
+          
+           if(typeof eve[0].value === 'string'){
+               setFilter((old)=>({
+                   ...old,
+                   [eve[0].extraInfo]:eve[0].value
+               }))
+           }else{
+           setFilter((old)=>({
+               ...old,
+               [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+           }))}
+       }
+       if(isArray){
+           // if(eve.length==1){
+           //     if(eve[0].extraInfo=="major_id"){
+           //         Sub(eve[0].value)
+           //     }
+           //     setFilter((old)=>({
+           //         ...old,
+           //         [eve[0].extraInfo]:eve[0].value
+           //     }))
+           // }
+           if(eve.length!=1){
+           if(eve[0].extraInfo=="emp_id"){
+               // Sub(0)
+               for(let i=0;i<eve.length;i++){
+                   empVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       empVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:empVals,
+                       // sub_id:""
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+       if(eve[0].extraInfo=="acdyr_id"){
+           
+               // alert(JSON.stringify(eve))
+               for(let i=0;i<eve.length;i++){
+                   // alert(JSON.stringify(eve[i].value))
+                   AcdVals+=eve[i].value
+                   if(i!=eve.length-1){
+                       AcdVals+=","
+                   }
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[i].extraInfo]:AcdVals
+                   }))
+               }
+               // alert(majorVals)
+           
+       }
+      
+       }
+       }
+       else if(extraInfo=="sem_id"){
+           setSelectedSem(value)
+           // handleChange(value)
+           setFilter((old)=>({
+               ...old,
+               [extraInfo]:JSON.stringify(value)
+           }))
+       }
+     
+   }}
+   
+   const deptInfoCollect=(eve)=>{
+     if(eve.length==0){
+       setFilter((old)=>({
+         ...old,
+         dept_id:""
+     }))
+     }else{
+   
+     const label = eve.label
+     const value = eve.value
+     const extraInfo = eve.extraInfo
+   
+     let isArray = Array.isArray(eve);
+     // alert(JSON.stringify(eve))
+     if(eve.length==1){
+         if(eve[0].extraInfo=="dept_id"){
+             // alert(eve[0].value)
+             fetchFac(eve[0].value)
+         }
+         if(typeof eve[0].value === 'string'){
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:eve[0].value
+             }))
+         }else{
+         setFilter((old)=>({
+             ...old,
+             [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+         }))}
+     }
+     if(isArray){
+         // if(eve.length==1){
+         //     if(eve[0].extraInfo=="major_id"){
+         //         Sub(eve[0].value)
+         //     }
+         //     setFilter((old)=>({
+         //         ...old,
+         //         [eve[0].extraInfo]:eve[0].value
+         //     }))
+         // }
+         if(eve.length!=1){
+         if(eve[0].extraInfo=="dept_id"){
+             fetchFac(0)
+             for(let i=0;i<eve.length;i++){
+                 deptVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     deptVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:deptVals,
+                     emp_id:""
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     if(eve[0].extraInfo=="acdyr_id"){
+         
+             // alert(JSON.stringify(eve))
+             for(let i=0;i<eve.length;i++){
+                 // alert(JSON.stringify(eve[i].value))
+                 AcdVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     AcdVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:AcdVals
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     }
+     }
+     else if(extraInfo=="sem_id"){
+         setSelectedSem(value)
+         // handleChange(value)
+         setFilter((old)=>({
+             ...old,
+             [extraInfo]:JSON.stringify(value)
+         }))
+     }
+     
+   }}
+    
+      const Acad=async()=>{
+        const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+       //  alert(JSON.stringify(t.data.result))
+        setYear(t.data.result)
+    }
+    const years = year.map((val) => ({
+     value: val.acd_yr_id,
+     label: val.acd_yr,
+     extraInfo: "acdyr_id"
+     }));
+    useEffect(()=>{
+      Acad()
+      fetchFac()
+      fetchDept()
+    },[])
+  
+    const semester = [
+      {sem_id:1,sem:"Odd"},
+      {sem_id:2,sem:"Even"},
+      {sem_id:3,sem:"Both"},
+    ]
+    let sems = semester.map((val)=>({
+      value: val.sem_id,
+      label: val.sem,
+      extraInfo: "sem_id"
+    }))
+
+     // const fetchFac=async(dId)=>{
+     //   await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`)
+     //           .then((response) => {
+     //           console.log(response);
+     //           setEmp(response.data.rows);
+     //           })
+     //   }
+
+     const fetchFac = async (dId) => {
+       try {
+         const response = await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`);
+         console.log(response);
+         setEmp(response.data.rows);
+       } catch (error) {
+         if (error.response) {
+           // The request was made and the server responded with a status code
+           // that falls out of the range of 2xx
+           console.error('Response error:', error.response.data);
+           console.error('Response status:', error.response.status);
+           console.error('Response headers:', error.response.headers);
+         } else if (error.request) {
+           // The request was made but no response was received
+           console.error('Request error:', error.request);
+         } else {
+           // Something happened in setting up the request that triggered an Error
+           console.error('Error', error.message);
+         }
+         console.error('Config error:', error.config);
+       }
+     };
+       const facs=emp.map((val)=>({
+         value: val.faculty_id,
+         label: val.faculty_name,
+         extraInfo: "emp_id"
+         }))
+    
+     const[dept,setDept]=useState([])
+ const fetchDept=async()=>{
+     const t = await axios.get("http://localhost:1234/ecrFilter/getDeptList")
+     // alert(JSON.stringify(t.data.result))
+     setDept(t.data.result)
+ }
+ const depts = dept.map((val) => ({
+     value: val.dept_id,
+     label: val.dept,
+     extraInfo: "dept_id"
+     }));
+
+    const onClickFilter=async()=>{
+     alert("clicked")
+     alert(JSON.stringify(filter))
+     try{
+         // alert("hi")
+         const logged=JSON.parse(sessionStorage.getItem("person"))
+         const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/principal/data_setaf_professional_society_membership`,filter)
+         setProfessionalRecs(filteredRecords.data.resultArray)
+         console.log(filteredRecords.data)
+         setCurrentRecords(filteredRecords.data.resultArray)
+     }
+     catch(err){
+         alert("No Reports in the selected filter")
+         console.log(err)
+     }
+ 
+   }
+
+
+  ///////////////professional fetch code/////////
+  const [ProfessionalRecs,setProfessionalRecs]=useState([])
+  useEffect(()=>{
+      fetchProfessionalRecords()
+  },[])
+  const logged=JSON.parse(sessionStorage.getItem("person"))
+  const fetchProfessionalRecords=async()=>{
+      try{
+          const temp = await professionalPrincipalView()
+          setProfessionalRecs(temp.data)
+      }
+      catch(e){
+          console.log(e);
+      }
+  }
+ 
+  return(
+      <>
+      <div>
+      <div> <p>&nbsp;</p>
+        <p>&nbsp;</p>
+
+        </div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',marginTop:"120px",alignItems:'center',marginLeft:'5px',justifyContent:'center'}}>
+        <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+<label for="dept_id">Department : </label>
+  <Select
+        closeMenuOnSelect={false}
+        components={{ ClearIndicator }}
+        styles={{ clearIndicator: ClearIndicatorStyles }}
+        defaultValue={[]}
+        name="emp_id"
+        onChange={deptInfoCollect}
+        isSearchable
+        isMulti
+        options={depts}
+      />
+      
+      <label for="emp_id">Faculty : </label>
+<Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="emp_id"
+      onChange={facInfoCollect}
+      isSearchable
+      isMulti
+      options={facs}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+</div>
+       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-50px"}}>
+       <div class="report-header">
+       <h1 class="recent-Articles">Professional Society Membership</h1>
+       </div>
+       <table className='table table-striped '>
+       <thead>
+       <tr>
+            <th>Report ID</th>
+            <th>Name of the Faculty</th>
+            <th>Academic Year</th>
+            <th>Semester</th>
+            <th>Membership ID</th>
+            <th>Date of Membership</th>
+            <th>Professional Society Membership</th>
+            <th>Download PDF</th>
+       
+       
+       </tr>
+       
+       {               
+                      ProfessionalRecs.length>0?
+                      ProfessionalRecs.map((val)=>(
+                      <tr>
+                        <td>{val.report_id}</td>
+                        <td>{val.name_of_the_faculty}</td>
+                        <td>{val.acd_yr}</td>
+                        <td>{val.sem}</td>
+                        <td>{val.membership_id}</td>
+                        <td>{val.date_of_membership}</td>
+                        <td>{val.professional_soceity_membership}</td>                              
+                        <th><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></th>
+                      </tr>
+                      ))
+                  :
+                  <tr> 
+                      
+                      No records
+                      
+                      </tr>}
+
+   
+       </thead>         
+       </table>
+       </div>
+       </div>
+    
+      
+    
+      </>
+  )
+}
+
+export const FieldworkPrincipalDashboard=()=>{
+  
+  const generatePDF = async (report_id)=> {
+    try{
+        // alert(report_id)
+    const res = await axios.get(`http://localhost:1234/setaf/data/fieldwork/${report_id}`);
+    const data = res.data;
+    const doc = new jsPDF();    
+    jsPDF.API.events.push(["addFonts", callAddBoldFont]);
+  
+    let pdfDocument;
+          try{
+              const pdfUrl = `/Journal_SETAF/${data.certificate_report_pdf}`;
+              const pdfResponse = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
+              const pdfData = pdfResponse.data;
+              
+           pdfDocument = await getDocument({ data: pdfData }).promise;
+             }catch(e){
+              console.log(e)
+             }  
+  
+  
+          doc.addImage(Image, 'PNG', 10, 3, 20, 20);
+          doc.addImage(Image2, 'PNG', 12,23, 15, 15);
+          doc.addImage(Image3, 'JPG', 175, 3, 20, 15);
+          doc.addImage(Image4, 'JPG', 175, 20, 20, 15);
+  
+          doc.setFontSize(18);
+          doc.setFont("times", "bold");
+          doc.text('MUTHAYAMMAL ENGINEERING COLLEGE',35, 15);
+          doc.setFontSize(10);
+          doc.setFont("times", "");
+          doc.text('(An Autonomous Institution)', 80, 20);
+          doc.text('(Approved by AICTE, New Delhi, Accredited by NAAC & Affiliated to Anna University)', 35, 25);
+          doc.text('Rasipuram - 637 408, Namakkal Dist., Tamil Nadu', 65, 30);
+          doc.setFont("times", "bold");
+          
+          doc.setFontSize(15); 
+          doc.rect(12, 53, 32, 11).stroke();
+          doc.text(`${data.dept}`,25,60)
+          doc.rect(90,38,32,11)
+          doc.text('SETAF', 97, 45);
+          doc.rect(50,54,112,11)
+          doc.text("Student Field Work, Internship Guidance",56,61)
+          
+         
+       doc.rect(168, 54, 28, 11).stroke();
+       doc.setFontSize(15); 
+       doc.text(`${data.acd_yr}`,172,61)
+  
+        doc.rect(12, 80, 70, 12).stroke();
+        doc.text('Name of the faculty', 14, 88);
+        doc.setFont("times", "");
+        doc.rect(82, 80, 120, 12).stroke();
+        doc.text(`${data.name_of_the_faculty}`, 90, 88);
+        //name_of_consultancy_project
+        doc.setFont("times", "bold");
+        doc.rect(12, 92, 70, 12).stroke();
+        doc.text('Student Name', 14, 100);
+        doc.setFont("times", "");
+        doc.rect(82, 92, 120, 12).stroke();
+        doc.text(`${data.student_name}`, 90, 100);
+        
+        doc.setFont("times", "bold");
+        doc.rect(12, 104, 70, 12).stroke();
+        doc.text('Nature of Guidance', 14, 112);
+        doc.setFont("times", "");
+        doc.rect(82, 104, 120, 12).stroke();
+        doc.text(`${data.nature_of_guidance}`, 90, 112);
+    
+        doc.setFont("times", "bold");
+        doc.rect(12, 116, 70, 12).stroke();
+        doc.text('Date of application', 14, 124);
+        doc.setFont("times", "");
+        doc.rect(82, 116, 120, 12).stroke();
+        doc.text(`${dateFormat(data.duration_from, "dd-mm-yyyy")}`, 90 , 124);
+    
+        doc.setFont("times", "bold");
+        doc.rect(12, 128, 70, 12).stroke();
+        doc.text('Date of publication', 14, 136);
+        doc.setFont("times", "");
+        doc.rect(82, 128, 120, 12).stroke();
+        doc.text(`${dateFormat(data.duration_to, "dd-mm-yyyy")}`, 90, 136);
+  
+        doc.setFont("times", "bold");
+        doc.rect(12, 140, 70, 12).stroke();
+        doc.text('Number of Students', 14, 148);
+        doc.setFont("times", "");
+        doc.rect(82, 140, 120, 12).stroke();
+        doc.text(`${data.number_of_students_undertaking_the_fieldwork_internship}`, 90, 148);
+  
+          try{ 
+              // Add pages from the original PDF
+              for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber++) {
+                const page = await pdfDocument.getPage(pageNumber);
+                const pdfWidth = page.view[2];
+                const pdfHeight = page.view[3];
+            
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = pdfWidth;
+                canvas.height = pdfHeight;
+            
+                await page.render({ canvasContext: context, viewport: page.getViewport({ scale: 1 }) }).promise;
+            
+                const imageDataUrl = canvas.toDataURL('image/jpeg');
+                try{doc.addPage();
+                doc.addImage(imageDataUrl, 'JPEG', 5, 0, 200, 300);
+                }catch(error){
+                  console.error(error);
+                }
+              }
+            }
+            catch(e){
+              console.log(e);
+            }
+  
+          // Generate a data URI for the PDF
+          const pdfDataUri = doc.output('datauristring');
+      
+          // Open the PDF in a new tab or window
+          const newWindow = window.open();
+          newWindow.document.write(`<iframe width='100%' height='100%' src='${pdfDataUri}'></iframe>`);
+        }
+        catch(e)
+        {
+          console.log(e);
+        }
+      }
+
+          /////////////////////filter options
+          const[year,setYear]=useState([])
+          const [currentRecords, setCurrentRecords] = useState([]);
+          let [AcdVals,setAcdVals]=useState("")
+          const[selectedSem,setSelectedSem]=useState([])
+          let [empVals,setEmpVals]=useState("")
+          const [emp,setEmp]=useState([])
+          let [deptVals,setDeptVals]=useState("")
+   
+          
+          const[filter,setFilter]=useState({
+           "acdyr_id":"",
+           "sem_id":"",
+           "emp_id":""
+       })
+       console.log(filter)
+          const CustomClearText = () => <>X</>;
+     
+          const ClearIndicator =(props) =>{
+            const {
+              children = <CustomClearText />,
+              getStyles,
+              innerProps: {ref, ...restInnerProps },
+            }= props;
+            return(
+              <div
+                {...restInnerProps}
+                ref={ref}
+                style={getStyles('clearIndicator', props)}
+              >
+                <div style={{padding: '0px 5px'}}>{children}</div>
+              </div>
+            )
+          }
+        
+          const ClearIndicatorStyles = (base, state) => ({
+            ...base,
+            cursor: 'pointer',
+            color: state.isFocused ? 'blue' : 'black',
+          });
+        
+          const acdInfoCollect=(eve)=>{
+           if(eve.length==0){
+             setFilter((old)=>({
+               ...old,
+               acdyr_id:""
+           }))
+           }else{
+         
+             const label = eve.label
+             const value = eve.value
+             const extraInfo = eve.extraInfo
+         
+             let isArray = Array.isArray(eve);
+             // alert(JSON.stringify(eve))
+             if(eve.length==1){
+                 if(typeof eve[0].value === 'string'){
+                     setFilter((old)=>({
+                         ...old,
+                         [eve[0].extraInfo]:eve[0].value
+                     }))
+                 }else{
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+                 }))}
+             }
+             if(isArray){
+                 // if(eve.length==1){
+                 //     if(eve[0].extraInfo=="major_id"){
+                 //         Sub(eve[0].value)
+                 //     }
+                 //     setFilter((old)=>({
+                 //         ...old,
+                 //         [eve[0].extraInfo]:eve[0].value
+                 //     }))
+                 // }
+                 if(eve.length!=1){
+                 
+             if(eve[0].extraInfo=="acdyr_id"){
+                 
+                     // alert(JSON.stringify(eve))
+                     for(let i=0;i<eve.length;i++){
+                         // alert(JSON.stringify(eve[i].value))
+                         AcdVals+=eve[i].value
+                         if(i!=eve.length-1){
+                             AcdVals+=","
+                         }
+                         setFilter((old)=>({
+                             ...old,
+                             [eve[i].extraInfo]:AcdVals
+                         }))
+                     }
+                     // alert(majorVals)
+                 
+             }
+             }
+             }
+             else if(extraInfo=="sem_id"){
+                 setSelectedSem(value)
+                 // handleChange(value)
+                 setFilter((old)=>({
+                     ...old,
+                     [extraInfo]:JSON.stringify(value)
+                 }))
+             }
+           
+         }
+         }
+     
+         const semInfoCollect=(eve)=>{
+           if(eve.length==0){
+             setFilter((old)=>({
+               ...old,
+               sem_id:""
+           }))
+           }else{
+         
+           const label = eve.label
+           const value = eve.value
+           const extraInfo = eve.extraInfo
+         
+           let isArray = Array.isArray(eve);
+           
+           if(isArray){
+               
+               if(eve.length!=1){
+               
+           if(eve[0].extraInfo=="acdyr_id"){
+               
+                   // alert(JSON.stringify(eve))
+                   for(let i=0;i<eve.length;i++){
+                       // alert(JSON.stringify(eve[i].value))
+                       AcdVals+=eve[i].value
+                       if(i!=eve.length-1){
+                           AcdVals+=","
+                       }
+                       setFilter((old)=>({
+                           ...old,
+                           [eve[i].extraInfo]:AcdVals
+                       }))
+                   }
+                   // alert(majorVals)
+               
+           }
+           }
+           }
+           else if(extraInfo=="sem_id"){
+               setSelectedSem(value)
+               // handleChange(value)
+               setFilter((old)=>({
+                   ...old,
+                   [extraInfo]:JSON.stringify(value)
+               }))
+           }
+           
+         }}
+   
+         const facInfoCollect=(eve)=>{
+           if(eve.length==0){
+           setFilter((old)=>({
+               ...old,
+               emp_id:""
+           }))
+           }else{
+       
+           const label = eve.label
+           const value = eve.value
+           const extraInfo = eve.extraInfo
+       
+           let isArray = Array.isArray(eve);
+           // alert(JSON.stringify(eve))
+           if(eve.length==1){
+              
+               if(typeof eve[0].value === 'string'){
+                   setFilter((old)=>({
+                       ...old,
+                       [eve[0].extraInfo]:eve[0].value
+                   }))
+               }else{
+               setFilter((old)=>({
+                   ...old,
+                   [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+               }))}
+           }
+           if(isArray){
+               // if(eve.length==1){
+               //     if(eve[0].extraInfo=="major_id"){
+               //         Sub(eve[0].value)
+               //     }
+               //     setFilter((old)=>({
+               //         ...old,
+               //         [eve[0].extraInfo]:eve[0].value
+               //     }))
+               // }
+               if(eve.length!=1){
+               if(eve[0].extraInfo=="emp_id"){
+                   // Sub(0)
+                   for(let i=0;i<eve.length;i++){
+                       empVals+=eve[i].value
+                       if(i!=eve.length-1){
+                           empVals+=","
+                       }
+                       setFilter((old)=>({
+                           ...old,
+                           [eve[i].extraInfo]:empVals,
+                           // sub_id:""
+                       }))
+                   }
+                   // alert(majorVals)
+               
+           }
+           if(eve[0].extraInfo=="acdyr_id"){
+               
+                   // alert(JSON.stringify(eve))
+                   for(let i=0;i<eve.length;i++){
+                       // alert(JSON.stringify(eve[i].value))
+                       AcdVals+=eve[i].value
+                       if(i!=eve.length-1){
+                           AcdVals+=","
+                       }
+                       setFilter((old)=>({
+                           ...old,
+                           [eve[i].extraInfo]:AcdVals
+                       }))
+                   }
+                   // alert(majorVals)
+               
+           }
+          
+           }
+           }
+           else if(extraInfo=="sem_id"){
+               setSelectedSem(value)
+               // handleChange(value)
+               setFilter((old)=>({
+                   ...old,
+                   [extraInfo]:JSON.stringify(value)
+               }))
+           }
+         
+       }}
+       
+       const deptInfoCollect=(eve)=>{
+         if(eve.length==0){
+           setFilter((old)=>({
+             ...old,
+             dept_id:""
+         }))
+         }else{
+       
+         const label = eve.label
+         const value = eve.value
+         const extraInfo = eve.extraInfo
+       
+         let isArray = Array.isArray(eve);
+         // alert(JSON.stringify(eve))
+         if(eve.length==1){
+             if(eve[0].extraInfo=="dept_id"){
+                 // alert(eve[0].value)
+                 fetchFac(eve[0].value)
+             }
+             if(typeof eve[0].value === 'string'){
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[0].extraInfo]:eve[0].value
+                 }))
+             }else{
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+             }))}
+         }
+         if(isArray){
+             // if(eve.length==1){
+             //     if(eve[0].extraInfo=="major_id"){
+             //         Sub(eve[0].value)
+             //     }
+             //     setFilter((old)=>({
+             //         ...old,
+             //         [eve[0].extraInfo]:eve[0].value
+             //     }))
+             // }
+             if(eve.length!=1){
+             if(eve[0].extraInfo=="dept_id"){
+                 fetchFac(0)
+                 for(let i=0;i<eve.length;i++){
+                     deptVals+=eve[i].value
+                     if(i!=eve.length-1){
+                         deptVals+=","
+                     }
+                     setFilter((old)=>({
+                         ...old,
+                         [eve[i].extraInfo]:deptVals,
+                         emp_id:""
+                     }))
+                 }
+                 // alert(majorVals)
+             
+         }
+         if(eve[0].extraInfo=="acdyr_id"){
+             
+                 // alert(JSON.stringify(eve))
+                 for(let i=0;i<eve.length;i++){
+                     // alert(JSON.stringify(eve[i].value))
+                     AcdVals+=eve[i].value
+                     if(i!=eve.length-1){
+                         AcdVals+=","
+                     }
+                     setFilter((old)=>({
+                         ...old,
+                         [eve[i].extraInfo]:AcdVals
+                     }))
+                 }
+                 // alert(majorVals)
+             
+         }
+         }
+         }
+         else if(extraInfo=="sem_id"){
+             setSelectedSem(value)
+             // handleChange(value)
+             setFilter((old)=>({
+                 ...old,
+                 [extraInfo]:JSON.stringify(value)
+             }))
+         }
+         
+       }}
+        
+          const Acad=async()=>{
+            const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+           //  alert(JSON.stringify(t.data.result))
+            setYear(t.data.result)
+        }
+        const years = year.map((val) => ({
+         value: val.acd_yr_id,
+         label: val.acd_yr,
+         extraInfo: "acdyr_id"
+         }));
+        useEffect(()=>{
+          Acad()
+          fetchFac()
+          fetchDept()
+        },[])
+      
+        const semester = [
+          {sem_id:1,sem:"Odd"},
+          {sem_id:2,sem:"Even"},
+          {sem_id:3,sem:"Both"},
+        ]
+        let sems = semester.map((val)=>({
+          value: val.sem_id,
+          label: val.sem,
+          extraInfo: "sem_id"
+        }))
+   
+         // const fetchFac=async(dId)=>{
+         //   await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`)
+         //           .then((response) => {
+         //           console.log(response);
+         //           setEmp(response.data.rows);
+         //           })
+         //   }
+   
+         const fetchFac = async (dId) => {
+           try {
+             const response = await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`);
+             console.log(response);
+             setEmp(response.data.rows);
+           } catch (error) {
+             if (error.response) {
+               // The request was made and the server responded with a status code
+               // that falls out of the range of 2xx
+               console.error('Response error:', error.response.data);
+               console.error('Response status:', error.response.status);
+               console.error('Response headers:', error.response.headers);
+             } else if (error.request) {
+               // The request was made but no response was received
+               console.error('Request error:', error.request);
+             } else {
+               // Something happened in setting up the request that triggered an Error
+               console.error('Error', error.message);
+             }
+             console.error('Config error:', error.config);
+           }
+         };
+           const facs=emp.map((val)=>({
+             value: val.faculty_id,
+             label: val.faculty_name,
+             extraInfo: "emp_id"
+             }))
+        
+         const[dept,setDept]=useState([])
+     const fetchDept=async()=>{
+         const t = await axios.get("http://localhost:1234/ecrFilter/getDeptList")
+         // alert(JSON.stringify(t.data.result))
+         setDept(t.data.result)
+     }
+     const depts = dept.map((val) => ({
+         value: val.dept_id,
+         label: val.dept,
+         extraInfo: "dept_id"
+         }));
+   
+        const onClickFilter=async()=>{
+         alert("clicked")
+         alert(JSON.stringify(filter))
+         try{
+             // alert("hi")
+             const logged=JSON.parse(sessionStorage.getItem("person"))
+             const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/principal/data_setaf_fieldwork_internship`,filter)
+             setFieldworkRecs(filteredRecords.data.resultArray)
+             console.log(filteredRecords.data)
+             setCurrentRecords(filteredRecords.data.resultArray)
+         }
+         catch(err){
+             alert("No Reports in the selected filter")
+             console.log(err)
+         }
+     
+       }
+////////////data fetch code/////////////////
+
+  const [FieldworkRecs,setFieldworkRecs]=useState([])
+  useEffect(()=>{
+      fetchFieldworkRecords()
+  },[])
+  const logged=JSON.parse(sessionStorage.getItem("person"))
+
+
+  const fetchFieldworkRecords=async()=>{
+      try{
+          const temp = await StudentFieldworkPrincipal() 
+      setFieldworkRecs(temp.data)
+      // console.log(temp.data)
+      }
+      catch(e){
+          console.log(e);
+      }
+  }
+
+  return(
+      <>
+  <div> <p>&nbsp;</p>
+        <p>&nbsp;</p>
+
+        </div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',marginTop:"120px",alignItems:'center',marginLeft:'-5%',justifyContent:'center'}}>
+        <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+<label for="dept_id">Department : </label>
+  <Select
+        closeMenuOnSelect={false}
+        components={{ ClearIndicator }}
+        styles={{ clearIndicator: ClearIndicatorStyles }}
+        defaultValue={[]}
+        name="emp_id"
+        onChange={deptInfoCollect}
+        isSearchable
+        isMulti
+        options={depts}
+      />
+      
+      <label for="emp_id">Faculty : </label>
+<Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="emp_id"
+      onChange={facInfoCollect}
+      isSearchable
+      isMulti
+      options={facs}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+</div>
+       <div class="overallcontent " style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-50px"}}>
+       <div class="report-header">
+       <h1 class="recent-Articles">Fieldwork</h1>
+       </div>
+       <table className='table table-striped '>                           
+        <thead>
+        <tr>
+                          <th>Report ID</th>
+                          <th>Accademic Year</th>
+                          <th>Semester</th>
+                          <th>Name of the Faculty</th>
+                          <th>Nature of Guidance</th>
+                          <th>Duration From</th>
+                          <th>Duration To</th>
+                          <th>Number of Student Undertaking the Field Work</th>
+                          <th>Student Name</th>
+                          <th>Download PDF</th>
+        </tr>
+        {               
+                     FieldworkRecs.length>0?
+                     FieldworkRecs.map((val)=>(
                           <tr>
                               <td>{val.report_id}</td>
                               <td>{val.acd_yr}</td>
-                              <td>{val.semester}</td>
+                              <td>{val.sem}</td>
                               <td>{val.name_of_the_faculty}</td>
-                              <td>{val.name_of_the_authors}</td>
-                              <td>{val.title_of_the_book}</td>
-                              <td>{dateFormat(val.date_of_publication,'dd-mm-yyyy')}</td>
-                              <td>{val.isbn_number}</td>
-                              <td>{val.category}</td>
+                              <td>{val.nature_of_guidance}</td>
+                              <td>{dateFormat(val.duration_from,'dd-mm-yyyy')}</td>
+                              <td>{dateFormat(val.duration_to,'dd-mm-yyyy')}</td>
+                              <td>{val.number_of_students_undertaking_the_fieldwork_internship}</td>
+                              <td>{val.student_name}</td>
                               <th><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></th>
                           </tr>
                       ))
@@ -3471,6 +13817,694 @@ catch(e)
        </div>
        
                     
+      </>
+  )
+}
+
+///fdpsdp
+export const FdpSdpPrincipal=()=>{
+
+  const generatePDF = async (report_id)=> {
+      try{
+      const res = await axios.get(`http://localhost:1234/setaf/data/fdpsdp/${report_id}`);
+      const data = res.data;
+      const doc = new jsPDF(); 
+      let pdfDocument;
+      try{
+          const pdfUrl = `/Journal_SETAF/${data.certificates_pdf}`;
+          const pdfResponse = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
+          const pdfData = pdfResponse.data;
+  
+       pdfDocument = await getDocument({ data: pdfData }).promise;
+         }catch(e){
+          console.log(e)
+         }  
+  
+       doc.addImage(Image, 'PNG', 10, 3, 20, 20);
+       doc.addImage(Image2, 'PNG', 12,23, 15, 15);
+       doc.addImage(Image3, 'JPG', 175, 3, 20, 15);
+       doc.addImage(Image4, 'JPG', 175, 20, 20, 15);
+  
+       doc.setFontSize(18);
+       doc.setFont("times", "bold");
+       doc.text('MUTHAYAMMAL ENGINEERING COLLEGE',35, 15);
+       doc.setFontSize(10);
+       doc.setFont("times", "");
+       doc.text('(An Autonomous Institution)', 80, 20);
+       doc.text('(Approved by AICTE, New Delhi, Accredited by NAAC & Affiliated to Anna University)', 35, 25);
+       doc.text('Rasipuram - 637 408, Namakkal Dist., Tamil Nadu', 65, 30);
+      
+      doc.setFont("times", "bold");
+      
+      doc.setFontSize(15); 
+      doc.rect(12, 53, 32, 11).stroke();
+      doc.text(`${data.dept}`,25,60)
+      doc.rect(90,38,32,11)
+      doc.text('SETAF', 97, 45);
+      doc.rect(65,54,85,11)
+      doc.text("FDPs and SDPs CERTIFICATE",71,61)
+      
+      doc.rect(168, 53, 30, 11).stroke();
+      doc.setFontSize(15); 
+      doc.text(`${data.acd_yr}`,173,60)
+      
+      doc.rect(12, 80, 64, 12).stroke();
+      doc.text('Designation', 14, 88);
+      doc.setFont("times", "");
+      doc.rect(76, 80, 126, 12).stroke();
+      doc.text(`${data.designation}`, 80, 88);
+      
+      doc.setFont("times", "bold");
+      doc.rect(12, 92, 64, 12).stroke();
+      doc.text('Nature of the Program', 14, 100);
+      doc.setFont("times", "");
+      doc.rect(76, 92, 126, 12).stroke();
+      doc.text(`${data.nature_of_the_program}`, 80, 100);
+      
+      doc.setFont("times", "bold");
+      doc.rect(12, 104, 64, 12).stroke();
+      doc.text('Title of the Program', 14, 112);
+      doc.setFont("times", "");
+      doc.rect(76, 104, 126, 12).stroke();
+      doc.text(`${data.title_of_the_program}`, 80, 112);
+      doc.setFont("times", "bold");
+      doc.rect(12, 116, 64, 12).stroke();
+      doc.text('Participation', 14, 124);
+      doc.setFont("times", "");
+      doc.rect(76, 116, 126, 12).stroke();
+      doc.text(`${data.participation}`, 80, 124);
+
+      doc.setFont("times", "bold");
+      doc.rect(12, 128, 64, 12).stroke();
+      doc.text('Name of the Organization', 14, 136);
+      doc.setFont("times", "");
+      doc.rect(76, 128, 126, 12).stroke();
+      doc.text(`${data.name_of_the_organization_and_place}`, 80, 136);
+      try{ 
+          // Add pages from the original PDF
+          for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber++) {
+            const page = await pdfDocument.getPage(pageNumber);
+            const pdfWidth = page.view[2];
+            const pdfHeight = page.view[3];
+        
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = pdfWidth;
+            canvas.height = pdfHeight;
+        
+            await page.render({ canvasContext: context, viewport: page.getViewport({ scale: 1 }) }).promise;
+        
+            const imageDataUrl = canvas.toDataURL('image/jpeg');
+            try{doc.addPage();
+            doc.addImage(imageDataUrl, 'JPEG', 5, 0, 200, 300);
+            }catch(error){
+              console.error(error);
+            }
+          }
+        }
+        catch(e){
+          console.log(e);
+        }
+  
+      // Generate a data URI for the PDF
+      const pdfDataUri = doc.output('datauristring');
+    
+      // Open the PDF in a new tab or window
+      const newWindow = window.open();
+      newWindow.document.write(`<iframe width='100%' height='100%' src='${pdfDataUri}'></iframe>`);
+    }
+    catch(e)
+    {
+      console.log(e);
+    }
+    }
+  /////////////////////filter options
+  const[year,setYear]=useState([])
+  const [currentRecords, setCurrentRecords] = useState([]);
+  let [AcdVals,setAcdVals]=useState("")
+  const[selectedSem,setSelectedSem]=useState([])
+  let [empVals,setEmpVals]=useState("")
+  const [emp,setEmp]=useState([])
+  let [deptVals,setDeptVals]=useState("")
+
+  
+  const[filter,setFilter]=useState({
+   "acdyr_id":"",
+   "sem_id":"",
+   "emp_id":""
+})
+console.log(filter)
+  const CustomClearText = () => <>X</>;
+
+  const ClearIndicator =(props) =>{
+    const {
+      children = <CustomClearText />,
+      getStyles,
+      innerProps: {ref, ...restInnerProps },
+    }= props;
+    return(
+      <div
+        {...restInnerProps}
+        ref={ref}
+        style={getStyles('clearIndicator', props)}
+      >
+        <div style={{padding: '0px 5px'}}>{children}</div>
+      </div>
+    )
+  }
+
+  const ClearIndicatorStyles = (base, state) => ({
+    ...base,
+    cursor: 'pointer',
+    color: state.isFocused ? 'blue' : 'black',
+  });
+
+  const acdInfoCollect=(eve)=>{
+   if(eve.length==0){
+     setFilter((old)=>({
+       ...old,
+       acdyr_id:""
+   }))
+   }else{
+ 
+     const label = eve.label
+     const value = eve.value
+     const extraInfo = eve.extraInfo
+ 
+     let isArray = Array.isArray(eve);
+     // alert(JSON.stringify(eve))
+     if(eve.length==1){
+         if(typeof eve[0].value === 'string'){
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:eve[0].value
+             }))
+         }else{
+         setFilter((old)=>({
+             ...old,
+             [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+         }))}
+     }
+     if(isArray){
+         // if(eve.length==1){
+         //     if(eve[0].extraInfo=="major_id"){
+         //         Sub(eve[0].value)
+         //     }
+         //     setFilter((old)=>({
+         //         ...old,
+         //         [eve[0].extraInfo]:eve[0].value
+         //     }))
+         // }
+         if(eve.length!=1){
+         
+     if(eve[0].extraInfo=="acdyr_id"){
+         
+             // alert(JSON.stringify(eve))
+             for(let i=0;i<eve.length;i++){
+                 // alert(JSON.stringify(eve[i].value))
+                 AcdVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     AcdVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:AcdVals
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     }
+     }
+     else if(extraInfo=="sem_id"){
+         setSelectedSem(value)
+         // handleChange(value)
+         setFilter((old)=>({
+             ...old,
+             [extraInfo]:JSON.stringify(value)
+         }))
+     }
+   
+ }
+ }
+
+ const semInfoCollect=(eve)=>{
+   if(eve.length==0){
+     setFilter((old)=>({
+       ...old,
+       sem_id:""
+   }))
+   }else{
+ 
+   const label = eve.label
+   const value = eve.value
+   const extraInfo = eve.extraInfo
+ 
+   let isArray = Array.isArray(eve);
+   
+   if(isArray){
+       
+       if(eve.length!=1){
+       
+   if(eve[0].extraInfo=="acdyr_id"){
+       
+           // alert(JSON.stringify(eve))
+           for(let i=0;i<eve.length;i++){
+               // alert(JSON.stringify(eve[i].value))
+               AcdVals+=eve[i].value
+               if(i!=eve.length-1){
+                   AcdVals+=","
+               }
+               setFilter((old)=>({
+                   ...old,
+                   [eve[i].extraInfo]:AcdVals
+               }))
+           }
+           // alert(majorVals)
+       
+   }
+   }
+   }
+   else if(extraInfo=="sem_id"){
+       setSelectedSem(value)
+       // handleChange(value)
+       setFilter((old)=>({
+           ...old,
+           [extraInfo]:JSON.stringify(value)
+       }))
+   }
+   
+ }}
+
+ const facInfoCollect=(eve)=>{
+   if(eve.length==0){
+   setFilter((old)=>({
+       ...old,
+       emp_id:""
+   }))
+   }else{
+
+   const label = eve.label
+   const value = eve.value
+   const extraInfo = eve.extraInfo
+
+   let isArray = Array.isArray(eve);
+   // alert(JSON.stringify(eve))
+   if(eve.length==1){
+      
+       if(typeof eve[0].value === 'string'){
+           setFilter((old)=>({
+               ...old,
+               [eve[0].extraInfo]:eve[0].value
+           }))
+       }else{
+       setFilter((old)=>({
+           ...old,
+           [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+       }))}
+   }
+   if(isArray){
+       // if(eve.length==1){
+       //     if(eve[0].extraInfo=="major_id"){
+       //         Sub(eve[0].value)
+       //     }
+       //     setFilter((old)=>({
+       //         ...old,
+       //         [eve[0].extraInfo]:eve[0].value
+       //     }))
+       // }
+       if(eve.length!=1){
+       if(eve[0].extraInfo=="emp_id"){
+           // Sub(0)
+           for(let i=0;i<eve.length;i++){
+               empVals+=eve[i].value
+               if(i!=eve.length-1){
+                   empVals+=","
+               }
+               setFilter((old)=>({
+                   ...old,
+                   [eve[i].extraInfo]:empVals,
+                   // sub_id:""
+               }))
+           }
+           // alert(majorVals)
+       
+   }
+   if(eve[0].extraInfo=="acdyr_id"){
+       
+           // alert(JSON.stringify(eve))
+           for(let i=0;i<eve.length;i++){
+               // alert(JSON.stringify(eve[i].value))
+               AcdVals+=eve[i].value
+               if(i!=eve.length-1){
+                   AcdVals+=","
+               }
+               setFilter((old)=>({
+                   ...old,
+                   [eve[i].extraInfo]:AcdVals
+               }))
+           }
+           // alert(majorVals)
+       
+   }
+  
+   }
+   }
+   else if(extraInfo=="sem_id"){
+       setSelectedSem(value)
+       // handleChange(value)
+       setFilter((old)=>({
+           ...old,
+           [extraInfo]:JSON.stringify(value)
+       }))
+   }
+ 
+}}
+
+const deptInfoCollect=(eve)=>{
+ if(eve.length==0){
+   setFilter((old)=>({
+     ...old,
+     dept_id:""
+ }))
+ }else{
+
+ const label = eve.label
+ const value = eve.value
+ const extraInfo = eve.extraInfo
+
+ let isArray = Array.isArray(eve);
+ // alert(JSON.stringify(eve))
+ if(eve.length==1){
+     if(eve[0].extraInfo=="dept_id"){
+         // alert(eve[0].value)
+         fetchFac(eve[0].value)
+     }
+     if(typeof eve[0].value === 'string'){
+         setFilter((old)=>({
+             ...old,
+             [eve[0].extraInfo]:eve[0].value
+         }))
+     }else{
+     setFilter((old)=>({
+         ...old,
+         [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+     }))}
+ }
+ if(isArray){
+     // if(eve.length==1){
+     //     if(eve[0].extraInfo=="major_id"){
+     //         Sub(eve[0].value)
+     //     }
+     //     setFilter((old)=>({
+     //         ...old,
+     //         [eve[0].extraInfo]:eve[0].value
+     //     }))
+     // }
+     if(eve.length!=1){
+     if(eve[0].extraInfo=="dept_id"){
+         fetchFac(0)
+         for(let i=0;i<eve.length;i++){
+             deptVals+=eve[i].value
+             if(i!=eve.length-1){
+                 deptVals+=","
+             }
+             setFilter((old)=>({
+                 ...old,
+                 [eve[i].extraInfo]:deptVals,
+                 emp_id:""
+             }))
+         }
+         // alert(majorVals)
+     
+ }
+ if(eve[0].extraInfo=="acdyr_id"){
+     
+         // alert(JSON.stringify(eve))
+         for(let i=0;i<eve.length;i++){
+             // alert(JSON.stringify(eve[i].value))
+             AcdVals+=eve[i].value
+             if(i!=eve.length-1){
+                 AcdVals+=","
+             }
+             setFilter((old)=>({
+                 ...old,
+                 [eve[i].extraInfo]:AcdVals
+             }))
+         }
+         // alert(majorVals)
+     
+ }
+ }
+ }
+ else if(extraInfo=="sem_id"){
+     setSelectedSem(value)
+     // handleChange(value)
+     setFilter((old)=>({
+         ...old,
+         [extraInfo]:JSON.stringify(value)
+     }))
+ }
+ 
+}}
+
+  const Acad=async()=>{
+    const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+   //  alert(JSON.stringify(t.data.result))
+    setYear(t.data.result)
+}
+const years = year.map((val) => ({
+ value: val.acd_yr_id,
+ label: val.acd_yr,
+ extraInfo: "acdyr_id"
+ }));
+useEffect(()=>{
+  Acad()
+  fetchFac()
+  fetchDept()
+},[])
+
+const semester = [
+  {sem_id:1,sem:"Odd"},
+  {sem_id:2,sem:"Even"},
+  {sem_id:3,sem:"Both"},
+]
+let sems = semester.map((val)=>({
+  value: val.sem_id,
+  label: val.sem,
+  extraInfo: "sem_id"
+}))
+
+ // const fetchFac=async(dId)=>{
+ //   await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`)
+ //           .then((response) => {
+ //           console.log(response);
+ //           setEmp(response.data.rows);
+ //           })
+ //   }
+
+ const fetchFac = async (dId) => {
+   try {
+     const response = await axios.get(`http://localhost:1234/seminar/findFacWithDept/${dId}`);
+     console.log(response);
+     setEmp(response.data.rows);
+   } catch (error) {
+     if (error.response) {
+       // The request was made and the server responded with a status code
+       // that falls out of the range of 2xx
+       console.error('Response error:', error.response.data);
+       console.error('Response status:', error.response.status);
+       console.error('Response headers:', error.response.headers);
+     } else if (error.request) {
+       // The request was made but no response was received
+       console.error('Request error:', error.request);
+     } else {
+       // Something happened in setting up the request that triggered an Error
+       console.error('Error', error.message);
+     }
+     console.error('Config error:', error.config);
+   }
+ };
+   const facs=emp.map((val)=>({
+     value: val.faculty_id,
+     label: val.faculty_name,
+     extraInfo: "emp_id"
+     }))
+
+ const[dept,setDept]=useState([])
+const fetchDept=async()=>{
+ const t = await axios.get("http://localhost:1234/ecrFilter/getDeptList")
+ // alert(JSON.stringify(t.data.result))
+ setDept(t.data.result)
+}
+const depts = dept.map((val) => ({
+ value: val.dept_id,
+ label: val.dept,
+ extraInfo: "dept_id"
+ }));
+
+const onClickFilter=async()=>{
+ alert("clicked")
+ alert(JSON.stringify(filter))
+ try{
+     // alert("hi")
+     const logged=JSON.parse(sessionStorage.getItem("person"))
+     const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/principal/data_setaf_fdp_sdp`,filter)
+     setfdpsdprecs(filteredRecords.data.resultArray)
+     console.log(filteredRecords.data)
+     setCurrentRecords(filteredRecords.data.resultArray)
+ }
+ catch(err){
+     alert("No Reports in the selected filter")
+     console.log(err)
+ }
+
+}
+
+///////////////////////fetch code 
+  const [fdpsdprecs,setfdpsdprecs]=useState([])
+  useEffect(()=>{
+      fetchFdpSdpRecords()
+  },[])
+  const logged=JSON.parse(sessionStorage.getItem("person"))
+
+
+  const fetchFdpSdpRecords=async()=>{
+     try{
+      const temp = await fdpSdpRecordsPrincipal()
+      setfdpsdprecs(temp.data)
+     }
+      
+     catch(e){
+      console.log(e);
+     }
+
+  }
+  return(
+      <>
+      <div> <p>&nbsp;</p>
+        <p>&nbsp;</p>
+
+        </div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',marginTop:"120px",alignItems:'center',marginLeft:'-5%',justifyContent:'center'}}>
+        <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+<label for="dept_id">Department : </label>
+  <Select
+        closeMenuOnSelect={false}
+        components={{ ClearIndicator }}
+        styles={{ clearIndicator: ClearIndicatorStyles }}
+        defaultValue={[]}
+        name="emp_id"
+        onChange={deptInfoCollect}
+        isSearchable
+        isMulti
+        options={depts}
+      />
+      
+      <label for="emp_id">Faculty : </label>
+<Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="emp_id"
+      onChange={facInfoCollect}
+      isSearchable
+      isMulti
+      options={facs}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+</div>
+       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-60px"}}>
+       <div class="report-header">
+       <h1 class="recent-Articles">Your Reports</h1>
+       </div>
+       <table className='table table-striped '>
+        <thead>
+        <tr className="table-active">
+                          <th>Report ID</th>
+                          <th>Academic Year</th>
+                          <th>Semester</th>
+                          <th>Designation</th>
+                          <th>Nature of the program</th>
+                          <th>Title of the program</th>
+                          <th>Duration From (Date)</th>
+                          <th>Duration To (DAte)</th>
+                          <th>Participation</th>
+                          <th>Name of the Organization and Place</th>
+                          <th>Download PDF</th>    
+        </tr>
+        {             
+                      fdpsdprecs.length>0?   
+                      fdpsdprecs.map((val)=>(
+                          <tr>
+                              <td>{val.report_id}</td>
+                              <td>{val.acd_yr}</td>
+                              <td>{val.sem}</td>
+                              <td>{val.designation}</td>
+                              <td>{val.nature_of_the_program}</td>
+                              <td>{val.title_of_the_program}</td>
+                              <td>{val.duration_from}</td>
+                              <td>{val.duration_to}</td>
+                              <td>{val.participation}</td>
+                              <td>{val.name_of_the_organization_and_place}</td>
+                              <th><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></th>
+                              
+                          </tr>
+                      ))
+                      :
+                      <tr>No Records</tr>
+                  }
+        </thead>
+       </table>
+       </div>
       </>
   )
 }

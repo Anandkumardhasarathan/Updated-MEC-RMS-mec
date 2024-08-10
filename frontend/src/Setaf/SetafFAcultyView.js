@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react"
 import jsPDF from 'jspdf';
 import axios from "axios";
 import { getDocument } from 'pdfjs-dist/webpack';
-import { AwardAtNationalList, BooksList, collaborativeRecords, conferenceRecords, consultancyRecords, econtentRecords, facultyRecords, Filters, IndustryRecords, industryRecords, journalRecords, MotivationViewRecs, NptelRecords, patentRecords, proposalRecords, SeedRecords, seedRecords, TasteRecords, techtalkRecords, visittolibraryRecords, workshopRecords } from "./axios"
+import { AwardAtNationalList, BooksList, collaborativeRecords, conferenceRecords, consultancyRecords, econtentRecords, facultyRecords, fdpSdpRecords, FieldworkRecords, Filters, IndustryRecords, industryRecords, journalRecords, MotivationViewRecs, NptelRecords, patentRecords, professionalRecords, proposalRecords, SeedRecords, seedRecords, StudentFieldworkRecords, TasteRecords, techtalkRecords, visittolibraryRecords, workshopRecords } from "./axios"
 import dateFormat from 'dateformat'
 import { callAddBoldFont } from "../calibri-bold-normal";
 import Image from '../logo.png';
@@ -12,6 +12,7 @@ import Image3 from '../logo3.jpg';
 import Image4 from '../logo4.jpg';
 import '../facultyEcrFilter.css';
 import Select from 'react-select';
+import Setafbutton from "./Setafbuttons";
 
 
 export const JournalPublication=()=>{
@@ -83,7 +84,50 @@ export const JournalPublication=()=>{
         doc.setFont("times", "");
         doc.rect(62, 104, 140, 12).stroke();
         doc.text(`${data.title_of_paper}`, 65, 112);
+
+        doc.setFont("times", "bold");
+        doc.rect(12, 116, 50, 12).stroke();
+        doc.text('Date of Publication', 14, 124);
+        doc.setFont("times", "");
+        doc.rect(62, 116, 140, 12).stroke();
+        doc.text(`${dateFormat(data.date_of_publication, "dd-mm-yyyy")}`, 65, 124);
+
+        doc.setFont("times", "bold");
+        doc.rect(12, 128, 50, 12).stroke();
+        doc.text('ISSN Number', 14, 136);
+        doc.setFont("times", "");
+        doc.rect(62, 128, 140, 12).stroke();
+        doc.text(`${data.issn_number}`, 65, 136);
         
+        doc.setFont("times", "bold");
+        doc.rect(12, 140, 50, 12).stroke();
+        doc.text('Volume Number', 14, 148);
+        doc.setFont("times", "");
+        doc.rect(62, 140, 140, 12).stroke();
+        doc.text(`${data.volume_no}`, 65, 148);
+
+        doc.setFont("times", "bold");
+        doc.rect(12, 152, 50, 12).stroke();
+        doc.text('Issue Number', 14, 160);
+        doc.setFont("times", "");
+        doc.rect(62, 152, 140, 12).stroke();
+        doc.text(`${data.issue_no}`, 65, 160);
+
+        doc.setFont("times", "bold");
+        doc.rect(12, 164, 50, 12).stroke();
+        doc.text('Page Number', 14, 172);
+        doc.setFont("times", "");
+        doc.rect(62, 164, 140, 12).stroke();
+        doc.text(`${data.page_no}`, 65, 172);
+
+        doc.setFont("times", "bold");
+        doc.rect(12, 176, 50, 12).stroke();
+        doc.text('Journal Listed In', 14, 184);
+        doc.setFont("times", "");
+        doc.rect(62, 176, 140, 12).stroke();
+        doc.text(`${data.journal_listed_in}`, 65, 184);
+
+
         try{ 
             // Add pages from the original PDF
             for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber++) {
@@ -582,7 +626,36 @@ const generatePDF = async (report_id)=> {
     doc.setFont("times", "");
     doc.rect(70, 104, 132, 12).stroke();
     doc.text(`${data.title_of_the_conference_paper}`, 73, 112);
-      
+
+    doc.setFont("times", "bold");
+    doc.rect(12, 116, 58, 12).stroke();
+    doc.text('Place of the Conference', 14, 124);
+    doc.setFont("times", "");
+    doc.rect(70, 116, 132, 12).stroke();
+    doc.text(`${data.place_of_the_conference}`, 73, 124);
+
+    doc.setFont("times", "bold");
+    doc.rect(12, 128, 58, 12).stroke();
+    doc.text('Type of Conference', 14, 136);
+    doc.setFont("times", "");
+    doc.rect(70, 128, 132, 12).stroke();
+    doc.text(`${data.conference_type}`, 73, 136);
+    
+    doc.setFont("times", "bold");
+    doc.rect(12, 140, 58, 12).stroke();
+    doc.text('Date of Conference', 14, 148);
+    doc.setFont("times", "");
+    doc.rect(70, 140, 132, 12).stroke();
+    doc.text(`${dateFormat(data.date_of_conference, "dd-mm-yyyy")}`, 73, 148);
+
+    doc.setFont("times", "bold");
+    doc.rect(12, 152, 58, 12).stroke();
+    doc.text('ISBN of Conference', 14, 160);
+    doc.setFont("times", "");
+    doc.rect(70, 152, 132, 12).stroke();
+    doc.text(`${data.isbn_of_the_conference_proceeding}`, 73, 160);
+
+ 
     try{ 
         // Add pages from the original PDF
         for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber++) {
@@ -622,6 +695,253 @@ const generatePDF = async (report_id)=> {
   }
   }
 
+
+     /////////////////////filter options
+     const[year,setYear]=useState([])
+     const [currentRecords, setCurrentRecords] = useState([]);
+     let [AcdVals,setAcdVals]=useState("")
+     const[selectedSem,setSelectedSem]=useState([])
+
+     
+     const[filter,setFilter]=useState({
+      "acdyr_id":"",
+      "sem_id":"",
+      "emp_id":""
+  })
+  console.log(filter)
+     const CustomClearText = () => <>X</>;
+
+     const ClearIndicator =(props) =>{
+       const {
+         children = <CustomClearText />,
+         getStyles,
+         innerProps: {ref, ...restInnerProps },
+       }= props;
+       return(
+         <div
+           {...restInnerProps}
+           ref={ref}
+           style={getStyles('clearIndicator', props)}
+         >
+           <div style={{padding: '0px 5px'}}>{children}</div>
+         </div>
+       )
+     }
+   
+     const ClearIndicatorStyles = (base, state) => ({
+       ...base,
+       cursor: 'pointer',
+       color: state.isFocused ? 'blue' : 'black',
+     });
+   
+     const acdInfoCollect=(eve)=>{
+      if(eve.length==0){
+        setFilter((old)=>({
+          ...old,
+          acdyr_id:""
+      }))
+      }else{
+    
+        const label = eve.label
+        const value = eve.value
+        const extraInfo = eve.extraInfo
+    
+        let isArray = Array.isArray(eve);
+        // alert(JSON.stringify(eve))
+        if(eve.length==1){
+            if(typeof eve[0].value === 'string'){
+                setFilter((old)=>({
+                    ...old,
+                    [eve[0].extraInfo]:eve[0].value
+                }))
+            }else{
+            setFilter((old)=>({
+                ...old,
+                [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+            }))}
+        }
+        if(isArray){
+            // if(eve.length==1){
+            //     if(eve[0].extraInfo=="major_id"){
+            //         Sub(eve[0].value)
+            //     }
+            //     setFilter((old)=>({
+            //         ...old,
+            //         [eve[0].extraInfo]:eve[0].value
+            //     }))
+            // }
+            if(eve.length!=1){
+            
+        if(eve[0].extraInfo=="acdyr_id"){
+            
+                // alert(JSON.stringify(eve))
+                for(let i=0;i<eve.length;i++){
+                    // alert(JSON.stringify(eve[i].value))
+                    AcdVals+=eve[i].value
+                    if(i!=eve.length-1){
+                        AcdVals+=","
+                    }
+                    setFilter((old)=>({
+                        ...old,
+                        [eve[i].extraInfo]:AcdVals
+                    }))
+                }
+                // alert(majorVals)
+            
+        }
+        }
+        }
+        else if(extraInfo=="sem_id"){
+            setSelectedSem(value)
+            // handleChange(value)
+            setFilter((old)=>({
+                ...old,
+                [extraInfo]:JSON.stringify(value)
+            }))
+        }
+      
+    }
+    }
+
+    // const semInfoCollect=(eve)=>{
+    //   if(eve.length==0){
+    //     setFilter((old)=>({
+    //       ...old,
+    //       sem_id:""
+    //   }))
+    //   }else{
+    
+    //   const label = eve.label
+    //   const value = eve.value
+    //   const extraInfo = eve.extraInfo
+    
+    //   let isArray = Array.isArray(eve);
+    //   // alert(JSON.stringify(eve))
+    
+    //   if(isArray){
+         
+    //       if(eve.length!=1){
+      
+    //   if(eve[0].extraInfo=="sem_id"){
+          
+    //           // alert(JSON.stringify(eve))
+    //           for(let i=0;i<eve.length;i++){
+    //               // alert(JSON.stringify(eve[i].value))
+    //               selectedSem+=eve[i].value
+    //               if(i!=eve.length-1){
+    //                   selectedSem+=","
+    //               }
+    //               setFilter((old)=>({
+    //                   ...old,
+    //                   [eve[i].extraInfo]:selectedSem
+    //               }))
+    //           }
+    //           // alert(majorVals)
+          
+    //   }
+    
+    //   }
+    //   }
+    //   else if(extraInfo=="sem_id"){
+    //       setSelectedSem(value)
+    //       // handleChange(value)
+    //       setFilter((old)=>({
+    //           ...old,
+    //           [extraInfo]:JSON.stringify(value)
+    //       }))
+    //   }
+      
+    // }}
+    const semInfoCollect=(eve)=>{
+      if(eve.length==0){
+        setFilter((old)=>({
+          ...old,
+          sem_id:""
+      }))
+      }else{
+    
+      const label = eve.label
+      const value = eve.value
+      const extraInfo = eve.extraInfo
+    
+      let isArray = Array.isArray(eve);
+      
+      if(isArray){
+          
+          if(eve.length!=1){
+          
+      if(eve[0].extraInfo=="acdyr_id"){
+          
+              // alert(JSON.stringify(eve))
+              for(let i=0;i<eve.length;i++){
+                  // alert(JSON.stringify(eve[i].value))
+                  AcdVals+=eve[i].value
+                  if(i!=eve.length-1){
+                      AcdVals+=","
+                  }
+                  setFilter((old)=>({
+                      ...old,
+                      [eve[i].extraInfo]:AcdVals
+                  }))
+              }
+              // alert(majorVals)
+          
+      }
+      }
+      }
+      else if(extraInfo=="sem_id"){
+          setSelectedSem(value)
+          // handleChange(value)
+          setFilter((old)=>({
+              ...old,
+              [extraInfo]:JSON.stringify(value)
+          }))
+      }
+      
+    }}
+   
+     const Acad=async()=>{
+       const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+      //  alert(JSON.stringify(t.data.result))
+       setYear(t.data.result)
+   }
+   const years = year.map((val) => ({
+    value: val.acd_yr_id,
+    label: val.acd_yr,
+    extraInfo: "acdyr_id"
+    }));
+   useEffect(()=>{
+     Acad()
+   },[])
+ 
+   const semester = [
+     {sem_id:1,sem:"Odd"},
+     {sem_id:2,sem:"Even"},
+     {sem_id:3,sem:"Both"},
+   ]
+   let sems = semester.map((val)=>({
+     value: val.sem_id,
+     label: val.sem,
+     extraInfo: "sem_id"
+   }))
+   
+   const onClickFilter=async()=>{
+    alert("clicked")
+    alert(JSON.stringify(filter))
+    try{
+        // alert("hi")
+        const logged=JSON.parse(sessionStorage.getItem("person"))
+        const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/data_setaf_conference_publication_and_presentations/${logged.faculty_id}`,filter)
+        setConferenceRecs(filteredRecords.data.resultArray)
+        console.log(filteredRecords.data)
+        setCurrentRecords(filteredRecords.data.resultArray)
+    }
+    catch(err){
+        alert("No Reports in the selected filter")
+        console.log(err)
+    }
+
+  }
     ////////////data fetch code/////////////////
 
     const [conferenceRecs,setConferenceRecs]=useState([])
@@ -644,8 +964,66 @@ const generatePDF = async (report_id)=> {
 
     return(
         <>
+         <div>
+         <div> <p>&nbsp;</p>
         <p>&nbsp;</p>
-        <p>&nbsp;</p>
+        </div>
+        <div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',alignItems:'center',marginLeft:'-5%', marginTop:"100px",justifyContent:'center'}}>
+       
+       {/* Filter of Academic year--------------------------------------------------- */}
+       
+               <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+
+           </div>
+        </div>
          <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-60px"}}>
          <div class="report-header">
          <h1 class="recent-Articles">Your Reports</h1>
@@ -671,7 +1049,7 @@ const generatePDF = async (report_id)=> {
                             <tr>
                                 <td>{val.report_id}</td>
                                 <td>{val.acd_yr}</td>
-                                <td>{val.semester}</td>
+                                <td>{val.sem}</td>
                                 <td>{val.name_of_the_authors}</td>
                                 <td>{val.title_of_the_conference_paper}</td>
                                 <td>{val.name_of_the_conference}</td>
@@ -687,6 +1065,8 @@ const generatePDF = async (report_id)=> {
           </thead>
          </table>
          </div>
+         </div>
+
          
                       
         </>
@@ -776,6 +1156,38 @@ export const Workshop=()=>{
         doc.setFont("times", "");
         doc.rect(76, 128, 126, 12).stroke();
         doc.text(`${data.name_of_the_organization_and_place}`, 80, 136);
+
+        doc.setFont("times", "bold");
+        doc.rect(12, 140, 64, 12).stroke();
+        doc.text('Duration From', 14, 148);
+        doc.setFont("times", "");
+        doc.rect(76, 140, 126, 12).stroke();
+        doc.text(`${dateFormat(data.duration_from, "dd-mm-yyyy")}`, 80, 148);
+
+        
+        doc.setFont("times", "bold");
+        doc.rect(12, 152, 64, 12).stroke();
+        doc.text('Duration To', 14, 160);
+        doc.setFont("times", "");
+        doc.rect(76, 152, 126, 12).stroke();
+        doc.text(`${dateFormat(data.duration_to, "dd-mm-yyyy")}`, 80, 160);
+
+        doc.setFont("times", "bold");
+        doc.rect(12, 164, 64, 12).stroke();
+        doc.text('Location of Organization', 14, 172);
+        doc.setFont("times", "");
+        doc.rect(76, 164, 126, 12).stroke();
+        doc.text(`${data.location_of_organization}`, 80, 172);
+
+        doc.setFont("times", "bold");
+        doc.rect(12, 176, 64, 12).stroke();
+        doc.text('Amount Provided by HEI', 14, 184);
+        doc.setFont("times", "");
+        doc.rect(76, 176, 126, 12).stroke();
+        doc.text(`${data.amount_provided_by_the_HEI}`, 80, 184);
+
+
+
         try{ 
             // Add pages from the original PDF
             for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber++) {
@@ -815,7 +1227,197 @@ export const Workshop=()=>{
       }
       }
   
-///////////////////////    
+   /////////////////////filter options
+   const[year,setYear]=useState([])
+   const [currentRecords, setCurrentRecords] = useState([]);
+   let [AcdVals,setAcdVals]=useState("")
+   const[selectedSem,setSelectedSem]=useState([])
+
+   
+   const[filter,setFilter]=useState({
+    "acdyr_id":"",
+    "sem_id":"",
+    "emp_id":""
+})
+console.log(filter)
+   const CustomClearText = () => <>X</>;
+
+   const ClearIndicator =(props) =>{
+     const {
+       children = <CustomClearText />,
+       getStyles,
+       innerProps: {ref, ...restInnerProps },
+     }= props;
+     return(
+       <div
+         {...restInnerProps}
+         ref={ref}
+         style={getStyles('clearIndicator', props)}
+       >
+         <div style={{padding: '0px 5px'}}>{children}</div>
+       </div>
+     )
+   }
+ 
+   const ClearIndicatorStyles = (base, state) => ({
+     ...base,
+     cursor: 'pointer',
+     color: state.isFocused ? 'blue' : 'black',
+   });
+ 
+   const acdInfoCollect=(eve)=>{
+    if(eve.length==0){
+      setFilter((old)=>({
+        ...old,
+        acdyr_id:""
+    }))
+    }else{
+  
+      const label = eve.label
+      const value = eve.value
+      const extraInfo = eve.extraInfo
+  
+      let isArray = Array.isArray(eve);
+      // alert(JSON.stringify(eve))
+      if(eve.length==1){
+          if(typeof eve[0].value === 'string'){
+              setFilter((old)=>({
+                  ...old,
+                  [eve[0].extraInfo]:eve[0].value
+              }))
+          }else{
+          setFilter((old)=>({
+              ...old,
+              [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+          }))}
+      }
+      if(isArray){
+          if(eve.length!=1){
+          
+      if(eve[0].extraInfo=="acdyr_id"){
+          
+              // alert(JSON.stringify(eve))
+              for(let i=0;i<eve.length;i++){
+                  // alert(JSON.stringify(eve[i].value))
+                  AcdVals+=eve[i].value
+                  if(i!=eve.length-1){
+                      AcdVals+=","
+                  }
+                  setFilter((old)=>({
+                      ...old,
+                      [eve[i].extraInfo]:AcdVals
+                  }))
+              }
+              // alert(majorVals)
+          
+      }
+      }
+      }
+      else if(extraInfo=="sem_id"){
+          setSelectedSem(value)
+          // handleChange(value)
+          setFilter((old)=>({
+              ...old,
+              [extraInfo]:JSON.stringify(value)
+          }))
+      }
+    
+  }
+  }
+
+  const semInfoCollect=(eve)=>{
+    if(eve.length==0){
+      setFilter((old)=>({
+        ...old,
+        sem_id:""
+    }))
+    }else{
+  
+    const label = eve.label
+    const value = eve.value
+    const extraInfo = eve.extraInfo
+  
+    let isArray = Array.isArray(eve);
+    
+    if(isArray){
+        
+        if(eve.length!=1){
+        
+    if(eve[0].extraInfo=="acdyr_id"){
+        
+            // alert(JSON.stringify(eve))
+            for(let i=0;i<eve.length;i++){
+                // alert(JSON.stringify(eve[i].value))
+                AcdVals+=eve[i].value
+                if(i!=eve.length-1){
+                    AcdVals+=","
+                }
+                setFilter((old)=>({
+                    ...old,
+                    [eve[i].extraInfo]:AcdVals
+                }))
+            }
+            // alert(majorVals)
+        
+    }
+    }
+    }
+    else if(extraInfo=="sem_id"){
+        setSelectedSem(value)
+        // handleChange(value)
+        setFilter((old)=>({
+            ...old,
+            [extraInfo]:JSON.stringify(value)
+        }))
+    }
+    
+  }}
+ 
+   const Acad=async()=>{
+     const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+    //  alert(JSON.stringify(t.data.result))
+     setYear(t.data.result)
+ }
+ const years = year.map((val) => ({
+  value: val.acd_yr_id,
+  label: val.acd_yr,
+  extraInfo: "acdyr_id"
+  }));
+ useEffect(()=>{
+   Acad()
+ },[])
+
+ const semester = [
+   {sem_id:1,sem:"Odd"},
+   {sem_id:2,sem:"Even"},
+   {sem_id:3,sem:"Both"},
+ ]
+ let sems = semester.map((val)=>({
+   value: val.sem_id,
+   label: val.sem,
+   extraInfo: "sem_id"
+ }))
+ 
+ const onClickFilter=async()=>{
+  alert("clicked")
+  alert(JSON.stringify(filter))
+  try{
+      // alert("hi")
+      const logged=JSON.parse(sessionStorage.getItem("person"))
+      const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/data_setaf_workshop_seminar_fdps_sdpa_participation/${logged.faculty_id}`,filter)
+      setWorkshopRecs(filteredRecords.data.resultArray)
+      console.log(filteredRecords.data)
+      setCurrentRecords(filteredRecords.data.resultArray)
+  }
+  catch(err){
+      alert("No Reports in the selected filter")
+      console.log(err)
+  }
+
+}
+
+
+///////////////////////fetch code 
 
     const [workshopRecs,setWorkshopRecs]=useState([])
     useEffect(()=>{
@@ -838,17 +1440,76 @@ export const Workshop=()=>{
     }
     return(
         <>
+        <div> <p>&nbsp;</p>
         <p>&nbsp;</p>
-        <p>&nbsp;</p>
+        </div>
+        <div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',alignItems:'center',marginLeft:'-5%', marginTop:"100px",justifyContent:'center'}}>
+       
+       {/* Filter of Academic year--------------------------------------------------- */}
+       
+               <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+
+           </div>
+        </div>
          <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-60px"}}>
          <div class="report-header">
          <h1 class="recent-Articles">Your Reports</h1>
-         <a className="topic-headings" href="Setaf/SetafForms/Workshopfront"><button style={{top:"27.5px",right:"50px"}} class="views" id="addButton">+ Add</button></a>
+         <a className="topic-headings" href="/setaf/SetafForms/Workshopfront"><button style={{top:"27.5px",right:"50px"}} class="views" id="addButton">+ Add</button></a>
          </div>
          <table className='table table-striped '>
           <thead>
           <tr className="table-active">
                             <th>Report ID</th>
+                            <th>Academic Year</th>
+                            <th>Semester</th>
                             <th>Designation</th>
                             <th>Nature of the program</th>
                             <th>Title of the program</th>
@@ -856,7 +1517,6 @@ export const Workshop=()=>{
                             <th>Duration To (DAte)</th>
                             <th>Participation</th>
                             <th>Name of the Organization and Place</th>
-                            <th>Location of Organization</th> 
                             <th>Download PDF</th>    
           </tr>
           {             
@@ -864,6 +1524,8 @@ export const Workshop=()=>{
                         workshopRecs.map((val)=>(
                             <tr>
                                 <td>{val.report_id}</td>
+                                <td>{val.acd_yr}</td>
+                                <td>{val.sem}</td>
                                 <td>{val.designation}</td>
                                 <td>{val.nature_of_the_program}</td>
                                 <td>{val.title_of_the_program}</td>
@@ -871,7 +1533,6 @@ export const Workshop=()=>{
                                 <td>{val.duration_to}</td>
                                 <td>{val.participation}</td>
                                 <td>{val.name_of_the_organization_and_place}</td>
-                                <td>{val.location_of_organization}</td>
                                 <th><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></th>
                                 
                             </tr>
@@ -885,29 +1546,10 @@ export const Workshop=()=>{
         </>
     )
 }
+
+
 ////////Tech talk/////////
-
 export const Techtalk=()=>{
-    const [techtalkRecs,setTechtalksRecs]=useState([])
-    useEffect(()=>{
-        fetchTechtalkRecords()
-    },[])
-    const logged=JSON.parse(sessionStorage.getItem("person"))
-
-
-    const fetchTechtalkRecords=async()=>{
-        try{
-            const temp = await techtalkRecords(`${logged.faculty_id}`)
-        // console.log(temp.data)
-        setTechtalksRecs(temp.data)
-        }
-        catch(e){
-            console.log(e)
-        }
-
-    }
-
-
     ///////////////////////pdf view code///////////////////
     const log=JSON.parse(sessionStorage.getItem('person'));
 
@@ -983,10 +1625,10 @@ export const Techtalk=()=>{
         
         doc.setFont("times", "bold");
         doc.rect(12, 104, 84, 12).stroke();
-        doc.text('Lecture Delievered to the Branch', 14, 112);
+        doc.text('Duration of Lecture Delivered', 14, 112);
         doc.setFont("times", "");
         doc.rect(96, 104, 102, 12).stroke();
-        doc.text(`${data.dept}`, 100, 112);
+        doc.text(`${dateFormat(data.data_of_lecture_delivered, "dd-mm-yyyy")}`, 100, 112);
         doc.setFont("times", "bold");
         doc.rect(12, 116, 84, 12).stroke();
         doc.text('Topic of Discussion', 14, 124);
@@ -1064,12 +1706,277 @@ export const Techtalk=()=>{
         console.log(e);
       }
       }
-  /////////// 
+
+ /////////////////////filter options
+ const[year,setYear]=useState([])
+ const [currentRecords, setCurrentRecords] = useState([]);
+ let [AcdVals,setAcdVals]=useState("")
+ const[selectedSem,setSelectedSem]=useState([])
+
+ 
+ const[filter,setFilter]=useState({
+  "acdyr_id":"",
+  "sem_id":"",
+  "emp_id":""
+})
+console.log(filter)
+ const CustomClearText = () => <>X</>;
+
+ const ClearIndicator =(props) =>{
+   const {
+     children = <CustomClearText />,
+     getStyles,
+     innerProps: {ref, ...restInnerProps },
+   }= props;
+   return(
+     <div
+       {...restInnerProps}
+       ref={ref}
+       style={getStyles('clearIndicator', props)}
+     >
+       <div style={{padding: '0px 5px'}}>{children}</div>
+     </div>
+   )
+ }
+
+ const ClearIndicatorStyles = (base, state) => ({
+   ...base,
+   cursor: 'pointer',
+   color: state.isFocused ? 'blue' : 'black',
+ });
+
+ const acdInfoCollect=(eve)=>{
+  if(eve.length==0){
+    setFilter((old)=>({
+      ...old,
+      acdyr_id:""
+  }))
+  }else{
+
+    const label = eve.label
+    const value = eve.value
+    const extraInfo = eve.extraInfo
+
+    let isArray = Array.isArray(eve);
+    // alert(JSON.stringify(eve))
+    if(eve.length==1){
+        if(typeof eve[0].value === 'string'){
+            setFilter((old)=>({
+                ...old,
+                [eve[0].extraInfo]:eve[0].value
+            }))
+        }else{
+        setFilter((old)=>({
+            ...old,
+            [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+        }))}
+    }
+    if(isArray){
+        if(eve.length!=1){
+        
+    if(eve[0].extraInfo=="acdyr_id"){
+        
+            // alert(JSON.stringify(eve))
+            for(let i=0;i<eve.length;i++){
+                // alert(JSON.stringify(eve[i].value))
+                AcdVals+=eve[i].value
+                if(i!=eve.length-1){
+                    AcdVals+=","
+                }
+                setFilter((old)=>({
+                    ...old,
+                    [eve[i].extraInfo]:AcdVals
+                }))
+            }
+            // alert(majorVals)
+        
+    }
+    }
+    }
+    else if(extraInfo=="sem_id"){
+        setSelectedSem(value)
+        // handleChange(value)
+        setFilter((old)=>({
+            ...old,
+            [extraInfo]:JSON.stringify(value)
+        }))
+    }
+  
+}
+}
+
+const semInfoCollect=(eve)=>{
+  if(eve.length==0){
+    setFilter((old)=>({
+      ...old,
+      sem_id:""
+  }))
+  }else{
+
+  const label = eve.label
+  const value = eve.value
+  const extraInfo = eve.extraInfo
+
+  let isArray = Array.isArray(eve);
+  
+  if(isArray){
+      
+      if(eve.length!=1){
+      
+  if(eve[0].extraInfo=="acdyr_id"){
+      
+          // alert(JSON.stringify(eve))
+          for(let i=0;i<eve.length;i++){
+              // alert(JSON.stringify(eve[i].value))
+              AcdVals+=eve[i].value
+              if(i!=eve.length-1){
+                  AcdVals+=","
+              }
+              setFilter((old)=>({
+                  ...old,
+                  [eve[i].extraInfo]:AcdVals
+              }))
+          }
+          // alert(majorVals)
+      
+  }
+  }
+  }
+  else if(extraInfo=="sem_id"){
+      setSelectedSem(value)
+      // handleChange(value)
+      setFilter((old)=>({
+          ...old,
+          [extraInfo]:JSON.stringify(value)
+      }))
+  }
+  
+}}
+
+ const Acad=async()=>{
+   const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+  //  alert(JSON.stringify(t.data.result))
+   setYear(t.data.result)
+}
+const years = year.map((val) => ({
+value: val.acd_yr_id,
+label: val.acd_yr,
+extraInfo: "acdyr_id"
+}));
+useEffect(()=>{
+ Acad()
+},[])
+
+const semester = [
+ {sem_id:1,sem:"Odd"},
+ {sem_id:2,sem:"Even"},
+ {sem_id:3,sem:"Both"},
+]
+let sems = semester.map((val)=>({
+ value: val.sem_id,
+ label: val.sem,
+ extraInfo: "sem_id"
+}))
+
+const onClickFilter=async()=>{
+alert("clicked")
+alert(JSON.stringify(filter))
+try{
+    // alert("hi")
+    const logged=JSON.parse(sessionStorage.getItem("person"))
+    const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/data_setaf_tech_talks/${logged.faculty_id}`,filter)
+    setTechtalksRecs(filteredRecords.data.resultArray)
+    console.log(filteredRecords.data)
+    setCurrentRecords(filteredRecords.data.resultArray)
+}
+catch(err){
+    alert("No Reports in the selected filter")
+    console.log(err)
+}
+}
+
+
+  /////////// data fetch
+  const [techtalkRecs,setTechtalksRecs]=useState([])
+  useEffect(()=>{
+      fetchTechtalkRecords()
+  },[])
+  const logged=JSON.parse(sessionStorage.getItem("person"))
+
+
+  const fetchTechtalkRecords=async()=>{
+      try{
+          const temp = await techtalkRecords(`${logged.faculty_id}`)
+      // console.log(temp.data)
+      setTechtalksRecs(temp.data)
+      }
+      catch(e){
+          console.log(e)
+      }
+
+  }
 
     return(
         <>
+         <div> <p>&nbsp;</p>
         <p>&nbsp;</p>
-        <p>&nbsp;</p>
+        </div>
+        <div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',alignItems:'center',marginLeft:'-5%', marginTop:"100px",justifyContent:'center'}}>
+       
+       {/* Filter of Academic year--------------------------------------------------- */}
+       
+               <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+
+           </div>
+        </div>
          <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-60px"}}>
          <div class="report-header">
          <h1 class="recent-Articles">Tech Talk to be delivered Multidisciplinary Lectures</h1>
@@ -1078,9 +1985,10 @@ export const Techtalk=()=>{
          <table className='table table-striped '>
           <thead>
           <tr className="table-active">
+                            <th>Academic Year</th>
+                            <th>Semester</th>
                             <th>MuDiL naumber</th>
                             <th>Lecture delivered to branch</th>
-                            <th>Semester</th>
                             <th>Section</th>
                             <th>Data of lecture delivered</th>
                             <th>Topic of discussion</th>
@@ -1093,9 +2001,10 @@ export const Techtalk=()=>{
                         techtalkRecs.length>0?  
                         techtalkRecs.map((val)=>(
                             <tr>  
+                                <td>{val.acd_yr}</td>
+                                <td>{val.sem}</td>
                                 <td>{val.MuDiL_number}</td>
                                 <td>{val.dept}</td>
-                                <td>{val.semester}</td>
                                 <td>{val.section}</td>
                                 <td>{dateFormat(val.data_of_lecture_delivered,'dd-mm-yyyy')}</td>
                                 <td>{val.topic_of_discussion}</td>
@@ -1192,6 +2101,20 @@ export const FacultyGuestTalk=()=>{
         doc.rect(92, 116, 110, 12).stroke();
         doc.text(`${data.place_of_institution_or_industry}`, 95, 124);
 
+        doc.setFont("times", "bold");
+        doc.rect(12, 128, 80, 12).stroke();
+        doc.text('Date of Guest Talk', 14, 136);
+        doc.setFont("times", "");
+        doc.rect(92, 128, 110, 12).stroke();
+        doc.text(`${dateFormat(data.date, "dd-mm-yyyy")}`, 95, 136);
+
+        doc.setFont("times", "bold");
+        doc.rect(12, 140, 80, 12).stroke();
+        doc.text('No of Beneficiaries', 14, 148);
+        doc.setFont("times", "");
+        doc.rect(92, 140, 110, 12).stroke();
+        doc.text(`${data.no_of_beneficaries}`, 95, 148);
+
         try{ 
             // alert("working")
             // Add pages from the original PDF
@@ -1233,7 +2156,193 @@ export const FacultyGuestTalk=()=>{
       }
     }
 
+/////////////////////filter options
+const[year,setYear]=useState([])
+const [currentRecords, setCurrentRecords] = useState([]);
+let [AcdVals,setAcdVals]=useState("")
+const[selectedSem,setSelectedSem]=useState([])
 
+
+const[filter,setFilter]=useState({
+ "acdyr_id":"",
+ "sem_id":"",
+ "emp_id":""
+})
+console.log(filter)
+const CustomClearText = () => <>X</>;
+
+const ClearIndicator =(props) =>{
+  const {
+    children = <CustomClearText />,
+    getStyles,
+    innerProps: {ref, ...restInnerProps },
+  }= props;
+  return(
+    <div
+      {...restInnerProps}
+      ref={ref}
+      style={getStyles('clearIndicator', props)}
+    >
+      <div style={{padding: '0px 5px'}}>{children}</div>
+    </div>
+  )
+}
+
+const ClearIndicatorStyles = (base, state) => ({
+  ...base,
+  cursor: 'pointer',
+  color: state.isFocused ? 'blue' : 'black',
+});
+
+const acdInfoCollect=(eve)=>{
+ if(eve.length==0){
+   setFilter((old)=>({
+     ...old,
+     acdyr_id:""
+ }))
+ }else{
+
+   const label = eve.label
+   const value = eve.value
+   const extraInfo = eve.extraInfo
+
+   let isArray = Array.isArray(eve);
+   // alert(JSON.stringify(eve))
+   if(eve.length==1){
+       if(typeof eve[0].value === 'string'){
+           setFilter((old)=>({
+               ...old,
+               [eve[0].extraInfo]:eve[0].value
+           }))
+       }else{
+       setFilter((old)=>({
+           ...old,
+           [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+       }))}
+   }
+   if(isArray){
+       if(eve.length!=1){
+       
+   if(eve[0].extraInfo=="acdyr_id"){
+       
+           // alert(JSON.stringify(eve))
+           for(let i=0;i<eve.length;i++){
+               // alert(JSON.stringify(eve[i].value))
+               AcdVals+=eve[i].value
+               if(i!=eve.length-1){
+                   AcdVals+=","
+               }
+               setFilter((old)=>({
+                   ...old,
+                   [eve[i].extraInfo]:AcdVals
+               }))
+           }
+           // alert(majorVals)
+       
+   }
+   }
+   }
+   else if(extraInfo=="sem_id"){
+       setSelectedSem(value)
+       // handleChange(value)
+       setFilter((old)=>({
+           ...old,
+           [extraInfo]:JSON.stringify(value)
+       }))
+   }
+ 
+}
+}
+
+const semInfoCollect=(eve)=>{
+ if(eve.length==0){
+   setFilter((old)=>({
+     ...old,
+     sem_id:""
+ }))
+ }else{
+
+ const label = eve.label
+ const value = eve.value
+ const extraInfo = eve.extraInfo
+
+ let isArray = Array.isArray(eve);
+ 
+ if(isArray){
+     
+     if(eve.length!=1){
+     
+ if(eve[0].extraInfo=="acdyr_id"){
+     
+         // alert(JSON.stringify(eve))
+         for(let i=0;i<eve.length;i++){
+             // alert(JSON.stringify(eve[i].value))
+             AcdVals+=eve[i].value
+             if(i!=eve.length-1){
+                 AcdVals+=","
+             }
+             setFilter((old)=>({
+                 ...old,
+                 [eve[i].extraInfo]:AcdVals
+             }))
+         }
+         // alert(majorVals)
+     
+ }
+ }
+ }
+ else if(extraInfo=="sem_id"){
+     setSelectedSem(value)
+     // handleChange(value)
+     setFilter((old)=>({
+         ...old,
+         [extraInfo]:JSON.stringify(value)
+     }))
+ }
+ 
+}}
+
+const Acad=async()=>{
+  const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+ //  alert(JSON.stringify(t.data.result))
+  setYear(t.data.result)
+}
+const years = year.map((val) => ({
+value: val.acd_yr_id,
+label: val.acd_yr,
+extraInfo: "acdyr_id"
+}));
+useEffect(()=>{
+Acad()
+},[])
+
+const semester = [
+{sem_id:1,sem:"Odd"},
+{sem_id:2,sem:"Even"},
+{sem_id:3,sem:"Both"},
+]
+let sems = semester.map((val)=>({
+value: val.sem_id,
+label: val.sem,
+extraInfo: "sem_id"
+}))
+
+const onClickFilter=async()=>{
+alert("clicked")
+alert(JSON.stringify(filter))
+try{
+   // alert("hi")
+   const logged=JSON.parse(sessionStorage.getItem("person"))
+   const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/data_setaf_faculty_guest_talk_in_other_institution/${logged.faculty_id}`,filter)
+   setFacultyRecs(filteredRecords.data.resultArray)
+   console.log(filteredRecords.data)
+   setCurrentRecords(filteredRecords.data.resultArray)
+}
+catch(err){
+   alert("No Reports in the selected filter")
+   console.log(err)
+}
+}
 
 
 //////////////////////facultyView page fetch code/////////////////////
@@ -1255,8 +2364,65 @@ export const FacultyGuestTalk=()=>{
     }
     return(
         <>
+                 <div> <p>&nbsp;</p>
         <p>&nbsp;</p>
-        <p>&nbsp;</p>
+        </div>
+        <div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',alignItems:'center',marginLeft:'-5%', marginTop:"100px",justifyContent:'center'}}>
+       
+       {/* Filter of Academic year--------------------------------------------------- */}
+       
+               <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+
+           </div>
+        </div>
          <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-60px"}}>
          <div class="report-header">
          <h1 class="recent-Articles">Your Reports</h1>
@@ -1268,6 +2434,7 @@ export const FacultyGuestTalk=()=>{
                             <th>Report ID</th>
                             <th>Name of the Faculty</th>
                             <th>Academic Year</th>
+                            <th>Semester</th>
                             <th>Date</th>
                             <th>Topic of the Guest Talk</th>
                             <th>Name of the Institution or Industry</th>
@@ -1283,6 +2450,7 @@ export const FacultyGuestTalk=()=>{
                                 <td>{val.report_id}</td>
                                 <td>{val.name_of_the_faculty}</td>
                                 <td>{val.acd_yr}</td>
+                                <td>{val.sem}</td>
                                 <td>{dateFormat(val.date,'dd-mm-yyyy')}</td>
                                 <td>{val.topic_of_guest_talk}</td>
                                 <td>{val.name_of_institution_or_industry}</td>
@@ -1428,6 +2596,194 @@ export const Nptel=()=>{
       }
     }
 
+    /////////////////////filter options
+ const[year,setYear]=useState([])
+ const [currentRecords, setCurrentRecords] = useState([]);
+ let [AcdVals,setAcdVals]=useState("")
+ const[selectedSem,setSelectedSem]=useState([])
+
+ 
+ const[filter,setFilter]=useState({
+  "acdyr_id":"",
+  "sem_id":"",
+  "emp_id":""
+})
+console.log(filter)
+ const CustomClearText = () => <>X</>;
+
+ const ClearIndicator =(props) =>{
+   const {
+     children = <CustomClearText />,
+     getStyles,
+     innerProps: {ref, ...restInnerProps },
+   }= props;
+   return(
+     <div
+       {...restInnerProps}
+       ref={ref}
+       style={getStyles('clearIndicator', props)}
+     >
+       <div style={{padding: '0px 5px'}}>{children}</div>
+     </div>
+   )
+ }
+
+ const ClearIndicatorStyles = (base, state) => ({
+   ...base,
+   cursor: 'pointer',
+   color: state.isFocused ? 'blue' : 'black',
+ });
+
+ const acdInfoCollect=(eve)=>{
+  if(eve.length==0){
+    setFilter((old)=>({
+      ...old,
+      acdyr_id:""
+  }))
+  }else{
+
+    const label = eve.label
+    const value = eve.value
+    const extraInfo = eve.extraInfo
+
+    let isArray = Array.isArray(eve);
+    // alert(JSON.stringify(eve))
+    if(eve.length==1){
+        if(typeof eve[0].value === 'string'){
+            setFilter((old)=>({
+                ...old,
+                [eve[0].extraInfo]:eve[0].value
+            }))
+        }else{
+        setFilter((old)=>({
+            ...old,
+            [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+        }))}
+    }
+    if(isArray){
+        if(eve.length!=1){
+        
+    if(eve[0].extraInfo=="acdyr_id"){
+        
+            // alert(JSON.stringify(eve))
+            for(let i=0;i<eve.length;i++){
+                // alert(JSON.stringify(eve[i].value))
+                AcdVals+=eve[i].value
+                if(i!=eve.length-1){
+                    AcdVals+=","
+                }
+                setFilter((old)=>({
+                    ...old,
+                    [eve[i].extraInfo]:AcdVals
+                }))
+            }
+            // alert(majorVals)
+        
+    }
+    }
+    }
+    else if(extraInfo=="sem_id"){
+        setSelectedSem(value)
+        // handleChange(value)
+        setFilter((old)=>({
+            ...old,
+            [extraInfo]:JSON.stringify(value)
+        }))
+    }
+  
+}
+}
+
+const semInfoCollect=(eve)=>{
+  if(eve.length==0){
+    setFilter((old)=>({
+      ...old,
+      sem_id:""
+  }))
+  }else{
+
+  const label = eve.label
+  const value = eve.value
+  const extraInfo = eve.extraInfo
+
+  let isArray = Array.isArray(eve);
+  
+  if(isArray){
+      
+      if(eve.length!=1){
+      
+  if(eve[0].extraInfo=="acdyr_id"){
+      
+          // alert(JSON.stringify(eve))
+          for(let i=0;i<eve.length;i++){
+              // alert(JSON.stringify(eve[i].value))
+              AcdVals+=eve[i].value
+              if(i!=eve.length-1){
+                  AcdVals+=","
+              }
+              setFilter((old)=>({
+                  ...old,
+                  [eve[i].extraInfo]:AcdVals
+              }))
+          }
+          // alert(majorVals)
+      
+  }
+  }
+  }
+  else if(extraInfo=="sem_id"){
+      setSelectedSem(value)
+      // handleChange(value)
+      setFilter((old)=>({
+          ...old,
+          [extraInfo]:JSON.stringify(value)
+      }))
+  }
+  
+}}
+
+ const Acad=async()=>{
+   const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+  //  alert(JSON.stringify(t.data.result))
+   setYear(t.data.result)
+}
+const years = year.map((val) => ({
+value: val.acd_yr_id,
+label: val.acd_yr,
+extraInfo: "acdyr_id"
+}));
+useEffect(()=>{
+ Acad()
+},[])
+
+const semester = [
+ {sem_id:1,sem:"Odd"},
+ {sem_id:2,sem:"Even"},
+ {sem_id:3,sem:"Both"},
+]
+let sems = semester.map((val)=>({
+ value: val.sem_id,
+ label: val.sem,
+ extraInfo: "sem_id"
+}))
+
+const onClickFilter=async()=>{
+alert("clicked")
+alert(JSON.stringify(filter))
+try{
+    // alert("hi")
+    const logged=JSON.parse(sessionStorage.getItem("person"))
+    const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/data_setaf_nptel_certification/${logged.faculty_id}`,filter)
+    setnptelRecs(filteredRecords.data.resultArray)
+    console.log(filteredRecords.data)
+    setCurrentRecords(filteredRecords.data.resultArray)
+}
+catch(err){
+    alert("No Reports in the selected filter")
+    console.log(err)
+}
+}
+
 
     ///////////////NPTEL fetch code
     const [nptelRecs,setnptelRecs]=useState([])
@@ -1452,8 +2808,65 @@ export const Nptel=()=>{
 
     return(
         <>
+                 <div> <p>&nbsp;</p>
         <p>&nbsp;</p>
-        <p>&nbsp;</p>
+        </div>
+        <div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',alignItems:'center',marginLeft:'-5%', marginTop:"100px",justifyContent:'center'}}>
+       
+       {/* Filter of Academic year--------------------------------------------------- */}
+       
+               <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+
+           </div>
+        </div>
          <div class="overallcontent"style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-60px"}}>
          <div class="report-header">
          <h1 class="recent-Articles">Your Reports</h1>
@@ -1479,7 +2892,7 @@ export const Nptel=()=>{
                         nptelRecs.map((val)=>(
                             <tr>
                                 <td>{val.acd_yr}</td>
-                                <td>{val.semesters}</td>
+                                <td>{val.sem}</td>
                                 <td>{val.name_of_the_faculty}</td>
                                 <td>{val.year}</td>
                                 <td>{val.session}</td>
@@ -1579,6 +2992,20 @@ export const Taste=()=>{
         doc.setFont("times", "");
         doc.rect(69, 116, 130, 12).stroke();
         doc.text(`${data.taste_number}`, 72, 124);
+
+        doc.setFont("times", "bold");
+        doc.rect(12, 128, 57, 12).stroke();
+        doc.text('Date', 14, 136);
+        doc.setFont("times", "");
+        doc.rect(69, 128, 130, 12).stroke();
+        doc.text(`${dateFormat(data.date, "dd-mm-yyyy")}`, 72, 136);
+
+        doc.setFont("times", "bold");
+        doc.rect(12, 140, 57, 12).stroke();
+        doc.text('Outcome of Activity', 14, 148);
+        doc.setFont("times", "");
+        doc.rect(69, 140, 130, 12).stroke();
+        doc.text(`${data.outcome_of_the_activity}`, 72, 148);
         
         try{ 
             // Add pages from the original PDF
@@ -1619,6 +3046,194 @@ export const Taste=()=>{
       }
     }
 
+    /////////////////////filter options
+ const[year,setYear]=useState([])
+ const [currentRecords, setCurrentRecords] = useState([]);
+ let [AcdVals,setAcdVals]=useState("")
+ const[selectedSem,setSelectedSem]=useState([])
+
+ 
+ const[filter,setFilter]=useState({
+  "acdyr_id":"",
+  "sem_id":"",
+  "emp_id":""
+})
+console.log(filter)
+ const CustomClearText = () => <>X</>;
+
+ const ClearIndicator =(props) =>{
+   const {
+     children = <CustomClearText />,
+     getStyles,
+     innerProps: {ref, ...restInnerProps },
+   }= props;
+   return(
+     <div
+       {...restInnerProps}
+       ref={ref}
+       style={getStyles('clearIndicator', props)}
+     >
+       <div style={{padding: '0px 5px'}}>{children}</div>
+     </div>
+   )
+ }
+
+ const ClearIndicatorStyles = (base, state) => ({
+   ...base,
+   cursor: 'pointer',
+   color: state.isFocused ? 'blue' : 'black',
+ });
+
+ const acdInfoCollect=(eve)=>{
+  if(eve.length==0){
+    setFilter((old)=>({
+      ...old,
+      acdyr_id:""
+  }))
+  }else{
+
+    const label = eve.label
+    const value = eve.value
+    const extraInfo = eve.extraInfo
+
+    let isArray = Array.isArray(eve);
+    // alert(JSON.stringify(eve))
+    if(eve.length==1){
+        if(typeof eve[0].value === 'string'){
+            setFilter((old)=>({
+                ...old,
+                [eve[0].extraInfo]:eve[0].value
+            }))
+        }else{
+        setFilter((old)=>({
+            ...old,
+            [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+        }))}
+    }
+    if(isArray){
+        if(eve.length!=1){
+        
+    if(eve[0].extraInfo=="acdyr_id"){
+        
+            // alert(JSON.stringify(eve))
+            for(let i=0;i<eve.length;i++){
+                // alert(JSON.stringify(eve[i].value))
+                AcdVals+=eve[i].value
+                if(i!=eve.length-1){
+                    AcdVals+=","
+                }
+                setFilter((old)=>({
+                    ...old,
+                    [eve[i].extraInfo]:AcdVals
+                }))
+            }
+            // alert(majorVals)
+        
+    }
+    }
+    }
+    else if(extraInfo=="sem_id"){
+        setSelectedSem(value)
+        // handleChange(value)
+        setFilter((old)=>({
+            ...old,
+            [extraInfo]:JSON.stringify(value)
+        }))
+    }
+  
+}
+}
+
+const semInfoCollect=(eve)=>{
+  if(eve.length==0){
+    setFilter((old)=>({
+      ...old,
+      sem_id:""
+  }))
+  }else{
+
+  const label = eve.label
+  const value = eve.value
+  const extraInfo = eve.extraInfo
+
+  let isArray = Array.isArray(eve);
+  
+  if(isArray){
+      
+      if(eve.length!=1){
+      
+  if(eve[0].extraInfo=="acdyr_id"){
+      
+          // alert(JSON.stringify(eve))
+          for(let i=0;i<eve.length;i++){
+              // alert(JSON.stringify(eve[i].value))
+              AcdVals+=eve[i].value
+              if(i!=eve.length-1){
+                  AcdVals+=","
+              }
+              setFilter((old)=>({
+                  ...old,
+                  [eve[i].extraInfo]:AcdVals
+              }))
+          }
+          // alert(majorVals)
+      
+  }
+  }
+  }
+  else if(extraInfo=="sem_id"){
+      setSelectedSem(value)
+      // handleChange(value)
+      setFilter((old)=>({
+          ...old,
+          [extraInfo]:JSON.stringify(value)
+      }))
+  }
+  
+}}
+
+ const Acad=async()=>{
+   const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+  //  alert(JSON.stringify(t.data.result))
+   setYear(t.data.result)
+}
+const years = year.map((val) => ({
+value: val.acd_yr_id,
+label: val.acd_yr,
+extraInfo: "acdyr_id"
+}));
+useEffect(()=>{
+ Acad()
+},[])
+
+const semester = [
+ {sem_id:1,sem:"Odd"},
+ {sem_id:2,sem:"Even"},
+ {sem_id:3,sem:"Both"},
+]
+let sems = semester.map((val)=>({
+ value: val.sem_id,
+ label: val.sem,
+ extraInfo: "sem_id"
+}))
+
+const onClickFilter=async()=>{
+alert("clicked")
+alert(JSON.stringify(filter))
+try{
+    // alert("hi")
+    const logged=JSON.parse(sessionStorage.getItem("person"))
+    const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/data_setaf_participation_in_taste/${logged.faculty_id}`,filter)
+    setTasteRecs(filteredRecords.data.resultArray)
+    console.log(filteredRecords.data)
+    setCurrentRecords(filteredRecords.data.resultArray)
+}
+catch(err){
+    alert("No Reports in the selected filter")
+    console.log(err)
+}
+}
+
 
 
 //////TASTE fetch Code////
@@ -1642,8 +3257,65 @@ export const Taste=()=>{
     }
     return(
         <>
+                 <div> <p>&nbsp;</p>
         <p>&nbsp;</p>
-        <p>&nbsp;</p>
+        </div>
+        <div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',alignItems:'center',marginLeft:'-5%', marginTop:"100px",justifyContent:'center'}}>
+       
+       {/* Filter of Academic year--------------------------------------------------- */}
+       
+               <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+
+           </div>
+        </div>
          <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-60px"}}>
          <div class="report-header">
          <h1 class="recent-Articles">Your Reports</h1>
@@ -1652,6 +3324,9 @@ export const Taste=()=>{
          <table className='table table-striped'>
           <thead>
           <tr className="table-active">
+                            <th>Report ID</th>
+                            <th>Academic Year</th>
+                            <th>Semester</th>
                             <th>Name of the faculty</th>
                             <th>date</th>
                             <th>Taste Number</th>
@@ -1662,8 +3337,12 @@ export const Taste=()=>{
                             
           </tr>
           {               
+                        tasteRecs.length>0?
                         tasteRecs.map((val)=>(
                             <tr>
+                                <td>{val.report_id}</td>
+                                <td>{val.acd_yr}</td>
+                                <td>{val.sem}</td>
                                 <td>{val.name_of_the_faculty}</td>
                                 <td>{dateFormat(val.date,'dd-mm-yyyy')}</td>
                                 <td>{val.taste_number}</td>
@@ -1675,6 +3354,10 @@ export const Taste=()=>{
             
                             </tr>
                         ))
+                        :
+                        <tr>
+                          No records
+                        </tr>
                     }
           </thead>
          </table>
@@ -1684,27 +3367,402 @@ export const Taste=()=>{
     )
 }
 
-/////////////////////////////PROPOSAL SUBMISSION FOR GRANTS///////////////////
-export const Proposal=()=>{
+//////////////////////////////////econtent
 
-  const [proposalRecs,setProposalRecs]=useState([])
-  useEffect(()=>{
-     fetchProposalRecords()
-  },[])
-  const logged=JSON.parse(sessionStorage.getItem("person"))
+export const Econtent=()=>{
 
-  const fetchProposalRecords=async()=>{
-     try{
-      const temp = await proposalRecords(`${logged.faculty_id}`)
-      // console.log(temp.data)
-      setProposalRecs(temp.data)
-     }
-     catch(e){
-          console.log(e)
-     }
 
-  }
+  const generatePDF = async (report_id)=> {
+      try{
+          // alert(report_id)
+      const res = await axios.get(`http://localhost:1234/setaf/data/econtent/${report_id}`);
+      const data = res.data;
+      const doc = new jsPDF();    
+    
+      doc.addImage(Image, 'PNG', 10, 3, 20, 20);
+      doc.addImage(Image2, 'PNG', 12,23, 15, 15);
+      doc.addImage(Image3, 'JPG', 175, 3, 20, 15);
+      doc.addImage(Image4, 'JPG', 175, 20, 20, 15);
+ 
+      doc.setFontSize(18);
+      doc.setFont("times", "bold");
+      doc.text('MUTHAYAMMAL ENGINEERING COLLEGE',35, 15);
+      doc.setFontSize(10);
+      doc.setFont("times", "");
+      doc.text('(An Autonomous Institution)', 80, 20);
+      doc.text('(Approved by AICTE, New Delhi, Accredited by NAAC & Affiliated to Anna University)', 35, 25);
+      doc.text('Rasipuram - 637 408, Namakkal Dist., Tamil Nadu', 65, 30);
+      doc.setFont("times", "bold");
+      
+      doc.setFont("times", "bold");
+   
+      doc.setFontSize(15); 
+      doc.rect(12, 54, 32, 11).stroke();
+      doc.text(`${data.dept}`,25,61)
+      doc.rect(90,38,32,11)
+      doc.text('SETAF', 97, 45);
+      doc.rect(82,54,50,11)
+      doc.text("E-CONTENT",88,61)
+
+      doc.rect(168, 54, 28, 11).stroke();
+      doc.setFontSize(15); 
+      doc.text(`${data.acd_yr}`,172,61)
   
+      
+      doc.rect(12, 80, 78, 12).stroke();
+      doc.text('Name of the Faculty', 14, 88);
+      doc.setFont("times", "");
+      doc.rect(90, 80, 112, 12).stroke();
+      doc.text(`${data.name_of_the_faculty}`, 100, 88);
+      
+      doc.setFont("times", "bold");
+      doc.rect(12, 92, 78, 12).stroke();
+      doc.text('Name of the Module Developed', 14, 100);
+      doc.setFont("times", "");
+      doc.rect(90, 92, 112, 12).stroke();
+      doc.text(`${data.name_of_the_module_developed}`, 100, 100);
+      
+      doc.setFont("times", "bold");
+      doc.rect(12, 104, 78, 12).stroke();
+      doc.text('Date of launching e-Content', 14, 112);
+      doc.setFont("times", "");
+      doc.rect(90, 104, 112, 12).stroke();
+      doc.text(`${data.date_of_launching_e_content}`, 100, 112);
+
+      doc.setFont("times", "bold");
+      doc.rect(12, 116, 78, 12).stroke();
+      doc.text('Platform of the Module', 14, 123);
+      doc.setFont("times", "");
+      doc.rect(90, 116, 112, 12).stroke();
+      doc.text(`${data.module_of_platform}`, 100, 123);
+        
+    
+      // Generate a data URI for the PDF
+      const pdfDataUri = doc.output('datauristring');
+    
+      // Open the PDF in a new tab or window
+      const newWindow = window.open();
+      newWindow.document.write(`<iframe width='100%' height='100%' src='${pdfDataUri}'></iframe>`);
+    }
+    catch(e)
+    {
+      console.log(e);
+    }
+    }
+
+/////////////////////filter options
+const[year,setYear]=useState([])
+const [currentRecords, setCurrentRecords] = useState([]);
+let [AcdVals,setAcdVals]=useState("")
+const[selectedSem,setSelectedSem]=useState([])
+
+
+const[filter,setFilter]=useState({
+ "acdyr_id":"",
+ "sem_id":"",
+ "emp_id":""
+})
+console.log(filter)
+const CustomClearText = () => <>X</>;
+
+const ClearIndicator =(props) =>{
+  const {
+    children = <CustomClearText />,
+    getStyles,
+    innerProps: {ref, ...restInnerProps },
+  }= props;
+  return(
+    <div
+      {...restInnerProps}
+      ref={ref}
+      style={getStyles('clearIndicator', props)}
+    >
+      <div style={{padding: '0px 5px'}}>{children}</div>
+    </div>
+  )
+}
+
+const ClearIndicatorStyles = (base, state) => ({
+  ...base,
+  cursor: 'pointer',
+  color: state.isFocused ? 'blue' : 'black',
+});
+
+const acdInfoCollect=(eve)=>{
+ if(eve.length==0){
+   setFilter((old)=>({
+     ...old,
+     acdyr_id:""
+ }))
+ }else{
+
+   const label = eve.label
+   const value = eve.value
+   const extraInfo = eve.extraInfo
+
+   let isArray = Array.isArray(eve);
+   // alert(JSON.stringify(eve))
+   if(eve.length==1){
+       if(typeof eve[0].value === 'string'){
+           setFilter((old)=>({
+               ...old,
+               [eve[0].extraInfo]:eve[0].value
+           }))
+       }else{
+       setFilter((old)=>({
+           ...old,
+           [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+       }))}
+   }
+   if(isArray){
+       if(eve.length!=1){
+       
+   if(eve[0].extraInfo=="acdyr_id"){
+       
+           // alert(JSON.stringify(eve))
+           for(let i=0;i<eve.length;i++){
+               // alert(JSON.stringify(eve[i].value))
+               AcdVals+=eve[i].value
+               if(i!=eve.length-1){
+                   AcdVals+=","
+               }
+               setFilter((old)=>({
+                   ...old,
+                   [eve[i].extraInfo]:AcdVals
+               }))
+           }
+           // alert(majorVals)
+       
+   }
+   }
+   }
+   else if(extraInfo=="sem_id"){
+       setSelectedSem(value)
+       // handleChange(value)
+       setFilter((old)=>({
+           ...old,
+           [extraInfo]:JSON.stringify(value)
+       }))
+   }
+ 
+}
+}
+
+const semInfoCollect=(eve)=>{
+ if(eve.length==0){
+   setFilter((old)=>({
+     ...old,
+     sem_id:""
+ }))
+ }else{
+
+ const label = eve.label
+ const value = eve.value
+ const extraInfo = eve.extraInfo
+
+ let isArray = Array.isArray(eve);
+ 
+ if(isArray){
+     
+     if(eve.length!=1){
+     
+ if(eve[0].extraInfo=="acdyr_id"){
+     
+         // alert(JSON.stringify(eve))
+         for(let i=0;i<eve.length;i++){
+             // alert(JSON.stringify(eve[i].value))
+             AcdVals+=eve[i].value
+             if(i!=eve.length-1){
+                 AcdVals+=","
+             }
+             setFilter((old)=>({
+                 ...old,
+                 [eve[i].extraInfo]:AcdVals
+             }))
+         }
+         // alert(majorVals)
+     
+ }
+ }
+ }
+ else if(extraInfo=="sem_id"){
+     setSelectedSem(value)
+     // handleChange(value)
+     setFilter((old)=>({
+         ...old,
+         [extraInfo]:JSON.stringify(value)
+     }))
+ }
+ 
+}}
+
+const Acad=async()=>{
+  const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+ //  alert(JSON.stringify(t.data.result))
+  setYear(t.data.result)
+}
+const years = year.map((val) => ({
+value: val.acd_yr_id,
+label: val.acd_yr,
+extraInfo: "acdyr_id"
+}));
+useEffect(()=>{
+Acad()
+},[])
+
+const semester = [
+{sem_id:1,sem:"Odd"},
+{sem_id:2,sem:"Even"},
+{sem_id:3,sem:"Both"},
+]
+let sems = semester.map((val)=>({
+value: val.sem_id,
+label: val.sem,
+extraInfo: "sem_id"
+}))
+
+const onClickFilter=async()=>{
+alert("clicked")
+alert(JSON.stringify(filter))
+try{
+   const logged=JSON.parse(sessionStorage.getItem("person"))
+   const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/data_setaf_e_content/${logged.faculty_id}`,filter)
+   setEcontentRecs(filteredRecords.data.resultArray)
+   console.log(filteredRecords.data)
+   setCurrentRecords(filteredRecords.data.resultArray)
+}
+catch(err){
+   alert("No Reports in the selected filter")
+   console.log(err)
+}
+}
+
+/////fetch code
+    const [EcontentRecs,setEcontentRecs]=useState([])
+    useEffect(()=>{
+       fetchecontentRecords()
+    },[])
+    const logged=JSON.parse(sessionStorage.getItem("person"))
+  
+    const fetchecontentRecords=async()=>{
+      try{
+        const temp = await econtentRecords(`${logged.faculty_id}`)
+        // console.log(temp.data)
+        setEcontentRecs(temp.data)
+      }
+      catch(e){
+        console.log(e);
+      }
+  
+    }
+  return(
+      <>
+               <div> <p>&nbsp;</p>
+        <p>&nbsp;</p>
+        </div>
+        <div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',alignItems:'center',marginLeft:'-5%', marginTop:"100px",justifyContent:'center'}}>
+       
+       {/* Filter of Academic year--------------------------------------------------- */}
+       
+               <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+
+           </div>
+        </div>
+       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-60px"}}>
+       <div class="report-header">
+       <h1 class="recent-Articles">Your Reports</h1>
+       <a className="topic-headings" href="Setaf/SetafForms/Econtentfront"><button style={{top:"27.5px",right:"50px"}} class="views" id="addButton">+ Add</button></a>
+       </div>
+       <table className='table table-striped'>
+        <thead>
+        <tr  className="table table-active">
+                          <th>Report Id</th>
+                          <th>Academic Year</th>
+                          <th>Semester</th>
+                          <th>Name of the Faculty</th>
+                          <th>Name of the Module Developed</th>
+                          <th>Module of Platform</th>
+                          <th>Date of launching e-Content</th>
+                          <th>Link to the Module Developed</th>
+                          <th>Download Pdf</th>
+                          
+        </tr>
+        {              EcontentRecs.length>0?
+                      EcontentRecs.map((val)=>(
+                          <tr>
+                              <td>{val.report_id}</td>
+                              <td>{val.acd_yr}</td>
+                              <td>{val.sem}</td>
+                              <td>{val.name_of_the_faculty}</td>
+                              <td>{val.name_of_the_module_developed}</td>
+                              <td>{val.module_of_platform}</td>
+                              <td>{val.date_of_launching_e_content}</td>
+                              <td>{val.link_to_the_module_developed}</td> 
+                              <td><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></td> 
+                          </tr>
+                      ))
+                      :
+                      <tr>No records</tr>
+                  }
+        </thead>
+       </table>
+       </div>
+       
+                    
+      </>
+  )
+}
+
+/////////////////////////////PROPOSAL SUBMISSION FOR GRANTS///////////////////
+export const Proposal=()=>{  
   const generatePDF = async (report_id)=> {
       try{
           // alert(report_id)
@@ -1860,9 +3918,275 @@ export const Proposal=()=>{
     }
   }
 
+
+  /////////////////////filter options
+ const[year,setYear]=useState([])
+ const [currentRecords, setCurrentRecords] = useState([]);
+ let [AcdVals,setAcdVals]=useState("")
+ const[selectedSem,setSelectedSem]=useState([])
+
+ 
+ const[filter,setFilter]=useState({
+  "acdyr_id":"",
+  "sem_id":"",
+  "emp_id":""
+})
+console.log(filter)
+ const CustomClearText = () => <>X</>;
+
+ const ClearIndicator =(props) =>{
+   const {
+     children = <CustomClearText />,
+     getStyles,
+     innerProps: {ref, ...restInnerProps },
+   }= props;
+   return(
+     <div
+       {...restInnerProps}
+       ref={ref}
+       style={getStyles('clearIndicator', props)}
+     >
+       <div style={{padding: '0px 5px'}}>{children}</div>
+     </div>
+   )
+ }
+
+ const ClearIndicatorStyles = (base, state) => ({
+   ...base,
+   cursor: 'pointer',
+   color: state.isFocused ? 'blue' : 'black',
+ });
+
+ const acdInfoCollect=(eve)=>{
+  if(eve.length==0){
+    setFilter((old)=>({
+      ...old,
+      acdyr_id:""
+  }))
+  }else{
+
+    const label = eve.label
+    const value = eve.value
+    const extraInfo = eve.extraInfo
+
+    let isArray = Array.isArray(eve);
+    // alert(JSON.stringify(eve))
+    if(eve.length==1){
+        if(typeof eve[0].value === 'string'){
+            setFilter((old)=>({
+                ...old,
+                [eve[0].extraInfo]:eve[0].value
+            }))
+        }else{
+        setFilter((old)=>({
+            ...old,
+            [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+        }))}
+    }
+    if(isArray){
+        if(eve.length!=1){
+        
+    if(eve[0].extraInfo=="acdyr_id"){
+        
+            // alert(JSON.stringify(eve))
+            for(let i=0;i<eve.length;i++){
+                // alert(JSON.stringify(eve[i].value))
+                AcdVals+=eve[i].value
+                if(i!=eve.length-1){
+                    AcdVals+=","
+                }
+                setFilter((old)=>({
+                    ...old,
+                    [eve[i].extraInfo]:AcdVals
+                }))
+            }
+            // alert(majorVals)
+        
+    }
+    }
+    }
+    else if(extraInfo=="sem_id"){
+        setSelectedSem(value)
+        // handleChange(value)
+        setFilter((old)=>({
+            ...old,
+            [extraInfo]:JSON.stringify(value)
+        }))
+    }
+  
+}
+}
+
+const semInfoCollect=(eve)=>{
+  if(eve.length==0){
+    setFilter((old)=>({
+      ...old,
+      sem_id:""
+  }))
+  }else{
+
+  const label = eve.label
+  const value = eve.value
+  const extraInfo = eve.extraInfo
+
+  let isArray = Array.isArray(eve);
+  
+  if(isArray){
+      
+      if(eve.length!=1){
+      
+  if(eve[0].extraInfo=="acdyr_id"){
+      
+          // alert(JSON.stringify(eve))
+          for(let i=0;i<eve.length;i++){
+              // alert(JSON.stringify(eve[i].value))
+              AcdVals+=eve[i].value
+              if(i!=eve.length-1){
+                  AcdVals+=","
+              }
+              setFilter((old)=>({
+                  ...old,
+                  [eve[i].extraInfo]:AcdVals
+              }))
+          }
+          // alert(majorVals)
+      
+  }
+  }
+  }
+  else if(extraInfo=="sem_id"){
+      setSelectedSem(value)
+      // handleChange(value)
+      setFilter((old)=>({
+          ...old,
+          [extraInfo]:JSON.stringify(value)
+      }))
+  }
+  
+}}
+
+ const Acad=async()=>{
+   const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+  //  alert(JSON.stringify(t.data.result))
+   setYear(t.data.result)
+}
+const years = year.map((val) => ({
+value: val.acd_yr_id,
+label: val.acd_yr,
+extraInfo: "acdyr_id"
+}));
+useEffect(()=>{
+ Acad()
+},[])
+
+const semester = [
+ {sem_id:1,sem:"Odd"},
+ {sem_id:2,sem:"Even"},
+ {sem_id:3,sem:"Both"},
+]
+let sems = semester.map((val)=>({
+ value: val.sem_id,
+ label: val.sem,
+ extraInfo: "sem_id"
+}))
+
+const onClickFilter=async()=>{
+alert("clicked")
+alert(JSON.stringify(filter))
+try{
+    // alert("hi")
+    const logged=JSON.parse(sessionStorage.getItem("person"))
+    const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/data_setaf_proposal_submission_for_grants/${logged.faculty_id}`,filter)
+    setProposalRecs(filteredRecords.data.resultArray)
+    console.log(filteredRecords.data)
+    setCurrentRecords(filteredRecords.data.resultArray)
+}
+catch(err){
+    alert("No Reports in the selected filter")
+    console.log(err)
+}
+}
+  //data fetch
+  const [proposalRecs,setProposalRecs]=useState([])
+  useEffect(()=>{
+     fetchProposalRecords()
+  },[])
+  const logged=JSON.parse(sessionStorage.getItem("person"))
+
+  const fetchProposalRecords=async()=>{
+     try{
+      const temp = await proposalRecords(`${logged.faculty_id}`)
+      // console.log(temp.data)
+      setProposalRecs(temp.data)
+     }
+     catch(e){
+          console.log(e)
+     }
+
+  }
+
   return(
       <>
-       <div class="overallcontent">
+               <div> <p>&nbsp;</p>
+        <p>&nbsp;</p>
+        </div>
+        <div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',alignItems:'center',marginLeft:'-5%', marginTop:"100px",justifyContent:'center'}}>
+       
+       {/* Filter of Academic year--------------------------------------------------- */}
+       
+               <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+
+           </div>
+        </div>
+       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-50px"}}>
        <div class="report-header">
        <h1 class="recent-Articles">Your Reports</h1>
        <a className="topic-headings" href="Setaf/SetafForms/proposalfront"><button style={{top:"27.5px",right:"50px"}} class="views" id="addButton">+ Add</button></a>
@@ -1880,12 +4204,13 @@ export const Proposal=()=>{
                           <th>Duration</th>
                           <th>Amount Quoted(in lakhs)</th>
                           <th>Grant Sanctioned</th>    
+                          <th>Download pdfDocument3</th>
         </tr>
         {               
                       proposalRecs.map((val)=>(
                           <tr>
                               <td>{val.acd_yr}</td>
-                              <td>{val.semester}</td>
+                              <td>{val.sem}</td>
                               <td>{val.name_of_the_faculty}</td>
                               <td>{val.name_of_the_funding_agency}</td>
                               <td>{dateFormat(val.date_of_submission,"dd-mm-yyyy")}</td>
@@ -1978,25 +4303,54 @@ export const Industry=()=>{
       doc.setFontSize(15); 
       doc.text(`${data.acd_yr}`,172,61)
       
-      doc.rect(12, 80, 50, 12).stroke();
-      doc.text('Name of Industry', 14, 88);
+      doc.rect(12, 80, 64, 12).stroke();
+      doc.text('Name of Faculty', 14, 88);
       doc.setFont("times", "");
-      doc.rect(62, 80, 140, 12).stroke();
-      doc.text(`${data.name_of_industry}`, 65, 88);
+      doc.rect(76, 80, 124, 12).stroke();
+      doc.text(`${data.faculty_name}`, 79, 88);
       
       doc.setFont("times", "bold");
-      doc.rect(12, 92, 50, 12).stroke();
-      doc.text('Name of the Faculty', 14, 100);
+      doc.rect(12, 92, 64, 12).stroke();
+      doc.text('Name of the Industry', 14, 100);
       doc.setFont("times", "");
-      doc.rect(62, 92, 140, 12).stroke();
-      doc.text(`${data.faculty_name}`, 65, 100);
+      doc.rect(76, 92, 124, 12).stroke();
+      doc.text(`${data.name_of_industry}`, 79, 100);
       
       doc.setFont("times", "bold");
-      doc.rect(12, 104, 50, 12).stroke();
+      doc.rect(12, 104, 64, 12).stroke();
       doc.text('Purpose of Visit', 14, 112);
       doc.setFont("times", "");
-      doc.rect(62, 104, 140, 12).stroke();
-      doc.text(`${data.purpose_of_the_visite}`, 65, 112);
+      doc.rect(76, 104, 124, 12).stroke();
+      doc.text(`${data.purpose_of_the_visite}`, 79, 112);
+
+      doc.setFont("times", "bold");
+      doc.rect(12, 116, 64, 12).stroke();
+      doc.text('Location of Industry', 14, 124);
+      doc.setFont("times", "");
+      doc.rect(76, 116, 124, 12).stroke();
+      doc.text(`${data.location_of_industry}`, 79, 124);
+
+      doc.setFont("times", "bold");
+      doc.rect(12, 128, 64, 12).stroke();
+      doc.text('Name of Interacted Person', 14, 136);
+      doc.setFont("times", "");
+      doc.rect(76, 128, 124, 12).stroke();
+      doc.text(`${data.name_of_insdustry_instution_person_interacted}`, 79, 136);
+
+      doc.setFont("times", "bold");
+      doc.rect(12, 140, 64, 12).stroke();
+      doc.text('Date of Visit', 14, 148);
+      doc.setFont("times", "");
+      doc.rect(76, 140, 124, 12).stroke();
+      doc.text(`${dateFormat(data.date_of_visit, "dd-mm-yyyy")}`, 79, 148);
+
+      doc.setFont("times", "bold");
+      doc.rect(12, 152, 64, 12).stroke();
+      doc.text('Purpose of Visit', 14, 160);
+      doc.setFont("times", "");
+      doc.rect(76, 152, 124, 12).stroke();
+      doc.text(`${data.purpose_of_the_visite}`, 79, 160);
+
       
       try{ 
           // Add pages from the original PDF
@@ -2087,6 +4441,195 @@ export const Industry=()=>{
     }
   }
   
+/////////////////////filter options
+const[year,setYear]=useState([])
+const [currentRecords, setCurrentRecords] = useState([]);
+let [AcdVals,setAcdVals]=useState("")
+const[selectedSem,setSelectedSem]=useState([])
+
+
+const[filter,setFilter]=useState({
+ "acdyr_id":"",
+ "sem_id":"",
+ "emp_id":""
+})
+console.log(filter)
+const CustomClearText = () => <>X</>;
+
+const ClearIndicator =(props) =>{
+  const {
+    children = <CustomClearText />,
+    getStyles,
+    innerProps: {ref, ...restInnerProps },
+  }= props;
+  return(
+    <div
+      {...restInnerProps}
+      ref={ref}
+      style={getStyles('clearIndicator', props)}
+    >
+      <div style={{padding: '0px 5px'}}>{children}</div>
+    </div>
+  )
+}
+
+const ClearIndicatorStyles = (base, state) => ({
+  ...base,
+  cursor: 'pointer',
+  color: state.isFocused ? 'blue' : 'black',
+});
+
+const acdInfoCollect=(eve)=>{
+ if(eve.length==0){
+   setFilter((old)=>({
+     ...old,
+     acdyr_id:""
+ }))
+ }else{
+
+   const label = eve.label
+   const value = eve.value
+   const extraInfo = eve.extraInfo
+
+   let isArray = Array.isArray(eve);
+   // alert(JSON.stringify(eve))
+   if(eve.length==1){
+       if(typeof eve[0].value === 'string'){
+           setFilter((old)=>({
+               ...old,
+               [eve[0].extraInfo]:eve[0].value
+           }))
+       }else{
+       setFilter((old)=>({
+           ...old,
+           [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+       }))}
+   }
+   if(isArray){
+       if(eve.length!=1){
+       
+   if(eve[0].extraInfo=="acdyr_id"){
+       
+           // alert(JSON.stringify(eve))
+           for(let i=0;i<eve.length;i++){
+               // alert(JSON.stringify(eve[i].value))
+               AcdVals+=eve[i].value
+               if(i!=eve.length-1){
+                   AcdVals+=","
+               }
+               setFilter((old)=>({
+                   ...old,
+                   [eve[i].extraInfo]:AcdVals
+               }))
+           }
+           // alert(majorVals)
+       
+   }
+   }
+   }
+   else if(extraInfo=="sem_id"){
+       setSelectedSem(value)
+       // handleChange(value)
+       setFilter((old)=>({
+           ...old,
+           [extraInfo]:JSON.stringify(value)
+       }))
+   }
+ 
+}
+}
+
+const semInfoCollect=(eve)=>{
+ if(eve.length==0){
+   setFilter((old)=>({
+     ...old,
+     sem_id:""
+ }))
+ }else{
+
+ const label = eve.label
+ const value = eve.value
+ const extraInfo = eve.extraInfo
+
+ let isArray = Array.isArray(eve);
+ 
+ if(isArray){
+     
+     if(eve.length!=1){
+     
+ if(eve[0].extraInfo=="acdyr_id"){
+     
+         // alert(JSON.stringify(eve))
+         for(let i=0;i<eve.length;i++){
+             // alert(JSON.stringify(eve[i].value))
+             AcdVals+=eve[i].value
+             if(i!=eve.length-1){
+                 AcdVals+=","
+             }
+             setFilter((old)=>({
+                 ...old,
+                 [eve[i].extraInfo]:AcdVals
+             }))
+         }
+         // alert(majorVals)
+     
+ }
+ }
+ }
+ else if(extraInfo=="sem_id"){
+     setSelectedSem(value)
+     // handleChange(value)
+     setFilter((old)=>({
+         ...old,
+         [extraInfo]:JSON.stringify(value)
+     }))
+ }
+ 
+}}
+
+const Acad=async()=>{
+  const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+ //  alert(JSON.stringify(t.data.result))
+  setYear(t.data.result)
+}
+const years = year.map((val) => ({
+value: val.acd_yr_id,
+label: val.acd_yr,
+extraInfo: "acdyr_id"
+}));
+useEffect(()=>{
+Acad()
+},[])
+
+const semester = [
+{sem_id:1,sem:"Odd"},
+{sem_id:2,sem:"Even"},
+{sem_id:3,sem:"Both"},
+]
+let sems = semester.map((val)=>({
+value: val.sem_id,
+label: val.sem,
+extraInfo: "sem_id"
+}))
+
+const onClickFilter=async()=>{
+alert("clicked")
+alert(JSON.stringify(filter))
+try{
+   // alert("hi")
+   const logged=JSON.parse(sessionStorage.getItem("person"))
+   const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/data_setaf_visit_to_industries_institution/${logged.faculty_id}`,filter)
+   setIndustryRecs(filteredRecords.data.resultArray)
+   console.log(filteredRecords.data)
+   setCurrentRecords(filteredRecords.data.resultArray)
+}
+catch(err){
+   alert("No Reports in the selected filter")
+   console.log(err)
+}
+}
+
+  /////data fetch
   const [industryRecs,setIndustryRecs]=useState([])
   useEffect(()=>{
      fetchIndustryRecords()
@@ -2107,8 +4650,65 @@ export const Industry=()=>{
 
   return(
       <>
-      <p>&nbsp;</p>
+               <div> <p>&nbsp;</p>
         <p>&nbsp;</p>
+        </div>
+        <div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',alignItems:'center',marginLeft:'-5%', marginTop:"100px",justifyContent:'center'}}>
+       
+       {/* Filter of Academic year--------------------------------------------------- */}
+       
+               <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+
+           </div>
+        </div>
        <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-60px"}}>
        <div class="report-header">
        <h1 class="recent-Articles">Your Reports</h1>
@@ -2117,7 +4717,9 @@ export const Industry=()=>{
        <table className='table table-striped'>
         <thead>
         <tr className="table-active">
-                          <th>Name of the faculty</th>
+                          <th>Report ID</th>
+                          <th>Academic Year</th>
+                          <th>Semester</th>
                           <th>Date of Visit</th>
                           <th>Academic Year</th>
                           <th>Name of Industry/Institution Visited</th>
@@ -2128,7 +4730,9 @@ export const Industry=()=>{
         {               industryRecs.length>0?
                       industryRecs.map((val)=>(
                           <tr>
-                              <td>{val.faculty_name}</td>
+                              <td>{val.report_id}</td>
+                              <td>{val.acd_yr}</td>
+                              <td>{val.sem}</td>
                               <td>{dateFormat(val.date_of_visit,'dd-mm-yyyy')}</td>
                               <td>{val.acd_yr}</td>
                               <td>{val.name_of_industry}</td>
@@ -2262,7 +4866,195 @@ export const Seed=()=>{
     }
   }
 
+/////////////////////filter options
+const[year,setYear]=useState([])
+const [currentRecords, setCurrentRecords] = useState([]);
+let [AcdVals,setAcdVals]=useState("")
+const[selectedSem,setSelectedSem]=useState([])
 
+
+const[filter,setFilter]=useState({
+ "acdyr_id":"",
+ "sem_id":"",
+ "emp_id":""
+})
+console.log(filter)
+const CustomClearText = () => <>X</>;
+
+const ClearIndicator =(props) =>{
+  const {
+    children = <CustomClearText />,
+    getStyles,
+    innerProps: {ref, ...restInnerProps },
+  }= props;
+  return(
+    <div
+      {...restInnerProps}
+      ref={ref}
+      style={getStyles('clearIndicator', props)}
+    >
+      <div style={{padding: '0px 5px'}}>{children}</div>
+    </div>
+  )
+}
+
+const ClearIndicatorStyles = (base, state) => ({
+  ...base,
+  cursor: 'pointer',
+  color: state.isFocused ? 'blue' : 'black',
+});
+
+const acdInfoCollect=(eve)=>{
+ if(eve.length==0){
+   setFilter((old)=>({
+     ...old,
+     acdyr_id:""
+ }))
+ }else{
+
+   const label = eve.label
+   const value = eve.value
+   const extraInfo = eve.extraInfo
+
+   let isArray = Array.isArray(eve);
+   // alert(JSON.stringify(eve))
+   if(eve.length==1){
+       if(typeof eve[0].value === 'string'){
+           setFilter((old)=>({
+               ...old,
+               [eve[0].extraInfo]:eve[0].value
+           }))
+       }else{
+       setFilter((old)=>({
+           ...old,
+           [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+       }))}
+   }
+   if(isArray){
+       if(eve.length!=1){
+       
+   if(eve[0].extraInfo=="acdyr_id"){
+       
+           // alert(JSON.stringify(eve))
+           for(let i=0;i<eve.length;i++){
+               // alert(JSON.stringify(eve[i].value))
+               AcdVals+=eve[i].value
+               if(i!=eve.length-1){
+                   AcdVals+=","
+               }
+               setFilter((old)=>({
+                   ...old,
+                   [eve[i].extraInfo]:AcdVals
+               }))
+           }
+           // alert(majorVals)
+       
+   }
+   }
+   }
+   else if(extraInfo=="sem_id"){
+       setSelectedSem(value)
+       // handleChange(value)
+       setFilter((old)=>({
+           ...old,
+           [extraInfo]:JSON.stringify(value)
+       }))
+   }
+ 
+}
+}
+
+const semInfoCollect=(eve)=>{
+ if(eve.length==0){
+   setFilter((old)=>({
+     ...old,
+     sem_id:""
+ }))
+ }else{
+
+ const label = eve.label
+ const value = eve.value
+ const extraInfo = eve.extraInfo
+
+ let isArray = Array.isArray(eve);
+ 
+ if(isArray){
+     
+     if(eve.length!=1){
+     
+ if(eve[0].extraInfo=="acdyr_id"){
+     
+         // alert(JSON.stringify(eve))
+         for(let i=0;i<eve.length;i++){
+             // alert(JSON.stringify(eve[i].value))
+             AcdVals+=eve[i].value
+             if(i!=eve.length-1){
+                 AcdVals+=","
+             }
+             setFilter((old)=>({
+                 ...old,
+                 [eve[i].extraInfo]:AcdVals
+             }))
+         }
+         // alert(majorVals)
+     
+ }
+ }
+ }
+ else if(extraInfo=="sem_id"){
+     setSelectedSem(value)
+     // handleChange(value)
+     setFilter((old)=>({
+         ...old,
+         [extraInfo]:JSON.stringify(value)
+     }))
+ }
+ 
+}}
+
+const Acad=async()=>{
+  const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+ //  alert(JSON.stringify(t.data.result))
+  setYear(t.data.result)
+}
+const years = year.map((val) => ({
+value: val.acd_yr_id,
+label: val.acd_yr,
+extraInfo: "acdyr_id"
+}));
+useEffect(()=>{
+Acad()
+},[])
+
+const semester = [
+{sem_id:1,sem:"Odd"},
+{sem_id:2,sem:"Even"},
+{sem_id:3,sem:"Both"},
+]
+let sems = semester.map((val)=>({
+value: val.sem_id,
+label: val.sem,
+extraInfo: "sem_id"
+}))
+
+const onClickFilter=async()=>{
+alert("clicked")
+alert(JSON.stringify(filter))
+try{
+   // alert("hi")
+   const logged=JSON.parse(sessionStorage.getItem("person"))
+   const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/data_setaf_seed_money_proposal_for_research/${logged.faculty_id}`,filter)
+   setSeedRecs(filteredRecords.data.resultArray)
+   console.log(filteredRecords.data)
+   setCurrentRecords(filteredRecords.data.resultArray)
+}
+catch(err){
+   alert("No Reports in the selected filter")
+   console.log(err)
+}
+}
+
+//data fetch 
   const [seedRecs,setSeedRecs]=useState([])
   useEffect(()=>{
      fetchSeedRecords()
@@ -2283,8 +5075,65 @@ export const Seed=()=>{
   }
   return(
       <>
-      <p>&nbsp;</p>
+               <div> <p>&nbsp;</p>
         <p>&nbsp;</p>
+        </div>
+        <div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',alignItems:'center',marginLeft:'-5%', marginTop:"100px",justifyContent:'center'}}>
+       
+       {/* Filter of Academic year--------------------------------------------------- */}
+       
+               <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+
+           </div>
+        </div>
        <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-60px"}}>
        <div class="report-header">
        <h1 class="recent-Articles">Your Reports</h1>
@@ -2293,6 +5142,7 @@ export const Seed=()=>{
        <table className='table table-striped'>
         <thead>
         <tr className="table-active">
+                          <th>Report ID</th>
                           <th>Accademic Year</th>
                           <th>Semester</th>
                           <th>Name of the Faculty</th>
@@ -2302,10 +5152,12 @@ export const Seed=()=>{
                           <th>Download PDF</th>
         </tr>
         {               
+                      seedRecs.length>0?
                       seedRecs.map((val)=>(
                           <tr>
+                              <td>{val.report_id}</td>
                               <td>{val.acd_yr}</td>
-                              <td>{val.semester}</td>
+                              <td>{val.sem}</td>
                               <td>{val.name_of_the_faculty}</td>
                               <td>{val.title_of_the_research_project}</td>
                               <td>{val.amount_of_seed_money}</td> 
@@ -2314,6 +5166,10 @@ export const Seed=()=>{
           
                           </tr>
                       ))
+                      :
+                      <tr>
+                        No Records
+                      </tr>
                   }
         </thead>
        </table>
@@ -2327,21 +5183,8 @@ export const Seed=()=>{
 
 export const Consultancy =()=>{
 
-  const [consultancyRecs,setconsultancyRecs]=useState([])
- 
-   useEffect(()=>{
-      fetchconsultancyRecords()
-  },[])
-  const logged=JSON.parse(sessionStorage.getItem("person"))
 
-
-  const fetchconsultancyRecords=async()=>{
-      const temp = await consultancyRecords(`${logged.faculty_id}`)
-      // console.log(temp.data)
-      setconsultancyRecs(temp.data)
-  }
-//////////////////////////////////////////////////////////////////////////////PDF VIWE //////////////////////////////
-const generatePDF = async (report_id)=> {
+  const generatePDF = async (report_id)=> {
   try{
       // alert(report_id)
   const res = await axios.get(`http://localhost:1234/setaf/consultancy_data/${report_id}`);
@@ -2462,14 +5305,275 @@ catch(e)
 }
 }
 
+/////////////////////filter options
+const[year,setYear]=useState([])
+const [currentRecords, setCurrentRecords] = useState([]);
+let [AcdVals,setAcdVals]=useState("")
+const[selectedSem,setSelectedSem]=useState([])
+
+
+const[filter,setFilter]=useState({
+ "acdyr_id":"",
+ "sem_id":"",
+ "emp_id":""
+})
+console.log(filter)
+const CustomClearText = () => <>X</>;
+
+const ClearIndicator =(props) =>{
+  const {
+    children = <CustomClearText />,
+    getStyles,
+    innerProps: {ref, ...restInnerProps },
+  }= props;
+  return(
+    <div
+      {...restInnerProps}
+      ref={ref}
+      style={getStyles('clearIndicator', props)}
+    >
+      <div style={{padding: '0px 5px'}}>{children}</div>
+    </div>
+  )
+}
+
+const ClearIndicatorStyles = (base, state) => ({
+  ...base,
+  cursor: 'pointer',
+  color: state.isFocused ? 'blue' : 'black',
+});
+
+const acdInfoCollect=(eve)=>{
+ if(eve.length==0){
+   setFilter((old)=>({
+     ...old,
+     acdyr_id:""
+ }))
+ }else{
+
+   const label = eve.label
+   const value = eve.value
+   const extraInfo = eve.extraInfo
+
+   let isArray = Array.isArray(eve);
+   // alert(JSON.stringify(eve))
+   if(eve.length==1){
+       if(typeof eve[0].value === 'string'){
+           setFilter((old)=>({
+               ...old,
+               [eve[0].extraInfo]:eve[0].value
+           }))
+       }else{
+       setFilter((old)=>({
+           ...old,
+           [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+       }))}
+   }
+   if(isArray){
+       if(eve.length!=1){
+       
+   if(eve[0].extraInfo=="acdyr_id"){
+       
+           // alert(JSON.stringify(eve))
+           for(let i=0;i<eve.length;i++){
+               // alert(JSON.stringify(eve[i].value))
+               AcdVals+=eve[i].value
+               if(i!=eve.length-1){
+                   AcdVals+=","
+               }
+               setFilter((old)=>({
+                   ...old,
+                   [eve[i].extraInfo]:AcdVals
+               }))
+           }
+           // alert(majorVals)
+       
+   }
+   }
+   }
+   else if(extraInfo=="sem_id"){
+       setSelectedSem(value)
+       // handleChange(value)
+       setFilter((old)=>({
+           ...old,
+           [extraInfo]:JSON.stringify(value)
+       }))
+   }
+ 
+}
+}
+
+const semInfoCollect=(eve)=>{
+ if(eve.length==0){
+   setFilter((old)=>({
+     ...old,
+     sem_id:""
+ }))
+ }else{
+
+ const label = eve.label
+ const value = eve.value
+ const extraInfo = eve.extraInfo
+
+ let isArray = Array.isArray(eve);
+ 
+ if(isArray){
+     
+     if(eve.length!=1){
+     
+ if(eve[0].extraInfo=="acdyr_id"){
+     
+         // alert(JSON.stringify(eve))
+         for(let i=0;i<eve.length;i++){
+             // alert(JSON.stringify(eve[i].value))
+             AcdVals+=eve[i].value
+             if(i!=eve.length-1){
+                 AcdVals+=","
+             }
+             setFilter((old)=>({
+                 ...old,
+                 [eve[i].extraInfo]:AcdVals
+             }))
+         }
+         // alert(majorVals)
+     
+ }
+ }
+ }
+ else if(extraInfo=="sem_id"){
+     setSelectedSem(value)
+     // handleChange(value)
+     setFilter((old)=>({
+         ...old,
+         [extraInfo]:JSON.stringify(value)
+     }))
+ }
+ 
+}}
+
+const Acad=async()=>{
+  const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+ //  alert(JSON.stringify(t.data.result))
+  setYear(t.data.result)
+}
+const years = year.map((val) => ({
+value: val.acd_yr_id,
+label: val.acd_yr,
+extraInfo: "acdyr_id"
+}));
+useEffect(()=>{
+Acad()
+},[])
+
+const semester = [
+{sem_id:1,sem:"Odd"},
+{sem_id:2,sem:"Even"},
+{sem_id:3,sem:"Both"},
+]
+let sems = semester.map((val)=>({
+value: val.sem_id,
+label: val.sem,
+extraInfo: "sem_id"
+}))
+
+const onClickFilter=async()=>{
+alert("clicked")
+alert(JSON.stringify(filter))
+try{
+   // alert("hi")
+   const logged=JSON.parse(sessionStorage.getItem("person"))
+   const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/data_setaf_consultancy_and_corporate_training/${logged.faculty_id}`,filter)
+   setconsultancyRecs(filteredRecords.data.resultArray)
+   console.log(filteredRecords.data)
+   setCurrentRecords(filteredRecords.data.resultArray)
+}
+catch(err){
+   alert("No Reports in the selected filter")
+   console.log(err)
+}
+}
+
+//fetch data
+const [consultancyRecs,setconsultancyRecs]=useState([])
+ 
+   useEffect(()=>{
+      fetchconsultancyRecords()
+  },[])
+  const logged=JSON.parse(sessionStorage.getItem("person"))
+
+
+  const fetchconsultancyRecords=async()=>{
+      const temp = await consultancyRecords(`${logged.faculty_id}`)
+      // console.log(temp.data)
+      setconsultancyRecs(temp.data)
+  }
+
+
 
  
   return(
       <>
       
       <div>
-      <p>&nbsp;</p>
+      <div> <p>&nbsp;</p>
         <p>&nbsp;</p>
+        </div>
+        <div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',alignItems:'center',marginLeft:'-5%', marginTop:"100px",justifyContent:'center'}}>
+       
+       {/* Filter of Academic year--------------------------------------------------- */}
+       
+               <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+
+           </div>
+        </div>
        <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-60px"}}>
        <div class="report-header">
        <h1 class="recent-Articles">Your Reports</h1>
@@ -2478,8 +5582,8 @@ catch(e)
        <table className='table table-striped '>
        <thead >
        <tr className="table-active">
-          <th>Academic Year/Semester</th>
-          {/* <th style={{width:"120px"}}>Semester</th> */}
+          <th>Academic Year</th>
+          <th>Semester</th>
           <th  style={{width:"150px"}}>Name of the faculty</th>
           <th>Name of consultancy project</th>
           <th>Sponsoring agency details</th>
@@ -2487,15 +5591,14 @@ catch(e)
           <th style={{width:"120px"}}>Date</th>
           <th>Revenue Generated</th>
           <th>Number of Trainees</th>
-          {/* <th>enclose_proof_pdf</th> */}
           <th>REPORT VIEW</th>
-       {/* <th>Journal First Page - PDF</th> */}
        </tr>
        {               
                       consultancyRecs.length>0? 
                       consultancyRecs.map((val)=>(
                           <tr className="table-striped">
-                              <td>{val.acd_yr}/{val.semester}</td>
+                              <td>{val.acd_yr}</td>
+                              <td>{val.sem}</td>
                               <td>{val.name_of_the_faculty}</td>
                               <td>{val.name_of_consultancy_project}</td>
                               <td>{val.sponsoring_agency_details}</td>
@@ -2503,7 +5606,6 @@ catch(e)
                               <td>{dateFormat(val.date,'dd-mm-yyyy')}</td>
                               <td>{val.revenue_generated}</td>
                               <td>{val.number_to_trainees}</td>
-                              {/* <th>{val.enclose_proof_pdf}</th> */}
                               <td><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></td>
                           </tr>
                       ))
@@ -2523,25 +5625,6 @@ catch(e)
 
 
 export const Patentsfilled=()=>{
-
-  const [patentRecs,setpatentRecs]=useState([])
-  useEffect(()=>{
-      fetchpatentRecords()
-  },[])
-
-  const logged=JSON.parse(sessionStorage.getItem("person"))
-  // emp_id=logged.faculty_id
-  const fetchpatentRecords=async()=>{
-     try{
-      const temp = await patentRecords(`${logged.faculty_id}`)
-      // console.log(temp.data)
-      setpatentRecs(temp.data)
-     }
-     catch(err){
-      console.log(err)
-     }
-  }
-
    ////////////////////////PDF////////////////////////////////////////
    const generatePDF = async (report_id)=> {
       try{
@@ -2664,13 +5747,277 @@ export const Patentsfilled=()=>{
     }
   }
   
+/////////////////////filter options
+const[year,setYear]=useState([])
+const [currentRecords, setCurrentRecords] = useState([]);
+let [AcdVals,setAcdVals]=useState("")
+const[selectedSem,setSelectedSem]=useState([])
+
+
+const[filter,setFilter]=useState({
+ "acdyr_id":"",
+ "sem_id":"",
+ "emp_id":""
+})
+console.log(filter)
+const CustomClearText = () => <>X</>;
+
+const ClearIndicator =(props) =>{
+  const {
+    children = <CustomClearText />,
+    getStyles,
+    innerProps: {ref, ...restInnerProps },
+  }= props;
+  return(
+    <div
+      {...restInnerProps}
+      ref={ref}
+      style={getStyles('clearIndicator', props)}
+    >
+      <div style={{padding: '0px 5px'}}>{children}</div>
+    </div>
+  )
+}
+
+const ClearIndicatorStyles = (base, state) => ({
+  ...base,
+  cursor: 'pointer',
+  color: state.isFocused ? 'blue' : 'black',
+});
+
+const acdInfoCollect=(eve)=>{
+ if(eve.length==0){
+   setFilter((old)=>({
+     ...old,
+     acdyr_id:""
+ }))
+ }else{
+
+   const label = eve.label
+   const value = eve.value
+   const extraInfo = eve.extraInfo
+
+   let isArray = Array.isArray(eve);
+   // alert(JSON.stringify(eve))
+   if(eve.length==1){
+       if(typeof eve[0].value === 'string'){
+           setFilter((old)=>({
+               ...old,
+               [eve[0].extraInfo]:eve[0].value
+           }))
+       }else{
+       setFilter((old)=>({
+           ...old,
+           [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+       }))}
+   }
+   if(isArray){
+       if(eve.length!=1){
+       
+   if(eve[0].extraInfo=="acdyr_id"){
+       
+           // alert(JSON.stringify(eve))
+           for(let i=0;i<eve.length;i++){
+               // alert(JSON.stringify(eve[i].value))
+               AcdVals+=eve[i].value
+               if(i!=eve.length-1){
+                   AcdVals+=","
+               }
+               setFilter((old)=>({
+                   ...old,
+                   [eve[i].extraInfo]:AcdVals
+               }))
+           }
+           // alert(majorVals)
+       
+   }
+   }
+   }
+   else if(extraInfo=="sem_id"){
+       setSelectedSem(value)
+       // handleChange(value)
+       setFilter((old)=>({
+           ...old,
+           [extraInfo]:JSON.stringify(value)
+       }))
+   }
+ 
+}
+}
+
+const semInfoCollect=(eve)=>{
+ if(eve.length==0){
+   setFilter((old)=>({
+     ...old,
+     sem_id:""
+ }))
+ }else{
+
+ const label = eve.label
+ const value = eve.value
+ const extraInfo = eve.extraInfo
+
+ let isArray = Array.isArray(eve);
+ 
+ if(isArray){
+     
+     if(eve.length!=1){
+     
+ if(eve[0].extraInfo=="acdyr_id"){
+     
+         // alert(JSON.stringify(eve))
+         for(let i=0;i<eve.length;i++){
+             // alert(JSON.stringify(eve[i].value))
+             AcdVals+=eve[i].value
+             if(i!=eve.length-1){
+                 AcdVals+=","
+             }
+             setFilter((old)=>({
+                 ...old,
+                 [eve[i].extraInfo]:AcdVals
+             }))
+         }
+         // alert(majorVals)
+     
+ }
+ }
+ }
+ else if(extraInfo=="sem_id"){
+     setSelectedSem(value)
+     // handleChange(value)
+     setFilter((old)=>({
+         ...old,
+         [extraInfo]:JSON.stringify(value)
+     }))
+ }
+ 
+}}
+
+const Acad=async()=>{
+  const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+ //  alert(JSON.stringify(t.data.result))
+  setYear(t.data.result)
+}
+const years = year.map((val) => ({
+value: val.acd_yr_id,
+label: val.acd_yr,
+extraInfo: "acdyr_id"
+}));
+useEffect(()=>{
+Acad()
+},[])
+
+const semester = [
+{sem_id:1,sem:"Odd"},
+{sem_id:2,sem:"Even"},
+{sem_id:3,sem:"Both"},
+]
+let sems = semester.map((val)=>({
+value: val.sem_id,
+label: val.sem,
+extraInfo: "sem_id"
+}))
+
+const onClickFilter=async()=>{
+alert("clicked")
+alert(JSON.stringify(filter))
+try{
+   // alert("hi")
+   const logged=JSON.parse(sessionStorage.getItem("person"))
+   const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/data_setaf_patents_filled/${logged.faculty_id}`,filter)
+   setpatentRecs(filteredRecords.data.resultArray)
+   console.log(filteredRecords.data)
+   setCurrentRecords(filteredRecords.data.resultArray)
+}
+catch(err){
+   alert("No Reports in the selected filter")
+   console.log(err)
+}
+}
+
+//fetch
+
+const [patentRecs,setpatentRecs]=useState([])
+useEffect(()=>{
+    fetchpatentRecords()
+},[])
+
+const logged=JSON.parse(sessionStorage.getItem("person"))
+// emp_id=logged.faculty_id
+const fetchpatentRecords=async()=>{
+   try{
+    const temp = await patentRecords(`${logged.faculty_id}`)
+    // console.log(temp.data)
+    setpatentRecs(temp.data)
+   }
+   catch(err){
+    console.log(err)
+   }
+}
 
 
 
   return(
       <>
-      <p>&nbsp;</p>
+               <div> <p>&nbsp;</p>
         <p>&nbsp;</p>
+        </div>
+        <div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',alignItems:'center',marginLeft:'-5%', marginTop:"100px",justifyContent:'center'}}>
+       
+       {/* Filter of Academic year--------------------------------------------------- */}
+       
+               <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+
+           </div>
+        </div>
        <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-60px"}}>
        <div class="report-header">
        <h1 class="recent-Articles">Your Reports</h1>
@@ -2680,7 +6027,8 @@ export const Patentsfilled=()=>{
        <table className='table table-striped'>
         <thead>
         <tr className="table-active">
-                     <th>Academic Year/Semester</th>
+                     <th>Academic Year</th>
+                     <th>Semester</th>
                      <th>Name of the Faculty</th>
                      <th>Title of the patent</th>
                      <th>Application_No</th>
@@ -2692,7 +6040,8 @@ export const Patentsfilled=()=>{
                       patentRecs.length>0? 
                       patentRecs.map((val)=>(
                           <tr>
-                              <td>{val.acd_yr}/{val.semester}</td>
+                              <td>{val.acd_yr}</td>
+                              <td>{val.sem}</td>
                               <td>{val.name_of_the_faculty}</td>
                               <td>{val.title_of_the_patent}</td>
                               <td>{val.application_no }</td>
@@ -2717,22 +6066,6 @@ export const Patentsfilled=()=>{
 
 export const Collabrative=()=>{
 
-  const [collabrativeRecs,setcollabrativeRecs]=useState([])
-  useEffect(()=>{
-      fetchcollabrativeRecords()
-  },[])
-
-  const logged=JSON.parse(sessionStorage.getItem("person"))
-  const fetchcollabrativeRecords=async()=>{
-     try{
-      const temp = await collaborativeRecords(`${logged.faculty_id}`)
-      setcollabrativeRecs(temp.data)
-     }
-     catch(e){
-          console.log(e)
-     }
-  }
-      ////////////////////////PDF////////////////////////////////////////
    const generatePDF = async (report_id)=> {
       try{
           // alert(report_id)
@@ -2847,10 +6180,272 @@ export const Collabrative=()=>{
     }
   }
 
+  /////////////////////filter options
+ const[year,setYear]=useState([])
+ const [currentRecords, setCurrentRecords] = useState([]);
+ let [AcdVals,setAcdVals]=useState("")
+ const[selectedSem,setSelectedSem]=useState([])
+
+ 
+ const[filter,setFilter]=useState({
+  "acdyr_id":"",
+  "sem_id":"",
+  "emp_id":""
+})
+console.log(filter)
+ const CustomClearText = () => <>X</>;
+
+ const ClearIndicator =(props) =>{
+   const {
+     children = <CustomClearText />,
+     getStyles,
+     innerProps: {ref, ...restInnerProps },
+   }= props;
+   return(
+     <div
+       {...restInnerProps}
+       ref={ref}
+       style={getStyles('clearIndicator', props)}
+     >
+       <div style={{padding: '0px 5px'}}>{children}</div>
+     </div>
+   )
+ }
+
+ const ClearIndicatorStyles = (base, state) => ({
+   ...base,
+   cursor: 'pointer',
+   color: state.isFocused ? 'blue' : 'black',
+ });
+
+ const acdInfoCollect=(eve)=>{
+  if(eve.length==0){
+    setFilter((old)=>({
+      ...old,
+      acdyr_id:""
+  }))
+  }else{
+
+    const label = eve.label
+    const value = eve.value
+    const extraInfo = eve.extraInfo
+
+    let isArray = Array.isArray(eve);
+    // alert(JSON.stringify(eve))
+    if(eve.length==1){
+        if(typeof eve[0].value === 'string'){
+            setFilter((old)=>({
+                ...old,
+                [eve[0].extraInfo]:eve[0].value
+            }))
+        }else{
+        setFilter((old)=>({
+            ...old,
+            [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+        }))}
+    }
+    if(isArray){
+        if(eve.length!=1){
+        
+    if(eve[0].extraInfo=="acdyr_id"){
+        
+            // alert(JSON.stringify(eve))
+            for(let i=0;i<eve.length;i++){
+                // alert(JSON.stringify(eve[i].value))
+                AcdVals+=eve[i].value
+                if(i!=eve.length-1){
+                    AcdVals+=","
+                }
+                setFilter((old)=>({
+                    ...old,
+                    [eve[i].extraInfo]:AcdVals
+                }))
+            }
+            // alert(majorVals)
+        
+    }
+    }
+    }
+    else if(extraInfo=="sem_id"){
+        setSelectedSem(value)
+        // handleChange(value)
+        setFilter((old)=>({
+            ...old,
+            [extraInfo]:JSON.stringify(value)
+        }))
+    }
+  
+}
+}
+
+const semInfoCollect=(eve)=>{
+  if(eve.length==0){
+    setFilter((old)=>({
+      ...old,
+      sem_id:""
+  }))
+  }else{
+
+  const label = eve.label
+  const value = eve.value
+  const extraInfo = eve.extraInfo
+
+  let isArray = Array.isArray(eve);
+  
+  if(isArray){
+      
+      if(eve.length!=1){
+      
+  if(eve[0].extraInfo=="acdyr_id"){
+      
+          // alert(JSON.stringify(eve))
+          for(let i=0;i<eve.length;i++){
+              // alert(JSON.stringify(eve[i].value))
+              AcdVals+=eve[i].value
+              if(i!=eve.length-1){
+                  AcdVals+=","
+              }
+              setFilter((old)=>({
+                  ...old,
+                  [eve[i].extraInfo]:AcdVals
+              }))
+          }
+          // alert(majorVals)
+      
+  }
+  }
+  }
+  else if(extraInfo=="sem_id"){
+      setSelectedSem(value)
+      // handleChange(value)
+      setFilter((old)=>({
+          ...old,
+          [extraInfo]:JSON.stringify(value)
+      }))
+  }
+  
+}}
+
+ const Acad=async()=>{
+   const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+  //  alert(JSON.stringify(t.data.result))
+   setYear(t.data.result)
+}
+const years = year.map((val) => ({
+value: val.acd_yr_id,
+label: val.acd_yr,
+extraInfo: "acdyr_id"
+}));
+useEffect(()=>{
+ Acad()
+},[])
+
+const semester = [
+ {sem_id:1,sem:"Odd"},
+ {sem_id:2,sem:"Even"},
+ {sem_id:3,sem:"Both"},
+]
+let sems = semester.map((val)=>({
+ value: val.sem_id,
+ label: val.sem,
+ extraInfo: "sem_id"
+}))
+
+const onClickFilter=async()=>{
+alert("clicked")
+alert(JSON.stringify(filter))
+try{
+    // alert("hi")
+    const logged=JSON.parse(sessionStorage.getItem("person"))
+    const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/data_setaf_collabrative_activity_with_mou/${logged.faculty_id}`,filter)
+    setcollabrativeRecs(filteredRecords.data.resultArray)
+    console.log(filteredRecords.data)
+    setCurrentRecords(filteredRecords.data.resultArray)
+}
+catch(err){
+    alert("No Reports in the selected filter")
+    console.log(err)
+}
+}
+
+
+  //fetch
+  const [collabrativeRecs,setcollabrativeRecs]=useState([])
+  useEffect(()=>{
+      fetchcollabrativeRecords()
+  },[])
+
+  const logged=JSON.parse(sessionStorage.getItem("person"))
+  const fetchcollabrativeRecords=async()=>{
+     try{
+      const temp = await collaborativeRecords(`${logged.faculty_id}`)
+      setcollabrativeRecs(temp.data)
+     }
+     catch(e){
+          console.log(e)
+     }
+  }
   return(
       <>
-      <p>&nbsp;</p>
+               <div> <p>&nbsp;</p>
         <p>&nbsp;</p>
+        </div>
+        <div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',alignItems:'center',marginLeft:'-5%', marginTop:"100px",justifyContent:'center'}}>
+       
+       {/* Filter of Academic year--------------------------------------------------- */}
+       
+               <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+
+           </div>
+        </div>
        <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-60px"}}>
        <div class="report-header">
        <h1 class="recent-Articles">Your Reports</h1>
@@ -2859,7 +6454,8 @@ export const Collabrative=()=>{
        <table className='table table-striped'>
         <thead>
         <tr className="table-active">
-                     <th>Academic Year/Semester</th>
+                     <th>Academic Year</th>
+                     <th>Semester</th>
                      <th>Name of MoU signed industry or institution</th>
                      <th>Title of the activity</th>
                      <th>Name of resource person</th>
@@ -2871,7 +6467,8 @@ export const Collabrative=()=>{
                       collabrativeRecs.length>0? 
                       collabrativeRecs.map((val)=>(
                           <tr>
-                              <td>{val.acd_yr}/{val.semester}</td>
+                              <td>{val.acd_yr}</td>
+                              <td>{val.sem}</td>
                               <td>{val.name_of_MoU_signed_industry_or_institution}</td>
                               <td>{val.title_of_the_activity}</td>
                               <td>{val.name_of_resource_person}</td>
@@ -2891,178 +6488,12 @@ export const Collabrative=()=>{
 }
 
 
-//////////////////////////////////econtent
-
-export const Econtent=()=>{
-
-  const [EcontentRecs,setEcontentRecs]=useState([])
-  useEffect(()=>{
-     fetchecontentRecords()
-  },[])
-  const logged=JSON.parse(sessionStorage.getItem("person"))
-
-  const fetchecontentRecords=async()=>{
-      const temp = await econtentRecords(`${logged.faculty_id}`)
-      // console.log(temp.data)
-      setEcontentRecs(temp.data)
-
-  }
-
-  const generatePDF = async (report_id)=> {
-      try{
-          // alert(report_id)
-      const res = await axios.get(`http://localhost:1234/setaf/data/econtent/${report_id}`);
-      const data = res.data;
-      const doc = new jsPDF();    
-    
-      doc.addImage(Image, 'PNG', 10, 3, 20, 20);
-      doc.addImage(Image2, 'PNG', 12,23, 15, 15);
-      doc.addImage(Image3, 'JPG', 175, 3, 20, 15);
-      doc.addImage(Image4, 'JPG', 175, 20, 20, 15);
- 
-      doc.setFontSize(18);
-      doc.setFont("times", "bold");
-      doc.text('MUTHAYAMMAL ENGINEERING COLLEGE',35, 15);
-      doc.setFontSize(10);
-      doc.setFont("times", "");
-      doc.text('(An Autonomous Institution)', 80, 20);
-      doc.text('(Approved by AICTE, New Delhi, Accredited by NAAC & Affiliated to Anna University)', 35, 25);
-      doc.text('Rasipuram - 637 408, Namakkal Dist., Tamil Nadu', 65, 30);
-      doc.setFont("times", "bold");
-      
-      doc.setFont("times", "bold");
-   
-      doc.setFontSize(15); 
-      doc.rect(12, 54, 32, 11).stroke();
-      doc.text(`${data.dept}`,25,61)
-      doc.rect(90,38,32,11)
-      doc.text('SETAF', 97, 45);
-      doc.rect(82,54,50,11)
-      doc.text("E-CONTENT",88,61)
-
-      doc.rect(168, 54, 28, 11).stroke();
-      doc.setFontSize(15); 
-      doc.text(`${data.acd_yr}`,172,61)
-  
-      
-      doc.rect(12, 80, 78, 12).stroke();
-      doc.text('Name of the Faculty', 14, 88);
-      doc.setFont("times", "");
-      doc.rect(90, 80, 112, 12).stroke();
-      doc.text(`${data.name_of_the_faculty}`, 100, 88);
-      
-      doc.setFont("times", "bold");
-      doc.rect(12, 92, 78, 12).stroke();
-      doc.text('Name of the Module Developed', 14, 100);
-      doc.setFont("times", "");
-      doc.rect(90, 92, 112, 12).stroke();
-      doc.text(`${data.name_of_the_module_developed}`, 100, 100);
-      
-      doc.setFont("times", "bold");
-      doc.rect(12, 104, 78, 12).stroke();
-      doc.text('Date of launching e-Content', 14, 112);
-      doc.setFont("times", "");
-      doc.rect(90, 104, 112, 12).stroke();
-      doc.text(`${data.date_of_launching_e_content}`, 100, 112);
-
-      doc.setFont("times", "bold");
-      doc.rect(12, 116, 78, 12).stroke();
-      doc.text('Platform of the Module', 14, 123);
-      doc.setFont("times", "");
-      doc.rect(90, 116, 112, 12).stroke();
-      doc.text(`${data.module_of_platform}`, 100, 123);
-        
-    
-      // Generate a data URI for the PDF
-      const pdfDataUri = doc.output('datauristring');
-    
-      // Open the PDF in a new tab or window
-      const newWindow = window.open();
-      newWindow.document.write(`<iframe width='100%' height='100%' src='${pdfDataUri}'></iframe>`);
-    }
-    catch(e)
-    {
-      console.log(e);
-    }
-    }
-  return(
-      <>
-      <p>&nbsp;</p>
-        <p>&nbsp;</p>
-       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-60px"}}>
-       <div class="report-header">
-       <h1 class="recent-Articles">Your Reports</h1>
-       <a className="topic-headings" href="Setaf/SetafForms/Econtentfront"><button style={{top:"27.5px",right:"50px"}} class="views" id="addButton">+ Add</button></a>
-       </div>
-       <table className='table table-striped'>
-        <thead>
-        <tr  className="table table-active">
-                          <th>Academic Year</th>
-                          <th>Name of the Faculty</th>
-                          <th>Name of the Module Developed</th>
-                          <th>Module of Platform</th>
-                          <th>Date of launching e-Content</th>
-                          <th>Link to the Module Developed</th>
-                          <th>Download Pdf</th>
-                          
-        </tr>
-        {              EcontentRecs.length>0?
-                      EcontentRecs.map((val)=>(
-                          <tr>
-                               <td>{val.acd_yr}</td>
-                              <td>{val.name_of_the_faculty}</td>
-                              <td>{val.name_of_the_module_developed}</td>
-                              <td>{val.module_of_platform}</td>
-                              <td>{val.date_of_launching_e_content}</td>
-                              <td>{val.link_to_the_module_developed}</td> 
-                              <td><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></td> 
-                          </tr>
-                      ))
-                      :
-                      <tr>No records</tr>
-                  }
-        </thead>
-       </table>
-       </div>
-       
-                    
-      </>
-  )
-}
-
 
 
 //////////////////////////////////Visit to library////////////
 
 export const VisitToLibrary=()=>{
   const logged=JSON.parse(sessionStorage.getItem("person"))
-
-  // const [VisittoLibrary,setVisitToLibrary]=useState([])
-  // useEffect(()=>{
-  //    fetchvisittolibrary()
-  // },[])
-
-  // const fetchvisittolibrary=async()=>{
-  //     const temp = await visittolibraryRecords(`${logged.faculty_id}`)
-  //     setVisitToLibrary(temp.data)
-
-  // }
-  
-  const [VisittoLibrary,setVisitToLibrary]=useState([])
-  useEffect(()=>{
-     fetchvisittolibrary()
-},[])
-
-  const fetchvisittolibrary=async()=>{
-      try{
-          const temp = await visittolibraryRecords(`${logged.faculty_id}`)
-      // console.log(temp.data)
-      setVisitToLibrary(temp.data)
-      }
-      catch(e){
-          console.log(e);
-      }
-  }
 
   const generatePDF = async (report_id)=> {
       try{
@@ -3133,10 +6564,273 @@ export const VisitToLibrary=()=>{
       console.log(e);
     }
     }
+
+
+    /////////////////////filter options
+ const[year,setYear]=useState([])
+ const [currentRecords, setCurrentRecords] = useState([]);
+ let [AcdVals,setAcdVals]=useState("")
+ const[selectedSem,setSelectedSem]=useState([])
+
+ 
+ const[filter,setFilter]=useState({
+  "acdyr_id":"",
+  "sem_id":"",
+  "emp_id":""
+})
+console.log(filter)
+ const CustomClearText = () => <>X</>;
+
+ const ClearIndicator =(props) =>{
+   const {
+     children = <CustomClearText />,
+     getStyles,
+     innerProps: {ref, ...restInnerProps },
+   }= props;
+   return(
+     <div
+       {...restInnerProps}
+       ref={ref}
+       style={getStyles('clearIndicator', props)}
+     >
+       <div style={{padding: '0px 5px'}}>{children}</div>
+     </div>
+   )
+ }
+
+ const ClearIndicatorStyles = (base, state) => ({
+   ...base,
+   cursor: 'pointer',
+   color: state.isFocused ? 'blue' : 'black',
+ });
+
+ const acdInfoCollect=(eve)=>{
+  if(eve.length==0){
+    setFilter((old)=>({
+      ...old,
+      acdyr_id:""
+  }))
+  }else{
+
+    const label = eve.label
+    const value = eve.value
+    const extraInfo = eve.extraInfo
+
+    let isArray = Array.isArray(eve);
+    // alert(JSON.stringify(eve))
+    if(eve.length==1){
+        if(typeof eve[0].value === 'string'){
+            setFilter((old)=>({
+                ...old,
+                [eve[0].extraInfo]:eve[0].value
+            }))
+        }else{
+        setFilter((old)=>({
+            ...old,
+            [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+        }))}
+    }
+    if(isArray){
+        if(eve.length!=1){
+        
+    if(eve[0].extraInfo=="acdyr_id"){
+        
+            // alert(JSON.stringify(eve))
+            for(let i=0;i<eve.length;i++){
+                // alert(JSON.stringify(eve[i].value))
+                AcdVals+=eve[i].value
+                if(i!=eve.length-1){
+                    AcdVals+=","
+                }
+                setFilter((old)=>({
+                    ...old,
+                    [eve[i].extraInfo]:AcdVals
+                }))
+            }
+            // alert(majorVals)
+        
+    }
+    }
+    }
+    else if(extraInfo=="sem_id"){
+        setSelectedSem(value)
+        // handleChange(value)
+        setFilter((old)=>({
+            ...old,
+            [extraInfo]:JSON.stringify(value)
+        }))
+    }
+  
+}
+}
+
+const semInfoCollect=(eve)=>{
+  if(eve.length==0){
+    setFilter((old)=>({
+      ...old,
+      sem_id:""
+  }))
+  }else{
+
+  const label = eve.label
+  const value = eve.value
+  const extraInfo = eve.extraInfo
+
+  let isArray = Array.isArray(eve);
+  
+  if(isArray){
+      
+      if(eve.length!=1){
+      
+  if(eve[0].extraInfo=="acdyr_id"){
+      
+          // alert(JSON.stringify(eve))
+          for(let i=0;i<eve.length;i++){
+              // alert(JSON.stringify(eve[i].value))
+              AcdVals+=eve[i].value
+              if(i!=eve.length-1){
+                  AcdVals+=","
+              }
+              setFilter((old)=>({
+                  ...old,
+                  [eve[i].extraInfo]:AcdVals
+              }))
+          }
+          // alert(majorVals)
+      
+  }
+  }
+  }
+  else if(extraInfo=="sem_id"){
+      setSelectedSem(value)
+      // handleChange(value)
+      setFilter((old)=>({
+          ...old,
+          [extraInfo]:JSON.stringify(value)
+      }))
+  }
+  
+}}
+
+ const Acad=async()=>{
+   const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+  //  alert(JSON.stringify(t.data.result))
+   setYear(t.data.result)
+}
+const years = year.map((val) => ({
+value: val.acd_yr_id,
+label: val.acd_yr,
+extraInfo: "acdyr_id"
+}));
+useEffect(()=>{
+ Acad()
+},[])
+
+const semester = [
+ {sem_id:1,sem:"Odd"},
+ {sem_id:2,sem:"Even"},
+ {sem_id:3,sem:"Both"},
+]
+let sems = semester.map((val)=>({
+ value: val.sem_id,
+ label: val.sem,
+ extraInfo: "sem_id"
+}))
+
+const onClickFilter=async()=>{
+alert("clicked")
+alert(JSON.stringify(filter))
+try{
+    // alert("hi")
+    const logged=JSON.parse(sessionStorage.getItem("person"))
+    const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/data_setaf_visit_to_library/${logged.faculty_id}`,filter)
+    setVisitToLibrary(filteredRecords.data.resultArray)
+    console.log(filteredRecords.data)
+    setCurrentRecords(filteredRecords.data.resultArray)
+}
+catch(err){
+    alert("No Reports in the selected filter")
+    console.log(err)
+}
+}
+//fetch
+  const [VisittoLibrary,setVisitToLibrary]=useState([])
+  useEffect(()=>{
+     fetchvisittolibrary()
+},[])
+
+  const fetchvisittolibrary=async()=>{
+      try{
+          const temp = await visittolibraryRecords(`${logged.faculty_id}`)
+      // console.log(temp.data)
+      setVisitToLibrary(temp.data)
+      }
+      catch(e){
+          console.log(e);
+      }
+  }
+
   return(
       <>
-      <p>&nbsp;</p>
+               <div> <p>&nbsp;</p>
         <p>&nbsp;</p>
+        </div>
+        <div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',alignItems:'center',marginLeft:'-5%', marginTop:"100px",justifyContent:'center'}}>
+       
+       {/* Filter of Academic year--------------------------------------------------- */}
+       
+               <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+
+           </div>
+        </div>
        <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-60px"}}>
        <div class="report-header">
        <h1 class="recent-Articles">Your Reports</h1>
@@ -3147,6 +6841,7 @@ export const VisitToLibrary=()=>{
         <tr  className="table table-active">
                           <th>Name of the Faculty</th>
                           <th>Academic Year</th>
+                          <th>Semester</th>
                           <th>Date</th>
                           <th>Purpose of Visit</th>
                           <th>Download Pdf</th>
@@ -3155,8 +6850,9 @@ export const VisitToLibrary=()=>{
         {              VisittoLibrary.length>0?
                       VisittoLibrary.map((val)=>(
                           <tr>
-                              <td>{val.name_of_the_faculty}</td>
                               <td>{val.acd_yr}</td>
+                              <td>{val.sem}</td>
+                              <td>{val.name_of_the_faculty}</td>
                               <td>{val.date}</td>
                               <td>{val.purpose_of_visit}</td>
                               <td><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></td> 
@@ -3300,6 +6996,194 @@ catch(e)
 }
 }
 
+
+/////////////////////filter options
+const[year,setYear]=useState([])
+const [currentRecords, setCurrentRecords] = useState([]);
+let [AcdVals,setAcdVals]=useState("")
+const[selectedSem,setSelectedSem]=useState([])
+
+
+const[filter,setFilter]=useState({
+ "acdyr_id":"",
+ "sem_id":"",
+ "emp_id":""
+})
+console.log(filter)
+const CustomClearText = () => <>X</>;
+
+const ClearIndicator =(props) =>{
+  const {
+    children = <CustomClearText />,
+    getStyles,
+    innerProps: {ref, ...restInnerProps },
+  }= props;
+  return(
+    <div
+      {...restInnerProps}
+      ref={ref}
+      style={getStyles('clearIndicator', props)}
+    >
+      <div style={{padding: '0px 5px'}}>{children}</div>
+    </div>
+  )
+}
+
+const ClearIndicatorStyles = (base, state) => ({
+  ...base,
+  cursor: 'pointer',
+  color: state.isFocused ? 'blue' : 'black',
+});
+
+const acdInfoCollect=(eve)=>{
+ if(eve.length==0){
+   setFilter((old)=>({
+     ...old,
+     acdyr_id:""
+ }))
+ }else{
+
+   const label = eve.label
+   const value = eve.value
+   const extraInfo = eve.extraInfo
+
+   let isArray = Array.isArray(eve);
+   // alert(JSON.stringify(eve))
+   if(eve.length==1){
+       if(typeof eve[0].value === 'string'){
+           setFilter((old)=>({
+               ...old,
+               [eve[0].extraInfo]:eve[0].value
+           }))
+       }else{
+       setFilter((old)=>({
+           ...old,
+           [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+       }))}
+   }
+   if(isArray){
+       if(eve.length!=1){
+       
+   if(eve[0].extraInfo=="acdyr_id"){
+       
+           // alert(JSON.stringify(eve))
+           for(let i=0;i<eve.length;i++){
+               // alert(JSON.stringify(eve[i].value))
+               AcdVals+=eve[i].value
+               if(i!=eve.length-1){
+                   AcdVals+=","
+               }
+               setFilter((old)=>({
+                   ...old,
+                   [eve[i].extraInfo]:AcdVals
+               }))
+           }
+           // alert(majorVals)
+       
+   }
+   }
+   }
+   else if(extraInfo=="sem_id"){
+       setSelectedSem(value)
+       // handleChange(value)
+       setFilter((old)=>({
+           ...old,
+           [extraInfo]:JSON.stringify(value)
+       }))
+   }
+ 
+}
+}
+
+const semInfoCollect=(eve)=>{
+ if(eve.length==0){
+   setFilter((old)=>({
+     ...old,
+     sem_id:""
+ }))
+ }else{
+
+ const label = eve.label
+ const value = eve.value
+ const extraInfo = eve.extraInfo
+
+ let isArray = Array.isArray(eve);
+ 
+ if(isArray){
+     
+     if(eve.length!=1){
+     
+ if(eve[0].extraInfo=="acdyr_id"){
+     
+         // alert(JSON.stringify(eve))
+         for(let i=0;i<eve.length;i++){
+             // alert(JSON.stringify(eve[i].value))
+             AcdVals+=eve[i].value
+             if(i!=eve.length-1){
+                 AcdVals+=","
+             }
+             setFilter((old)=>({
+                 ...old,
+                 [eve[i].extraInfo]:AcdVals
+             }))
+         }
+         // alert(majorVals)
+     
+ }
+ }
+ }
+ else if(extraInfo=="sem_id"){
+     setSelectedSem(value)
+     // handleChange(value)
+     setFilter((old)=>({
+         ...old,
+         [extraInfo]:JSON.stringify(value)
+     }))
+ }
+ 
+}}
+
+const Acad=async()=>{
+  const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+ //  alert(JSON.stringify(t.data.result))
+  setYear(t.data.result)
+}
+const years = year.map((val) => ({
+value: val.acd_yr_id,
+label: val.acd_yr,
+extraInfo: "acdyr_id"
+}));
+useEffect(()=>{
+Acad()
+},[])
+
+const semester = [
+{sem_id:1,sem:"Odd"},
+{sem_id:2,sem:"Even"},
+{sem_id:3,sem:"Both"},
+]
+let sems = semester.map((val)=>({
+value: val.sem_id,
+label: val.sem,
+extraInfo: "sem_id"
+}))
+
+const onClickFilter=async()=>{
+alert("clicked")
+alert(JSON.stringify(filter))
+try{
+   // alert("hi")
+   const logged=JSON.parse(sessionStorage.getItem("person"))
+   const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/data_setaf_awards_at_national/${logged.faculty_id}`,filter)
+   setAward(filteredRecords.data.resultArray)
+   console.log(filteredRecords.data)
+   setCurrentRecords(filteredRecords.data.resultArray)
+}
+catch(err){
+   alert("No Reports in the selected filter")
+   console.log(err)
+}
+}
   ////////////data fetch code/////////////////
 
   const [Award,setAward]=useState([])
@@ -3322,8 +7206,65 @@ catch(e)
 
   return(
       <>
-      <p>&nbsp;</p>
-      <p>&nbsp;</p>
+        <div> <p>&nbsp;</p>
+        <p>&nbsp;</p>
+        </div>
+        <div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',alignItems:'center',marginLeft:'-5%', marginTop:"100px",justifyContent:'center'}}>
+       
+       {/* Filter of Academic year--------------------------------------------------- */}
+       
+               <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+
+           </div>
+        </div>
        <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-60px"}}>
        <div class="report-header">
        <h1 class="recent-Articles">Your Reports</h1>
@@ -3348,7 +7289,7 @@ catch(e)
                           <tr>
                               <td>{val.report_id}</td>
                               <td>{val.acd_yr}</td>
-                              <td>{val.semester}</td>
+                              <td>{val.sem}</td>
                               <td>{val.name_of_the_faculty}</td>
                               <td>{val.name_of_the_award}</td>
                               <td>{val.category}</td>
@@ -3504,6 +7445,194 @@ catch(e)
 }
 }
 
+/////////////////////filter options
+const[year,setYear]=useState([])
+const [currentRecords, setCurrentRecords] = useState([]);
+let [AcdVals,setAcdVals]=useState("")
+const[selectedSem,setSelectedSem]=useState([])
+
+
+const[filter,setFilter]=useState({
+ "acdyr_id":"",
+ "sem_id":"",
+ "emp_id":""
+})
+console.log(filter)
+const CustomClearText = () => <>X</>;
+
+const ClearIndicator =(props) =>{
+  const {
+    children = <CustomClearText />,
+    getStyles,
+    innerProps: {ref, ...restInnerProps },
+  }= props;
+  return(
+    <div
+      {...restInnerProps}
+      ref={ref}
+      style={getStyles('clearIndicator', props)}
+    >
+      <div style={{padding: '0px 5px'}}>{children}</div>
+    </div>
+  )
+}
+
+const ClearIndicatorStyles = (base, state) => ({
+  ...base,
+  cursor: 'pointer',
+  color: state.isFocused ? 'blue' : 'black',
+});
+
+const acdInfoCollect=(eve)=>{
+ if(eve.length==0){
+   setFilter((old)=>({
+     ...old,
+     acdyr_id:""
+ }))
+ }else{
+
+   const label = eve.label
+   const value = eve.value
+   const extraInfo = eve.extraInfo
+
+   let isArray = Array.isArray(eve);
+   // alert(JSON.stringify(eve))
+   if(eve.length==1){
+       if(typeof eve[0].value === 'string'){
+           setFilter((old)=>({
+               ...old,
+               [eve[0].extraInfo]:eve[0].value
+           }))
+       }else{
+       setFilter((old)=>({
+           ...old,
+           [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+       }))}
+   }
+   if(isArray){
+       if(eve.length!=1){
+       
+   if(eve[0].extraInfo=="acdyr_id"){
+       
+           // alert(JSON.stringify(eve))
+           for(let i=0;i<eve.length;i++){
+               // alert(JSON.stringify(eve[i].value))
+               AcdVals+=eve[i].value
+               if(i!=eve.length-1){
+                   AcdVals+=","
+               }
+               setFilter((old)=>({
+                   ...old,
+                   [eve[i].extraInfo]:AcdVals
+               }))
+           }
+           // alert(majorVals)
+       
+   }
+   }
+   }
+   else if(extraInfo=="sem_id"){
+       setSelectedSem(value)
+       // handleChange(value)
+       setFilter((old)=>({
+           ...old,
+           [extraInfo]:JSON.stringify(value)
+       }))
+   }
+ 
+}
+}
+
+const semInfoCollect=(eve)=>{
+ if(eve.length==0){
+   setFilter((old)=>({
+     ...old,
+     sem_id:""
+ }))
+ }else{
+
+ const label = eve.label
+ const value = eve.value
+ const extraInfo = eve.extraInfo
+
+ let isArray = Array.isArray(eve);
+ 
+ if(isArray){
+     
+     if(eve.length!=1){
+     
+ if(eve[0].extraInfo=="acdyr_id"){
+     
+         // alert(JSON.stringify(eve))
+         for(let i=0;i<eve.length;i++){
+             // alert(JSON.stringify(eve[i].value))
+             AcdVals+=eve[i].value
+             if(i!=eve.length-1){
+                 AcdVals+=","
+             }
+             setFilter((old)=>({
+                 ...old,
+                 [eve[i].extraInfo]:AcdVals
+             }))
+         }
+         // alert(majorVals)
+     
+ }
+ }
+ }
+ else if(extraInfo=="sem_id"){
+     setSelectedSem(value)
+     // handleChange(value)
+     setFilter((old)=>({
+         ...old,
+         [extraInfo]:JSON.stringify(value)
+     }))
+ }
+ 
+}}
+
+const Acad=async()=>{
+  const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+ //  alert(JSON.stringify(t.data.result))
+  setYear(t.data.result)
+}
+const years = year.map((val) => ({
+value: val.acd_yr_id,
+label: val.acd_yr,
+extraInfo: "acdyr_id"
+}));
+useEffect(()=>{
+Acad()
+},[])
+
+const semester = [
+{sem_id:1,sem:"Odd"},
+{sem_id:2,sem:"Even"},
+{sem_id:3,sem:"Both"},
+]
+let sems = semester.map((val)=>({
+value: val.sem_id,
+label: val.sem,
+extraInfo: "sem_id"
+}))
+
+const onClickFilter=async()=>{
+alert("clicked")
+alert(JSON.stringify(filter))
+try{
+   // alert("hi")
+   const logged=JSON.parse(sessionStorage.getItem("person"))
+   const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/data_setaf_books_chapter_authorship/${logged.faculty_id}`,filter)
+   setBooks(filteredRecords.data.resultArray)
+   console.log(filteredRecords.data)
+   setCurrentRecords(filteredRecords.data.resultArray)
+}
+catch(err){
+   alert("No Reports in the selected filter")
+   console.log(err)
+}
+}
+
   ////////////data fetch code/////////////////
 
   const [books,setBooks]=useState([])
@@ -3525,8 +7654,66 @@ catch(e)
 
   return(
       <>
-      <p>&nbsp;</p>
-      <p>&nbsp;</p>
+       
+        <div> <p>&nbsp;</p>
+        <p>&nbsp;</p>
+        </div>
+        <div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',alignItems:'center',marginLeft:'-5%', marginTop:"100px",justifyContent:'center'}}>
+       
+       {/* Filter of Academic year--------------------------------------------------- */}
+       
+               <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+
+           </div>
+        </div>
        <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-60px"}}>
        <div class="report-header">
        <h1 class="recent-Articles">Your Reports</h1>
@@ -3552,7 +7739,7 @@ catch(e)
                           <tr>
                               <td>{val.report_id}</td>
                               <td>{val.acd_yr}</td>
-                              <td>{val.semester}</td>
+                              <td>{val.sem}</td>
                               <td>{val.name_of_the_faculty}</td>
                               <td>{val.name_of_the_authors}</td>
                               <td>{val.title_of_the_book}</td>
@@ -3598,6 +7785,10 @@ export const StudentsMotivation=()=>{
          }catch(e){
           console.log(e)
          }  
+      doc.addImage(Image, 'PNG', 10, 3, 20, 20);
+      doc.addImage(Image2, 'PNG', 12,23, 15, 15);
+      doc.addImage(Image3, 'JPG', 175, 3, 20, 15);
+      doc.addImage(Image4, 'JPG', 175, 20, 20, 15);
       doc.setFontSize(18);
       doc.setFont("times", "bold");
       doc.text('MUTHAYAMMAL ENGINEERING COLLEGE',35, 15);
@@ -3606,18 +7797,19 @@ export const StudentsMotivation=()=>{
       doc.text('(An Autonomous Institution)', 80, 20);
       doc.text('(Approved by AICTE, New Delhi, Accredited by NAAC & Affiliated to Anna University)', 35, 25);
       doc.text('Rasipuram - 637 408, Namakkal Dist., Tamil Nadu', 65, 30);
-      
       doc.setFont("times", "bold");
       
       doc.setFontSize(15); 
-      doc.rect(12, 48, 32, 11).stroke();
-      doc.text(`${data.dept}`, 23, 55);
-      doc.rect(88, 48, 32, 11).stroke();
-      doc.text('SETAF', 95, 55);
+      doc.rect(12, 53, 32, 11).stroke();
+      doc.text(`${data.dept}`,25,60)
+      doc.rect(90,38,32,11)
+      doc.text('SETAF', 97, 45);
+      doc.rect(80,54,52,11)
+      doc.text("Student Motivation",83,61)
       
-      doc.rect(168, 48, 30, 11).stroke();
+      doc.rect(168, 53, 30, 11).stroke();
       doc.setFontSize(15); 
-      doc.text(`${data.acd_yr}`, 173, 55);
+      doc.text(`${data.acd_yr}`,173,60)
       
       doc.rect(12, 80, 50, 12).stroke();
       doc.text('Name of the faculty', 14, 88);
@@ -3686,6 +7878,196 @@ export const StudentsMotivation=()=>{
     }
   }
 
+  ////////filter
+  const[year,setYear]=useState([])
+  const [currentRecords, setCurrentRecords] = useState([]);
+  let [AcdVals,setAcdVals]=useState("")
+  const[selectedSem,setSelectedSem]=useState([])
+
+  
+  const[filter,setFilter]=useState({
+   "acdyr_id":"",
+   "sem_id":"",
+   "emp_id":""
+})
+console.log(filter)
+  const CustomClearText = () => <>X</>;
+
+  const ClearIndicator =(props) =>{
+    const {
+      children = <CustomClearText />,
+      getStyles,
+      innerProps: {ref, ...restInnerProps },
+    }= props;
+    return(
+      <div
+        {...restInnerProps}
+        ref={ref}
+        style={getStyles('clearIndicator', props)}
+      >
+        <div style={{padding: '0px 5px'}}>{children}</div>
+      </div>
+    )
+  }
+
+  const ClearIndicatorStyles = (base, state) => ({
+    ...base,
+    cursor: 'pointer',
+    color: state.isFocused ? 'blue' : 'black',
+  });
+
+  const acdInfoCollect=(eve)=>{
+   if(eve.length==0){
+     setFilter((old)=>({
+       ...old,
+       acdyr_id:""
+   }))
+   }else{
+ 
+     const label = eve.label
+     const value = eve.value
+     const extraInfo = eve.extraInfo
+ 
+     let isArray = Array.isArray(eve);
+     // alert(JSON.stringify(eve))
+     if(eve.length==1){
+         if(typeof eve[0].value === 'string'){
+             setFilter((old)=>({
+                 ...old,
+                 [eve[0].extraInfo]:eve[0].value
+             }))
+         }else{
+         setFilter((old)=>({
+             ...old,
+             [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+         }))}
+     }
+     if(isArray){
+        
+         if(eve.length!=1){
+         
+     if(eve[0].extraInfo=="acdyr_id"){
+         
+             // alert(JSON.stringify(eve))
+             for(let i=0;i<eve.length;i++){
+                 // alert(JSON.stringify(eve[i].value))
+                 AcdVals+=eve[i].value
+                 if(i!=eve.length-1){
+                     AcdVals+=","
+                 }
+                 setFilter((old)=>({
+                     ...old,
+                     [eve[i].extraInfo]:AcdVals
+                 }))
+             }
+             // alert(majorVals)
+         
+     }
+     }
+     }
+     else if(extraInfo=="sem_id"){
+         setSelectedSem(value)
+         // handleChange(value)
+         setFilter((old)=>({
+             ...old,
+             [extraInfo]:JSON.stringify(value)
+         }))
+     }
+   
+ }
+ }
+
+ const semInfoCollect=(eve)=>{
+   if(eve.length==0){
+     setFilter((old)=>({
+       ...old,
+       sem_id:""
+   }))
+   }else{
+ 
+   const label = eve.label
+   const value = eve.value
+   const extraInfo = eve.extraInfo
+ 
+   let isArray = Array.isArray(eve);
+   
+   if(isArray){
+       
+       if(eve.length!=1){
+       
+   if(eve[0].extraInfo=="acdyr_id"){
+       
+           // alert(JSON.stringify(eve))
+           for(let i=0;i<eve.length;i++){
+               // alert(JSON.stringify(eve[i].value))
+               AcdVals+=eve[i].value
+               if(i!=eve.length-1){
+                   AcdVals+=","
+               }
+               setFilter((old)=>({
+                   ...old,
+                   [eve[i].extraInfo]:AcdVals
+               }))
+           }
+           // alert(majorVals)
+       
+   }
+   }
+   }
+   else if(extraInfo=="sem_id"){
+       setSelectedSem(value)
+       // handleChange(value)
+       setFilter((old)=>({
+           ...old,
+           [extraInfo]:JSON.stringify(value)
+       }))
+   }
+   
+ }}
+
+  const Acad=async()=>{
+    const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+   //  alert(JSON.stringify(t.data.result))
+    setYear(t.data.result)
+}
+const years = year.map((val) => ({
+ value: val.acd_yr_id,
+ label: val.acd_yr,
+ extraInfo: "acdyr_id"
+ }));
+useEffect(()=>{
+  Acad()
+},[])
+
+const semester = [
+  {sem_id:1,sem:"Odd"},
+  {sem_id:2,sem:"Even"},
+  {sem_id:3,sem:"Both"},
+]
+let sems = semester.map((val)=>({
+  value: val.sem_id,
+  label: val.sem,
+  extraInfo: "sem_id"
+}))
+
+const onClickFilter=async()=>{
+ alert("clicked")
+ alert(JSON.stringify(filter))
+ try{
+     // alert("hi")
+     const logged=JSON.parse(sessionStorage.getItem("person"))
+     const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/data_setaf_students_motivation/${logged.faculty_id}`,filter)
+     setMotivationRecs(filteredRecords.data.resultArray)
+     console.log(filteredRecords.data)
+     setCurrentRecords(filteredRecords.data.resultArray)
+ }
+ catch(err){
+     alert("No Reports in the selected filter")
+     console.log(err)
+ }
+
+}
+
 
   ///////////////motivation fetch code
   const [MotivationRecs,setMotivationRecs]=useState([])
@@ -3697,7 +8079,7 @@ export const StudentsMotivation=()=>{
 
   const fetchMotivationRecs=async()=>{
       try{
-          const temp = await MotivationViewRecs(`${logged.emp_id}`)
+          const temp = await MotivationViewRecs(`${logged.faculty_id}`)
           // console.log(temp.data)
           setMotivationRecs(temp.data)
       }
@@ -3705,7 +8087,6 @@ export const StudentsMotivation=()=>{
           console.log(e);
       }
      
-
   }
 
   
@@ -3714,7 +8095,66 @@ export const StudentsMotivation=()=>{
      
 
       <div>
-       <div class="overallcontent">
+      <div> <p>&nbsp;</p>
+        <p>&nbsp;</p>
+        </div>
+        <div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',alignItems:'center',marginLeft:'-5%', marginTop:"100px",justifyContent:'center'}}>
+       
+       {/* Filter of Academic year--------------------------------------------------- */}
+       
+               <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+
+           </div>
+        </div>
+       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:""}}>
        <div class="report-header">
        <h1 class="recent-Articles">Students Motivation</h1>
        <a className="topic-headings" href="/motivationfront"><button style={{top:"27.5px",right:"50px"}} class="views" id="addButton">+ Add</button></a>
@@ -3740,7 +8180,7 @@ export const StudentsMotivation=()=>{
                           <tr>
                               <td>{val.report_id}</td>
                               <td>{val.acd_yr}</td>
-                              <td>{val.semester}</td>
+                              <td>{val.sem}</td>
                               <td>{val.name_of_the_faculty}</td>
                               <td>{val.name_of_the_student}</td>
                               <td>{val.paper_presentation_project_submission_other_contest}</td>
@@ -3762,9 +8202,1368 @@ export const StudentsMotivation=()=>{
        </table>
        </div>
        </div>
+      </>
+  )
+}
+
+/////////////////Professional Society Membership////////////////////
+
+export const Professionalpublication=()=>{
+
+  const generatePDF = async (report_id)=> {
+      try{
+          // alert(report_id)
+      const res = await axios.get(`http://localhost:1234/setaf/data/professional/${report_id}`);
+      const data = res.data;
+      const doc = new jsPDF();
+
+      let pdfDocument;
+      try{
+        const pdfUrl = `/Journal_SETAF/${data.membership_certificate_PDF}`;
+        const pdfResponse = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
+        const pdfData = pdfResponse.data;
+  
+       pdfDocument = await getDocument({ data: pdfData }).promise;
+         }catch(e){
+          console.log(e)
+         }  
+      
+     doc.addImage(Image, 'PNG', 10, 3, 20, 20);
+     doc.addImage(Image2, 'PNG', 12,23, 15, 15);
+     doc.addImage(Image3, 'JPG', 175, 3, 20, 15);
+     doc.addImage(Image4, 'JPG', 175, 20, 20, 15);
+
+     doc.setFontSize(18);
+     doc.setFont("times", "bold");
+     doc.text('MUTHAYAMMAL ENGINEERING COLLEGE',35, 15);
+     doc.setFontSize(10);
+     doc.setFont("times", "");
+     doc.text('(An Autonomous Institution)', 80, 20);
+     doc.text('(Approved by AICTE, New Delhi, Accredited by NAAC & Affiliated to Anna University)', 35, 25);
+     doc.text('Rasipuram - 637 408, Namakkal Dist., Tamil Nadu', 65, 30);
+     doc.setFont("times", "bold");
+     
+     doc.setFont("times", "bold");
+  
+     doc.setFontSize(15); 
+     doc.rect(12, 54, 32, 11).stroke();
+     doc.text(`${data.dept}`,25,61)
+     doc.rect(90,38,32,11)
+     doc.text('SETAF', 97, 45);
+     doc.rect(52,54,110,11)
+     doc.text("PROFESSIONAL SOCIETY MEMBERSHIP",55,61)
+     
+     doc.rect(168, 54, 28, 11).stroke();
+     doc.setFontSize(15); 
+     doc.text(`${data.acd_yr}`,172,61)
+
+      doc.rect(12, 80, 80, 12).stroke();
+      doc.text('Name of the faculty', 14, 88);
+      doc.setFont("times", "");
+      doc.rect(92, 80, 110, 12).stroke();
+      doc.text(`${data.name_of_the_faculty}`, 100, 88);
+      //name_of_consultancy_project
+      doc.setFont("times", "bold");
+      doc.rect(12, 92, 80, 12).stroke();
+      doc.text('Membership ID', 14, 100);
+      doc.setFont("times", "");
+      doc.rect(92, 92, 110, 12).stroke();
+      doc.text(`${data.membership_id}`, 100, 100);
+      
+      doc.setFont("times", "bold");
+      doc.rect(12, 104, 80, 12).stroke();
+      doc.text('Professional Society Membership', 14, 112);
+      doc.setFont("times", "");
+      doc.rect(92, 104, 110, 12).stroke();
+      doc.text(`${data.professional_soceity_membership}`, 100, 112);
+  
+      doc.setFont("times", "bold");
+      doc.rect(12, 116, 80, 12).stroke();
+      doc.text('Date of Membership', 14, 124);
+      doc.setFont("times", "");
+      doc.rect(92, 116, 110, 12).stroke();
+      doc.text(`${dateFormat(data.date_of_membership, "dd-mm-yyyy")}`, 100 , 124);
+  
+      try{ 
+          // Add pages from the original PDF
+          for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber++) {
+            const page = await pdfDocument.getPage(pageNumber);
+            const pdfWidth = page.view[2];
+            const pdfHeight = page.view[3];
+        
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = pdfWidth;
+            canvas.height = pdfHeight;
+        
+            await page.render({ canvasContext: context, viewport: page.getViewport({ scale: 1 }) }).promise;
+        
+            const imageDataUrl = canvas.toDataURL('image/jpeg');
+            try{doc.addPage();
+            doc.addImage(imageDataUrl, 'JPEG', 5, 0, 200, 300);
+            }catch(error){
+              console.error(error);
+            }
+          }
+        }
+        catch(e){
+          console.log(e);
+        }
+
+      // Generate a data URI for the PDF
+      const pdfDataUri = doc.output('datauristring');
+  
+      // Open the PDF in a new tab or window
+      const newWindow = window.open();
+      newWindow.document.write(`<iframe width='100%' height='100%' src='${pdfDataUri}'></iframe>`);
+    }
+    catch(e)
+    {
+      console.log(e);
+    }
+  }
+
+  /////////////////////filter options
+ const[year,setYear]=useState([])
+ const [currentRecords, setCurrentRecords] = useState([]);
+ let [AcdVals,setAcdVals]=useState("")
+ const[selectedSem,setSelectedSem]=useState([])
+
+ 
+ const[filter,setFilter]=useState({
+  "acdyr_id":"",
+  "sem_id":"",
+  "emp_id":""
+})
+console.log(filter)
+ const CustomClearText = () => <>X</>;
+
+ const ClearIndicator =(props) =>{
+   const {
+     children = <CustomClearText />,
+     getStyles,
+     innerProps: {ref, ...restInnerProps },
+   }= props;
+   return(
+     <div
+       {...restInnerProps}
+       ref={ref}
+       style={getStyles('clearIndicator', props)}
+     >
+       <div style={{padding: '0px 5px'}}>{children}</div>
+     </div>
+   )
+ }
+
+ const ClearIndicatorStyles = (base, state) => ({
+   ...base,
+   cursor: 'pointer',
+   color: state.isFocused ? 'blue' : 'black',
+ });
+
+ const acdInfoCollect=(eve)=>{
+  if(eve.length==0){
+    setFilter((old)=>({
+      ...old,
+      acdyr_id:""
+  }))
+  }else{
+
+    const label = eve.label
+    const value = eve.value
+    const extraInfo = eve.extraInfo
+
+    let isArray = Array.isArray(eve);
+    // alert(JSON.stringify(eve))
+    if(eve.length==1){
+        if(typeof eve[0].value === 'string'){
+            setFilter((old)=>({
+                ...old,
+                [eve[0].extraInfo]:eve[0].value
+            }))
+        }else{
+        setFilter((old)=>({
+            ...old,
+            [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+        }))}
+    }
+    if(isArray){
+        if(eve.length!=1){
+        
+    if(eve[0].extraInfo=="acdyr_id"){
+        
+            // alert(JSON.stringify(eve))
+            for(let i=0;i<eve.length;i++){
+                // alert(JSON.stringify(eve[i].value))
+                AcdVals+=eve[i].value
+                if(i!=eve.length-1){
+                    AcdVals+=","
+                }
+                setFilter((old)=>({
+                    ...old,
+                    [eve[i].extraInfo]:AcdVals
+                }))
+            }
+            // alert(majorVals)
+        
+    }
+    }
+    }
+    else if(extraInfo=="sem_id"){
+        setSelectedSem(value)
+        // handleChange(value)
+        setFilter((old)=>({
+            ...old,
+            [extraInfo]:JSON.stringify(value)
+        }))
+    }
+  
+}
+}
+
+const semInfoCollect=(eve)=>{
+  if(eve.length==0){
+    setFilter((old)=>({
+      ...old,
+      sem_id:""
+  }))
+  }else{
+
+  const label = eve.label
+  const value = eve.value
+  const extraInfo = eve.extraInfo
+
+  let isArray = Array.isArray(eve);
+  
+  if(isArray){
+      
+      if(eve.length!=1){
+      
+  if(eve[0].extraInfo=="acdyr_id"){
+      
+          // alert(JSON.stringify(eve))
+          for(let i=0;i<eve.length;i++){
+              // alert(JSON.stringify(eve[i].value))
+              AcdVals+=eve[i].value
+              if(i!=eve.length-1){
+                  AcdVals+=","
+              }
+              setFilter((old)=>({
+                  ...old,
+                  [eve[i].extraInfo]:AcdVals
+              }))
+          }
+          // alert(majorVals)
+      
+  }
+  }
+  }
+  else if(extraInfo=="sem_id"){
+      setSelectedSem(value)
+      // handleChange(value)
+      setFilter((old)=>({
+          ...old,
+          [extraInfo]:JSON.stringify(value)
+      }))
+  }
+  
+}}
+
+ const Acad=async()=>{
+   const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+  //  alert(JSON.stringify(t.data.result))
+   setYear(t.data.result)
+}
+const years = year.map((val) => ({
+value: val.acd_yr_id,
+label: val.acd_yr,
+extraInfo: "acdyr_id"
+}));
+useEffect(()=>{
+ Acad()
+},[])
+
+const semester = [
+ {sem_id:1,sem:"Odd"},
+ {sem_id:2,sem:"Even"},
+ {sem_id:3,sem:"Both"},
+]
+let sems = semester.map((val)=>({
+ value: val.sem_id,
+ label: val.sem,
+ extraInfo: "sem_id"
+}))
+
+const onClickFilter=async()=>{
+alert("clicked")
+alert(JSON.stringify(filter))
+try{
+    // alert("hi")
+    const logged=JSON.parse(sessionStorage.getItem("person"))
+    const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/data_setaf_professional_society_membership/${logged.faculty_id}`,filter)
+    setProfessionalRecs(filteredRecords.data.resultArray)
+    console.log(filteredRecords.data)
+    setCurrentRecords(filteredRecords.data.resultArray)
+}
+catch(err){
+    alert("No Reports in the selected filter")
+    console.log(err)
+}
+}
+
+  ///////////////Professional fetch code///
+  const [ProfessionalRecs,setProfessionalRecs]=useState([])
+  useEffect(()=>{
+      fetchProfessionalRecords()
+  },[])
+  const logged=JSON.parse(sessionStorage.getItem("person"))
+
+
+  const fetchProfessionalRecords=async()=>{
+      try{
+          const temp = await professionalRecords(`${logged.faculty_id}`)
+          setProfessionalRecs(temp.data)
+      }
+      catch(e){
+          console.log(e);
+      }
+     
+
+  }
+
+  
+  return(
+      <>
+     
+
+      <div>
+      <div> <p>&nbsp;</p>
+        <p>&nbsp;</p>
+        </div>
+        <div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',alignItems:'center',marginLeft:'-5%', marginTop:"100px",justifyContent:'center'}}>
+       
+       {/* Filter of Academic year--------------------------------------------------- */}
+       
+               <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+
+           </div>
+        </div>
+       <div class="overallcontent"  style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-50px"}}>
+       <div class="report-header">
+       <h1 class="recent-Articles">Your Reports</h1>
+       <a className="topic-headings" href="/professionalfront"><button style={{top:"27.5px",right:"50px"}} class="views" id="addButton">+ Add</button></a>
+       </div>
+       <table className='table table-striped '>
+       <thead>
+       <tr>
+       <th >Academic Year</th>
+       <th>Semester</th>
+       <th>Name of the Faculty</th>
+       <th>Membership ID</th>
+       <th>Date of Membership</th>
+       <th>Professional Society Membership</th>
+       <th>Download PDF</th>
+       {/* <th>Journal First Page - PDF</th> */}
+       </tr>
+       
+       {               
+                      ProfessionalRecs.length>0?
+                      ProfessionalRecs.map((val)=>(
+                          <tr>
+                          
+                              <td>{val.acd_yr}</td>
+                              <td>{val.sem}</td>
+                              <td>{val.name_of_the_faculty}</td>
+                              <td>{val.membership_id}</td>
+                              <td>{val.date_of_membership}</td>
+                              <td>{val.professional_soceity_membership}</td>
+                              <th><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></th>
+                          </tr>
+                      ))
+                  :
+                  <tr> 
+                      
+                      No records
+                      
+                      </tr>}
+
+   
+       </thead>         
+       </table>
+       </div>
+       </div>
     
       
     
+      </>
+  )
+}
+
+/////student field work
+export const StudentFieldworkFaculty=()=>{
+  ///////pdf view///////////////
+  
+const generatePDF = async (report_id)=> {
+  try{
+      // alert(report_id)
+  const res = await axios.get(`http://localhost:1234/setaf/data/fieldwork/${report_id}`);
+  const data = res.data;
+  const doc = new jsPDF();    
+  jsPDF.API.events.push(["addFonts", callAddBoldFont]);
+
+  let pdfDocument;
+        try{
+            const pdfUrl = `/Journal_SETAF/${data.certificate_report_pdf}`;
+            const pdfResponse = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
+            const pdfData = pdfResponse.data;
+            
+         pdfDocument = await getDocument({ data: pdfData }).promise;
+           }catch(e){
+            console.log(e)
+           }  
+
+
+        doc.addImage(Image, 'PNG', 10, 3, 20, 20);
+        doc.addImage(Image2, 'PNG', 12,23, 15, 15);
+        doc.addImage(Image3, 'JPG', 175, 3, 20, 15);
+        doc.addImage(Image4, 'JPG', 175, 20, 20, 15);
+
+        doc.setFontSize(18);
+        doc.setFont("times", "bold");
+        doc.text('MUTHAYAMMAL ENGINEERING COLLEGE',35, 15);
+        doc.setFontSize(10);
+        doc.setFont("times", "");
+        doc.text('(An Autonomous Institution)', 80, 20);
+        doc.text('(Approved by AICTE, New Delhi, Accredited by NAAC & Affiliated to Anna University)', 35, 25);
+        doc.text('Rasipuram - 637 408, Namakkal Dist., Tamil Nadu', 65, 30);
+        doc.setFont("times", "bold");
+        
+        doc.setFontSize(15); 
+        doc.rect(12, 53, 32, 11).stroke();
+        doc.text(`${data.dept}`,25,60)
+        doc.rect(90,38,32,11)
+        doc.text('SETAF', 97, 45);
+        doc.rect(50,54,112,11)
+        doc.text("Student Field Work, Internship Guidance",56,61)
+        
+       
+     doc.rect(168, 54, 28, 11).stroke();
+     doc.setFontSize(15); 
+     doc.text(`${data.acd_yr}`,172,61)
+
+      doc.rect(12, 80, 70, 12).stroke();
+      doc.text('Name of the faculty', 14, 88);
+      doc.setFont("times", "");
+      doc.rect(82, 80, 120, 12).stroke();
+      doc.text(`${data.name_of_the_faculty}`, 90, 88);
+      //name_of_consultancy_project
+      doc.setFont("times", "bold");
+      doc.rect(12, 92, 70, 12).stroke();
+      doc.text('Student Name', 14, 100);
+      doc.setFont("times", "");
+      doc.rect(82, 92, 120, 12).stroke();
+      doc.text(`${data.student_name}`, 90, 100);
+      
+      doc.setFont("times", "bold");
+      doc.rect(12, 104, 70, 12).stroke();
+      doc.text('Nature of Guidance', 14, 112);
+      doc.setFont("times", "");
+      doc.rect(82, 104, 120, 12).stroke();
+      doc.text(`${data.nature_of_guidance}`, 90, 112);
+  
+      doc.setFont("times", "bold");
+      doc.rect(12, 116, 70, 12).stroke();
+      doc.text('Date of application', 14, 124);
+      doc.setFont("times", "");
+      doc.rect(82, 116, 120, 12).stroke();
+      doc.text(`${dateFormat(data.duration_from, "dd-mm-yyyy")}`, 90 , 124);
+  
+      doc.setFont("times", "bold");
+      doc.rect(12, 128, 70, 12).stroke();
+      doc.text('Date of publication', 14, 136);
+      doc.setFont("times", "");
+      doc.rect(82, 128, 120, 12).stroke();
+      doc.text(`${dateFormat(data.duration_to, "dd-mm-yyyy")}`, 90, 136);
+
+      doc.setFont("times", "bold");
+      doc.rect(12, 140, 70, 12).stroke();
+      doc.text('Number of Students', 14, 148);
+      doc.setFont("times", "");
+      doc.rect(82, 140, 120, 12).stroke();
+      doc.text(`${data.number_of_students_undertaking_the_fieldwork_internship}`, 90, 148);
+
+        try{ 
+            // Add pages from the original PDF
+            for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber++) {
+              const page = await pdfDocument.getPage(pageNumber);
+              const pdfWidth = page.view[2];
+              const pdfHeight = page.view[3];
+          
+              const canvas = document.createElement('canvas');
+              const context = canvas.getContext('2d');
+              canvas.width = pdfWidth;
+              canvas.height = pdfHeight;
+          
+              await page.render({ canvasContext: context, viewport: page.getViewport({ scale: 1 }) }).promise;
+          
+              const imageDataUrl = canvas.toDataURL('image/jpeg');
+              try{doc.addPage();
+              doc.addImage(imageDataUrl, 'JPEG', 5, 0, 200, 300);
+              }catch(error){
+                console.error(error);
+              }
+            }
+          }
+          catch(e){
+            console.log(e);
+          }
+
+        // Generate a data URI for the PDF
+        const pdfDataUri = doc.output('datauristring');
+    
+        // Open the PDF in a new tab or window
+        const newWindow = window.open();
+        newWindow.document.write(`<iframe width='100%' height='100%' src='${pdfDataUri}'></iframe>`);
+      }
+      catch(e)
+      {
+        console.log(e);
+      }
+    }
+ 
+/////////////////////filter options
+const[year,setYear]=useState([])
+const [currentRecords, setCurrentRecords] = useState([]);
+let [AcdVals,setAcdVals]=useState("")
+const[selectedSem,setSelectedSem]=useState([])
+
+
+const[filter,setFilter]=useState({
+ "acdyr_id":"",
+ "sem_id":"",
+ "emp_id":""
+})
+console.log(filter)
+const CustomClearText = () => <>X</>;
+
+const ClearIndicator =(props) =>{
+  const {
+    children = <CustomClearText />,
+    getStyles,
+    innerProps: {ref, ...restInnerProps },
+  }= props;
+  return(
+    <div
+      {...restInnerProps}
+      ref={ref}
+      style={getStyles('clearIndicator', props)}
+    >
+      <div style={{padding: '0px 5px'}}>{children}</div>
+    </div>
+  )
+}
+
+const ClearIndicatorStyles = (base, state) => ({
+  ...base,
+  cursor: 'pointer',
+  color: state.isFocused ? 'blue' : 'black',
+});
+
+const acdInfoCollect=(eve)=>{
+ if(eve.length==0){
+   setFilter((old)=>({
+     ...old,
+     acdyr_id:""
+ }))
+ }else{
+
+   const label = eve.label
+   const value = eve.value
+   const extraInfo = eve.extraInfo
+
+   let isArray = Array.isArray(eve);
+   // alert(JSON.stringify(eve))
+   if(eve.length==1){
+       if(typeof eve[0].value === 'string'){
+           setFilter((old)=>({
+               ...old,
+               [eve[0].extraInfo]:eve[0].value
+           }))
+       }else{
+       setFilter((old)=>({
+           ...old,
+           [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+       }))}
+   }
+   if(isArray){
+       if(eve.length!=1){
+       
+   if(eve[0].extraInfo=="acdyr_id"){
+       
+           // alert(JSON.stringify(eve))
+           for(let i=0;i<eve.length;i++){
+               // alert(JSON.stringify(eve[i].value))
+               AcdVals+=eve[i].value
+               if(i!=eve.length-1){
+                   AcdVals+=","
+               }
+               setFilter((old)=>({
+                   ...old,
+                   [eve[i].extraInfo]:AcdVals
+               }))
+           }
+           // alert(majorVals)
+       
+   }
+   }
+   }
+   else if(extraInfo=="sem_id"){
+       setSelectedSem(value)
+       // handleChange(value)
+       setFilter((old)=>({
+           ...old,
+           [extraInfo]:JSON.stringify(value)
+       }))
+   }
+ 
+}
+}
+
+const semInfoCollect=(eve)=>{
+ if(eve.length==0){
+   setFilter((old)=>({
+     ...old,
+     sem_id:""
+ }))
+ }else{
+
+ const label = eve.label
+ const value = eve.value
+ const extraInfo = eve.extraInfo
+
+ let isArray = Array.isArray(eve);
+ 
+ if(isArray){
+     
+     if(eve.length!=1){
+     
+ if(eve[0].extraInfo=="acdyr_id"){
+     
+         // alert(JSON.stringify(eve))
+         for(let i=0;i<eve.length;i++){
+             // alert(JSON.stringify(eve[i].value))
+             AcdVals+=eve[i].value
+             if(i!=eve.length-1){
+                 AcdVals+=","
+             }
+             setFilter((old)=>({
+                 ...old,
+                 [eve[i].extraInfo]:AcdVals
+             }))
+         }
+         // alert(majorVals)
+     
+ }
+ }
+ }
+ else if(extraInfo=="sem_id"){
+     setSelectedSem(value)
+     // handleChange(value)
+     setFilter((old)=>({
+         ...old,
+         [extraInfo]:JSON.stringify(value)
+     }))
+ }
+ 
+}}
+
+const Acad=async()=>{
+  const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+ //  alert(JSON.stringify(t.data.result))
+  setYear(t.data.result)
+}
+const years = year.map((val) => ({
+value: val.acd_yr_id,
+label: val.acd_yr,
+extraInfo: "acdyr_id"
+}));
+useEffect(()=>{
+Acad()
+},[])
+
+const semester = [
+{sem_id:1,sem:"Odd"},
+{sem_id:2,sem:"Even"},
+{sem_id:3,sem:"Both"},
+]
+let sems = semester.map((val)=>({
+value: val.sem_id,
+label: val.sem,
+extraInfo: "sem_id"
+}))
+
+const onClickFilter=async()=>{
+alert("clicked")
+alert(JSON.stringify(filter))
+try{
+   // alert("hi")
+   const logged=JSON.parse(sessionStorage.getItem("person"))
+   const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/data_setaf_fieldwork_internship/${logged.faculty_id}`,filter)
+   setFieldworkRecords(filteredRecords.data.resultArray)
+   console.log(filteredRecords.data)
+   setCurrentRecords(filteredRecords.data.resultArray)
+}
+catch(err){
+   alert("No Reports in the selected filter")
+   console.log(err)
+}
+}
+
+
+  ////////////data fetch code/////////////////
+
+  const [fieldworkRecords,setFieldworkRecords]=useState([])
+  useEffect(()=>{
+      fetchFieldworkRecords()
+  },[])
+  const logged=JSON.parse(sessionStorage.getItem("person"))
+
+
+  const fetchFieldworkRecords=async()=>{
+      try{
+          const temp = await StudentFieldworkRecords(`${logged.faculty_id}`)
+      // console.log(temp.data)
+      setFieldworkRecords(temp.data)
+      }
+      catch(e){
+          console.log(e);
+      }
+  }
+
+
+  return(
+      <>
+               <div> <p>&nbsp;</p>
+        <p>&nbsp;</p>
+        </div>
+        <div>
+        <div className="filter-dropdowns" style={{width:'100%',display:'flex',alignItems:'center',marginLeft:'-5%', marginTop:"100px",justifyContent:'center'}}>
+       
+       {/* Filter of Academic year--------------------------------------------------- */}
+       
+               <label for="acdyr_id">Academic Year : </label>
+       <Select
+             closeMenuOnSelect={false}
+             components={{ ClearIndicator }}
+             styles={{ clearIndicator: ClearIndicatorStyles }}
+             defaultValue={[]}
+             name="acdyr_id"
+             onChange={acdInfoCollect}
+             isSearchable
+             isMulti
+             options={years}
+           />
+
+       
+       {/* Filter of Sem--------------------------------------------------------- */}
+       <label for="sem_id">Semester : </label>
+    <Select
+      closeMenuOnSelect={false}
+      components={{ ClearIndicator }}
+      styles={{ clearIndicator: ClearIndicatorStyles }}
+      defaultValue={[]}
+      name="sem_id"
+      onChange={semInfoCollect}
+      isSearchable
+      // isMulti
+      options={sems}
+    />
+
+           <input
+  className='filter-button'
+  type='button'
+  value="Filter"
+  onClick={onClickFilter}
+  style={{
+  
+    backgroundColor: '#4CAF50',
+    border: 'none',
+    color: 'white',
+    padding: '10px 15px',
+    textAlign: 'center',
+    textDecoration: 'none',
+    display: 'inline-block',
+    fontSize: '16px',
+    margin: '4px 2px',
+    cursor: 'pointer',
+    borderRadius: '12px'
+  }}
+/>
+
+           </div>
+        </div>
+       <div class="overallcontent"style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-50px"}}>
+       <div class="report-header">
+       <h1 class="recent-Articles">Student Fieldwork Reports</h1>
+       <a className="topic-headings" href="/studentfieldwork"><button style={{top:"27.5px",right:"50px"}} class="views" id="addButton">+ Add</button></a>
+       </div>
+       <table className='table table-striped'>
+        <thead>
+        <tr>
+                          <th>Academic Year</th>
+                          <th>Semester</th>
+                          <th>Name of the Faculty</th>
+                          <th>Nature of Guidance</th>
+                          <th>Duration From</th>
+                          <th>Duration to</th>
+                          <th>Number of students undertaking the Field Projects</th>
+                          <th>Student Name</th>      
+                          <th>Download PDF</th>          
+        </tr>
+        {               
+                      fieldworkRecords.length>0?
+                      fieldworkRecords.map((val)=>(
+                          <tr>
+                              <td>{val.acd_yr}</td>
+                              <td>{val.sem}</td>
+                              <td>{val.name_of_the_faculty}</td>
+                              <td>{val.nature_of_guidance}</td>
+                              <td>{dateFormat(val.duration_from,'dd-mm-yyyy')}</td>
+                              <td>{dateFormat(val.duration_to,'dd-mm-yyyy')}</td>
+                              <td>{val.number_of_students_undertaking_the_fieldwork_internship}</td>
+                              <td>{val.student_name}</td>
+                              <th><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></th>                              
+          
+                          </tr>
+                      ))
+                      :
+                      <tr>
+                        No Records
+                      </tr>
+                  
+                  }
+        </thead>
+       </table>
+       </div>
+       
+                    
+      </>
+  );
+}
+
+
+///fdpsdp
+export const FdpSdpFaculty=()=>{
+
+  const generatePDF = async (report_id)=> {
+      try{
+          // alert(report_id)
+      const res = await axios.get(`http://localhost:1234/setaf/data/fdpsdp/${report_id}`);
+      const data = res.data;
+      const doc = new jsPDF(); 
+      let pdfDocument;
+      try{
+          const pdfUrl = `/Journal_SETAF/${data.certificates_pdf}`;
+          const pdfResponse = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
+          const pdfData = pdfResponse.data;
+  
+       pdfDocument = await getDocument({ data: pdfData }).promise;
+         }catch(e){
+          console.log(e)
+         }  
+  
+       doc.addImage(Image, 'PNG', 10, 3, 20, 20);
+       doc.addImage(Image2, 'PNG', 12,23, 15, 15);
+       doc.addImage(Image3, 'JPG', 175, 3, 20, 15);
+       doc.addImage(Image4, 'JPG', 175, 20, 20, 15);
+  
+       doc.setFontSize(18);
+       doc.setFont("times", "bold");
+       doc.text('MUTHAYAMMAL ENGINEERING COLLEGE',35, 15);
+       doc.setFontSize(10);
+       doc.setFont("times", "");
+       doc.text('(An Autonomous Institution)', 80, 20);
+       doc.text('(Approved by AICTE, New Delhi, Accredited by NAAC & Affiliated to Anna University)', 35, 25);
+       doc.text('Rasipuram - 637 408, Namakkal Dist., Tamil Nadu', 65, 30);
+      
+      doc.setFont("times", "bold");
+      
+      doc.setFontSize(15); 
+      doc.rect(12, 53, 32, 11).stroke();
+      doc.text(`${data.dept}`,25,60)
+      doc.rect(90,38,32,11)
+      doc.text('SETAF', 97, 45);
+      doc.rect(65,54,85,11)
+      doc.text("FDPs and SDPs CERTIFICATE",71,61)
+      
+      doc.rect(168, 53, 30, 11).stroke();
+      doc.setFontSize(15); 
+      doc.text(`${data.acd_yr}`,173,60)
+      
+      doc.rect(12, 80, 64, 12).stroke();
+      doc.text('Designation', 14, 88);
+      doc.setFont("times", "");
+      doc.rect(76, 80, 126, 12).stroke();
+      doc.text(`${data.designation}`, 80, 88);
+      
+      doc.setFont("times", "bold");
+      doc.rect(12, 92, 64, 12).stroke();
+      doc.text('Nature of the Program', 14, 100);
+      doc.setFont("times", "");
+      doc.rect(76, 92, 126, 12).stroke();
+      doc.text(`${data.nature_of_the_program}`, 80, 100);
+      
+      doc.setFont("times", "bold");
+      doc.rect(12, 104, 64, 12).stroke();
+      doc.text('Title of the Program', 14, 112);
+      doc.setFont("times", "");
+      doc.rect(76, 104, 126, 12).stroke();
+      doc.text(`${data.title_of_the_program}`, 80, 112);
+      doc.setFont("times", "bold");
+      doc.rect(12, 116, 64, 12).stroke();
+      doc.text('Participation', 14, 124);
+      doc.setFont("times", "");
+      doc.rect(76, 116, 126, 12).stroke();
+      doc.text(`${data.participation}`, 80, 124);
+
+      doc.setFont("times", "bold");
+      doc.rect(12, 128, 64, 12).stroke();
+      doc.text('Name of the Organization', 14, 136);
+      doc.setFont("times", "");
+      doc.rect(76, 128, 126, 12).stroke();
+      doc.text(`${data.name_of_the_organization_and_place}`, 80, 136);
+
+        doc.setFont("times", "bold");
+        doc.rect(12, 140, 64, 12).stroke();
+        doc.text('Duration From', 14, 148);
+        doc.setFont("times", "");
+        doc.rect(76, 140, 126, 12).stroke();
+        doc.text(`${dateFormat(data.duration_from, "dd-mm-yyyy")}`, 80, 148);
+
+
+      doc.setFont("times", "bold");
+      doc.rect(12, 152, 64, 12).stroke();
+      doc.text('Duration To', 14, 160);
+      doc.setFont("times", "");
+      doc.rect(76, 152, 126, 12).stroke();
+      doc.text(`${dateFormat(data.duration_to, "dd-mm-yyyy")}`, 80, 160);
+
+      doc.setFont("times", "bold");
+      doc.rect(12, 164, 64, 12).stroke();
+      doc.text('Location of Organization', 14, 172);
+      doc.setFont("times", "");
+      doc.rect(76, 164, 126, 12).stroke();
+      doc.text(`${data.location_of_organization}`, 80, 172);
+
+      doc.setFont("times", "bold");
+      doc.rect(12, 176, 64, 12).stroke();
+      doc.text('Amount Provided by HEI', 14, 184);
+      doc.setFont("times", "");
+      doc.rect(76, 176, 126, 12).stroke();
+      doc.text(`${data.amount_provided_by_the_HEI}`, 80, 184);
+
+
+      try{ 
+          // Add pages from the original PDF
+          for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber++) {
+            const page = await pdfDocument.getPage(pageNumber);
+            const pdfWidth = page.view[2];
+            const pdfHeight = page.view[3];
+        
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = pdfWidth;
+            canvas.height = pdfHeight;
+        
+            await page.render({ canvasContext: context, viewport: page.getViewport({ scale: 1 }) }).promise;
+        
+            const imageDataUrl = canvas.toDataURL('image/jpeg');
+            try{doc.addPage();
+            doc.addImage(imageDataUrl, 'JPEG', 5, 0, 200, 300);
+            }catch(error){
+              console.error(error);
+            }
+          }
+        }
+        catch(e){
+          console.log(e);
+        }
+  
+      // Generate a data URI for the PDF
+      const pdfDataUri = doc.output('datauristring');
+    
+      // Open the PDF in a new tab or window
+      const newWindow = window.open();
+      newWindow.document.write(`<iframe width='100%' height='100%' src='${pdfDataUri}'></iframe>`);
+    }
+    catch(e)
+    {
+      console.log(e);
+    }
+    }
+
+ /////////////////////filter options
+ const[year,setYear]=useState([])
+ const [currentRecords, setCurrentRecords] = useState([]);
+ let [AcdVals,setAcdVals]=useState("")
+ const[selectedSem,setSelectedSem]=useState([])
+
+ 
+ const[filter,setFilter]=useState({
+  "acdyr_id":"",
+  "sem_id":"",
+  "emp_id":""
+})
+console.log(filter)
+ const CustomClearText = () => <>X</>;
+
+ const ClearIndicator =(props) =>{
+   const {
+     children = <CustomClearText />,
+     getStyles,
+     innerProps: {ref, ...restInnerProps },
+   }= props;
+   return(
+     <div
+       {...restInnerProps}
+       ref={ref}
+       style={getStyles('clearIndicator', props)}
+     >
+       <div style={{padding: '0px 5px'}}>{children}</div>
+     </div>
+   )
+ }
+
+ const ClearIndicatorStyles = (base, state) => ({
+   ...base,
+   cursor: 'pointer',
+   color: state.isFocused ? 'blue' : 'black',
+ });
+
+ const acdInfoCollect=(eve)=>{
+  if(eve.length==0){
+    setFilter((old)=>({
+      ...old,
+      acdyr_id:""
+  }))
+  }else{
+
+    const label = eve.label
+    const value = eve.value
+    const extraInfo = eve.extraInfo
+
+    let isArray = Array.isArray(eve);
+    // alert(JSON.stringify(eve))
+    if(eve.length==1){
+        if(typeof eve[0].value === 'string'){
+            setFilter((old)=>({
+                ...old,
+                [eve[0].extraInfo]:eve[0].value
+            }))
+        }else{
+        setFilter((old)=>({
+            ...old,
+            [eve[0].extraInfo]:JSON.stringify(eve[0].value)
+        }))}
+    }
+    if(isArray){
+        if(eve.length!=1){
+        
+    if(eve[0].extraInfo=="acdyr_id"){
+        
+            // alert(JSON.stringify(eve))
+            for(let i=0;i<eve.length;i++){
+                // alert(JSON.stringify(eve[i].value))
+                AcdVals+=eve[i].value
+                if(i!=eve.length-1){
+                    AcdVals+=","
+                }
+                setFilter((old)=>({
+                    ...old,
+                    [eve[i].extraInfo]:AcdVals
+                }))
+            }
+            // alert(majorVals)
+        
+    }
+    }
+    }
+    else if(extraInfo=="sem_id"){
+        setSelectedSem(value)
+        // handleChange(value)
+        setFilter((old)=>({
+            ...old,
+            [extraInfo]:JSON.stringify(value)
+        }))
+    }
+  
+}
+}
+
+const semInfoCollect=(eve)=>{
+  if(eve.length==0){
+    setFilter((old)=>({
+      ...old,
+      sem_id:""
+  }))
+  }else{
+
+  const label = eve.label
+  const value = eve.value
+  const extraInfo = eve.extraInfo
+
+  let isArray = Array.isArray(eve);
+  
+  if(isArray){
+      
+      if(eve.length!=1){
+      
+  if(eve[0].extraInfo=="acdyr_id"){
+      
+          // alert(JSON.stringify(eve))
+          for(let i=0;i<eve.length;i++){
+              // alert(JSON.stringify(eve[i].value))
+              AcdVals+=eve[i].value
+              if(i!=eve.length-1){
+                  AcdVals+=","
+              }
+              setFilter((old)=>({
+                  ...old,
+                  [eve[i].extraInfo]:AcdVals
+              }))
+          }
+          // alert(majorVals)
+      
+  }
+  }
+  }
+  else if(extraInfo=="sem_id"){
+      setSelectedSem(value)
+      // handleChange(value)
+      setFilter((old)=>({
+          ...old,
+          [extraInfo]:JSON.stringify(value)
+      }))
+  }
+  
+}}
+
+ const Acad=async()=>{
+   const t = await axios.get("http://localhost:1234/setaffilter/getAcdYrList") 
+  //  alert(JSON.stringify(t.data.result))
+   setYear(t.data.result)
+}
+const years = year.map((val) => ({
+value: val.acd_yr_id,
+label: val.acd_yr,
+extraInfo: "acdyr_id"
+}));
+useEffect(()=>{
+ Acad()
+},[])
+
+const semester = [
+ {sem_id:1,sem:"Odd"},
+ {sem_id:2,sem:"Even"},
+ {sem_id:3,sem:"Both"},
+]
+let sems = semester.map((val)=>({
+ value: val.sem_id,
+ label: val.sem,
+ extraInfo: "sem_id"
+}))
+
+const onClickFilter=async()=>{
+alert("clicked")
+alert(JSON.stringify(filter))
+try{
+    // alert("hi")
+    const logged=JSON.parse(sessionStorage.getItem("person"))
+    const filteredRecords=await axios.post(`http://localhost:1234/setaf/filterSetaf/data_setaf_fdp_sdp/${logged.faculty_id}`,filter)
+    setfdpsdprecs(filteredRecords.data.resultArray)
+    console.log(filteredRecords.data)
+    setCurrentRecords(filteredRecords.data.resultArray)
+}
+catch(err){
+    alert("No Reports in the selected filter")
+    console.log(err)
+}
+}
+
+
+///////////////////////fetch code 
+
+  const [fdpsdprecs,setfdpsdprecs]=useState([])
+  useEffect(()=>{
+      fetchFdpSdpRecords()
+  },[])
+  const logged=JSON.parse(sessionStorage.getItem("person"))
+
+
+  const fetchFdpSdpRecords=async()=>{
+     try{
+      const temp = await fdpSdpRecords(`${logged.faculty_id}`)
+      setfdpsdprecs(temp.data)
+     }
+      
+     catch(e){
+      console.log(e);
+     }
+
+  }
+  return(
+      <>
+      <div> <p>&nbsp;</p>
+      <p>&nbsp;</p>
+      </div>
+      <div>
+      <div className="filter-dropdowns" style={{width:'100%',display:'flex',alignItems:'center',marginLeft:'-5%', marginTop:"100px",justifyContent:'center'}}>
+     
+     {/* Filter of Academic year--------------------------------------------------- */}
+     
+             <label for="acdyr_id">Academic Year : </label>
+     <Select
+           closeMenuOnSelect={false}
+           components={{ ClearIndicator }}
+           styles={{ clearIndicator: ClearIndicatorStyles }}
+           defaultValue={[]}
+           name="acdyr_id"
+           onChange={acdInfoCollect}
+           isSearchable
+           isMulti
+           options={years}
+         />
+
+     
+     {/* Filter of Sem--------------------------------------------------------- */}
+     <label for="sem_id">Semester : </label>
+  <Select
+    closeMenuOnSelect={false}
+    components={{ ClearIndicator }}
+    styles={{ clearIndicator: ClearIndicatorStyles }}
+    defaultValue={[]}
+    name="sem_id"
+    onChange={semInfoCollect}
+    isSearchable
+    // isMulti
+    options={sems}
+  />
+
+         <input
+className='filter-button'
+type='button'
+value="Filter"
+onClick={onClickFilter}
+style={{
+
+  backgroundColor: '#4CAF50',
+  border: 'none',
+  color: 'white',
+  padding: '10px 15px',
+  textAlign: 'center',
+  textDecoration: 'none',
+  display: 'inline-block',
+  fontSize: '16px',
+  margin: '4px 2px',
+  cursor: 'pointer',
+  borderRadius: '12px'
+}}
+/>
+
+         </div>
+      </div>
+       <div class="overallcontent" style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%",marginTop:"-60px"}}>
+       <div class="report-header">
+       <h1 class="recent-Articles">Your Reports</h1>
+       <a className="topic-headings" href="/fdpsdp/front"><button style={{top:"27.5px",right:"50px"}} class="views" id="addButton">+ Add</button></a>
+       </div>
+       <table className='table table-striped '>
+        <thead>
+        <tr className="table-active">
+                          <th>Report ID</th>
+                          <th>Academic Year</th>
+                          <th>Semester</th>
+                          <th>Designation</th>
+                          <th>Nature of the program</th>
+                          <th>Title of the program</th>
+                          <th>Duration From (Date)</th>
+                          <th>Duration To (DAte)</th>
+                          <th>Participation</th>
+                          <th>Name of the Organization and Place</th>
+                          <th>Download PDF</th>    
+        </tr>
+        {             
+                      fdpsdprecs.length>0?   
+                      fdpsdprecs.map((val)=>(
+                          <tr>
+                              <td>{val.report_id}</td>
+                              <td>{val.acd_yr}</td>
+                              <td>{val.sem}</td>
+                              <td>{val.designation}</td>
+                              <td>{val.nature_of_the_program}</td>
+                              <td>{val.title_of_the_program}</td>
+                              <td>{val.duration_from}</td>
+                              <td>{val.duration_to}</td>
+                              <td>{val.participation}</td>
+                              <td>{val.name_of_the_organization_and_place}</td>
+                              <th><button onClick={async()=>{generatePDF(val.report_id)}}>View</button></th>
+                              
+                          </tr>
+                      ))
+                      :
+                      <tr>No Records</tr>
+                  }
+        </thead>
+       </table>
+       </div>
       </>
   )
 }

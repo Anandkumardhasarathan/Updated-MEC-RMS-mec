@@ -321,6 +321,19 @@ console.log(logged)
             // console.log(temp.data.row)
             setAcd(temp.data.row)
           }
+
+          
+  useEffect(()=>{
+    Sems()
+  },[])
+  const [sem,setsem] = useState([])
+
+  const Sems=async()=>{
+    const temp = await axios.get(`http://localhost:1234/setaf/getsem`)
+    // console.log(temp.data.row)
+    setsem(temp.data.row)
+  }
+
       console.log(conference)
       const navigate = useNavigate()
 
@@ -486,10 +499,13 @@ const handlechange=(eve)=>{
             </select>
 
             <label>Semester</label>
-            <select value={conference.semester} onChange={handlechange}  name='semester'>
-                <option value="">Select the Semester</option>
-                <option>Odd</option>
-                <option>Even</option>
+            <select name='semester' onChange={handlechange} value={conference.semester}>
+              <option>Select the Semester</option>
+            {
+                                sem.map((val,key)=>{
+                                    return (<option key={val.sem_id}  value={val.sem_id}>{val.sem}</option>)
+                                })
+                            }  
             </select>
          
             {/* <label>Department</label>
@@ -556,6 +572,7 @@ console.log(logged)
     "dept_id":`${logged.dept_id}`,
     "name_of_the_faculty": `${logged.faculty_name}`,
     "academic_year":"",
+    "semester":"",
     "designation":"",
     "nature_of_the_program":"",
     "title_of_the_program":"",
@@ -722,7 +739,7 @@ const handlechange=(eve)=>{
   })
   const{name,value}=eve.target
   setworkshop((old)=>{
-      if(name==="dept_id"||name==="name_of_the_faculty"||name==="academic_year"||name==="designation"||name==="nature_of_the_program"||name==="title_of_the_program"||name==="duration_from"||name==="duration_to"||name==="participation"||name==="name_of_the_organization_and_place"||name==="location_of_organization"||name==="amount_provided_by_the_HEI"||name==="certificates_pdf"){
+      if(name==="dept_id"||name==="name_of_the_faculty"||name==="academic_year"||name==="semester"||name==="designation"||name==="nature_of_the_program"||name==="title_of_the_program"||name==="duration_from"||name==="duration_to"||name==="participation"||name==="name_of_the_organization_and_place"||name==="location_of_organization"||name==="amount_provided_by_the_HEI"||name==="certificates_pdf"){
           return{
               ...old,
               [name]:value
@@ -774,6 +791,17 @@ const handlechange=(eve)=>{
     setAcd(temp.data.row)
   }
 
+  useEffect(()=>{
+    Sems()
+  },[])
+  const [sem,setsem] = useState([])
+
+  const Sems=async()=>{
+    const temp = await axios.get(`http://localhost:1234/setaf/getsem`)
+    // console.log(temp.data.row)
+    setsem(temp.data.row)
+  }
+
 
   return (
   <>
@@ -793,6 +821,15 @@ const handlechange=(eve)=>{
               } 
             </select>
 
+            <label>Semester</label>
+            <select name='semester' onChange={handlechange} value={workshop.semester}>
+              <option>Select the Semester</option>
+            {
+                                sem.map((val,key)=>{
+                                    return (<option key={val.sem_id}  value={val.sem_id}>{val.sem}</option>)
+                                })
+                            }  
+            </select>
                
                   <label>Designation </label>
                   <input type='text' name='designation'  value={setworkshop.ndesignation} placeholder='Enter Designation'  onChange={handlechange}/>
@@ -917,6 +954,18 @@ export const Techtalks=()=>{
         });
         }
         };
+
+        
+        useEffect(()=>{
+          Dept()
+        },[])
+        const [dept,setDept] = useState([])
+          
+        const Dept=async()=>{
+          const temp = await axios.get(`http://localhost:1234/setaf/getDept`)
+          // console.log(temp.data.row)
+          setDept(temp.data.row)
+        }
    ///////////////////////////////////////Fetch code/////////////
       const handlechange=(eve)=>{
         settechtalk((old)=>{
@@ -966,16 +1015,6 @@ export const Techtalks=()=>{
             }
         }
 
-        useEffect(()=>{
-          Dept()
-        },[])
-        const [dept,setDept] = useState([])
-          
-        const Dept=async()=>{
-          const temp = await axios.get(`http://localhost:1234/setaf/getDept`)
-          // console.log(temp.data.row)
-          setDept(temp.data.row)
-        }
 /////////////////////pdf code////////////////////////
         
       const [newFileName, setNewFileName] = useState('');
@@ -1113,6 +1152,19 @@ const Acad=async()=>{
   setAcd(temp.data.row)
 }
 
+
+useEffect(()=>{
+  Sems()
+},[])
+const [sem,setsem] = useState([])
+
+const Sems=async()=>{
+  const temp = await axios.get(`http://localhost:1234/setaf/getsem`)
+  // console.log(temp.data.row)
+  setsem(temp.data.row)
+}
+
+
     return(
         <>
         <div className='overallcontent' style={{maxWidth:"50%",marginLeft:"25%"}}>
@@ -1148,8 +1200,11 @@ const Acad=async()=>{
             <label>Semester</label>
             <select value={settechtalk.semester} name='semester' onClick={handlechange}>
                 <option >Select the Semester</option>
-                <option >Odd Sem</option>
-                <option >Even Sem</option>
+                {
+                                sem.map((val,key)=>{
+                                    return (<option key={val.sem_id}  value={val.sem_id}>{val.sem}</option>)
+                                })
+                            }  
             </select>
 
             <label>Section</label>
@@ -1281,6 +1336,7 @@ export const Facultyfront=()=>{
         "dept_id":`${logged.dept_id}`,
         "name_of_the_faculty":`${logged.faculty_name}`,
         "academic_year":"",
+        "semester":"",
         "date":"",
         "topic_of_guest_talk":"",
         "name_of_institution_or_industry":"",
@@ -1444,7 +1500,7 @@ const call=async()=>{
         })
         const{name,value}=eve.target
         setfaculty((old)=>{
-            if(name==="dept_id"||name==="name_of_the_faculty"||name==="academic_year"||name==="date"||name==="topic_of_guest_talk"||name==="name_of_institution_or_industry"||name==="place_of_institution_or_industry"||name==="no_of_beneficaries"||name==="letter_of_appreciation_or_certificate_pdf"){
+            if(name==="dept_id"||name==="name_of_the_faculty"||name==="academic_year"||name==="semester"||name==="date"||name==="topic_of_guest_talk"||name==="name_of_institution_or_industry"||name==="place_of_institution_or_industry"||name==="no_of_beneficaries"||name==="letter_of_appreciation_or_certificate_pdf"){
                 return{
                     ...old,
                     [name]:value
@@ -1488,6 +1544,17 @@ const call=async()=>{
           // console.log(temp.data.row)
           setAcd(temp.data.row)
         }
+        useEffect(()=>{
+          Sems()
+        },[])
+        const [sem,setsem] = useState([])
+        
+        const Sems=async()=>{
+          const temp = await axios.get(`http://localhost:1234/setaf/getsem`)
+          // console.log(temp.data.row)
+          setsem(temp.data.row)
+        }
+        
       
       
 
@@ -1507,6 +1574,16 @@ const call=async()=>{
                                     return (<option key={val.acd_yr_id}  value={val.acd_yr_id}>{val.acd_yr}</option>)
                                 })
               } 
+            </select>
+
+            <label>Semester</label>
+            <select value={setfaculty.semester} name='semester' onClick={infoCollect}>
+                <option >Select the Semester</option>
+                {
+                                sem.map((val,key)=>{
+                                    return (<option key={val.sem_id}  value={val.sem_id}>{val.sem}</option>)
+                                })
+                            }  
             </select>
 
             <label>Date</label>
@@ -1557,7 +1634,7 @@ export const Nptelfront=()=>{
 
     const[nptel,setnptel]=useState({
         "academic_year":"",
-        "semesters":"",
+        "semester":"",
         "name_of_the_faculty":"",
         "year":"",
         "session":"",
@@ -1688,7 +1765,7 @@ const call=async(err)=>{
           }
         })
         setnptel((old)=>{
-            if(name==="academic_year"||name==="semesters"||name==="name_of_the_faculty"||name==="year"||name==="session"||name==="course_name"||name==="score_obtained"||name==="certificate_type"||name==="certificate_pdf"){
+            if(name==="academic_year"||name==="semester"||name==="name_of_the_faculty"||name==="year"||name==="session"||name==="course_name"||name==="score_obtained"||name==="certificate_type"||name==="certificate_pdf"){
                 return{
                     ...old,
                     [name]:value
@@ -1722,6 +1799,18 @@ const call=async(err)=>{
         }
         const [loading, setLoading] = useState(false);
         const [file, setFile] = useState(true);
+
+        useEffect(()=>{
+          Sems()
+        },[])
+        const [sem,setsem] = useState([])
+        
+        const Sems=async()=>{
+          const temp = await axios.get(`http://localhost:1234/setaf/getsem`)
+          // console.log(temp.data.row)
+          setsem(temp.data.row)
+        }
+        
     return(
         <>
         
@@ -1741,10 +1830,13 @@ const call=async(err)=>{
             </select>
 
             <label>Semester</label>
-            <select name="semesters" onClick={infoCollect} value={setnptel.semesters} >
-            <option value="">Select The Semester</option>
-            <option value="ODD">ODD</option>
-            <option value="EVEN">EVEN</option>
+            <select value={setnptel.semester} name='semester' onClick={infoCollect}>
+                <option >Select the Semester</option>
+                {
+                                sem.map((val,key)=>{
+                                    return (<option key={val.sem_id}  value={val.sem_id}>{val.sem}</option>)
+                                })
+                            }  
             </select>
         </div>
 
@@ -1813,11 +1905,13 @@ const call=async(err)=>{
 }
 
 
-
+//////Participation in Taste
 export const Tastefront=()=>{
   const logged = JSON.parse(sessionStorage.getItem("person"))
     const[taste,setTaste]=useState({
         "dept_id":`${logged.dept_id}`,
+        "academic_year":"",
+        "semester":"",
         "name_of_the_faculty":`${logged.faculty_name}`,
         "date":"",
         "taste_number":"",
@@ -1936,7 +2030,7 @@ const call=async(err)=>{
       const infoCollect=(eve)=>{
         const{name,value}=eve.target
         setTaste((old)=>{
-            if(name==="name_of_the_faculty"||name==="date"||name==="taste_number"||name==="seminar_topic"||name==="resource_person_name"||name==="outcome_of_the_activity"){
+            if(name==="academic_year"||name==="semester"||name==="name_of_the_faculty"||name==="date"||name==="taste_number"||name==="seminar_topic"||name==="resource_person_name"||name==="outcome_of_the_activity"){
                 return{
                     ...old,
                     [name]:value
@@ -1968,6 +2062,17 @@ const call=async(err)=>{
               console.log(err)
             }
         }
+        useEffect(()=>{
+          Sems()
+        },[])
+        const [sem,setsem] = useState([])
+        
+        const Sems=async()=>{
+          const temp = await axios.get(`http://localhost:1234/setaf/getsem`)
+          // console.log(temp.data.row)
+          setsem(temp.data.row)
+        }
+        
 
     return(
         <>
@@ -1988,6 +2093,15 @@ const call=async(err)=>{
                             }          
             </select>
 
+            <label>Semester</label>
+            <select value={setTaste.semester} name='semester' onClick={infoCollect}>
+                <option >Select the Semester</option>
+                {
+                                sem.map((val,key)=>{
+                                    return (<option key={val.sem_id}  value={val.sem_id}>{val.sem}</option>)
+                                })
+                            }  
+            </select>
 
             <label>Date</label>
             <input type="date" name='date' onChange={infoCollect} value={setTaste.date} placeholder='Date' />
@@ -2015,6 +2129,177 @@ const call=async(err)=>{
         </div>
         </>
     )
+}
+
+////////////////////////////e-content///////////////////////////////////////////////////////////
+
+export const Econtentfront=()=>{
+ 
+  const[econtent,setecontent]=useState({
+      "dept_id":"",
+      "emp_id":"",
+      "academic_year":"",
+      "semester":"",
+      "name_of_the_faculty":"",
+      "name_of_the_module_developed":"",
+      "module_of_platform":"",
+      "date_of_launching_e_content":"",
+      "link_to_the_module_developed":""
+     
+    })
+  
+    console.log(econtent)
+    const navi=useNavigate()
+
+  
+    const infoCollect=(eve)=>{
+      const{name,value}=eve.target
+      setecontent((old)=>{
+     
+      if(name==="academic_year"||name==="semester"||name==="name_of_the_faculty"||name==="name_of_the_module_developed"||name==="module_of_platform"||name==="date_of_launching_e_content"||name==="link_to_the_module_developed"){
+              return{
+                  ...old,
+                  [name]:value
+              }
+          }
+          else if(name==="s_no"){
+                 // fillPorposals(value)
+              return{
+                  ...old,
+                  [name]:parseInt(value)
+              }
+          }
+          else{
+              return{
+                  ...old,
+                  [name]:parseInt(value)
+              }
+          }
+      })
+    }
+
+    const logged = JSON.parse(sessionStorage.getItem("person"))
+    useEffect(()=>{
+      setecontent((prev)=>({
+        ...prev,
+        dept_id:`${logged.dept_id}`
+      }))
+
+      setecontent((prev)=>({
+        ...prev,
+        name_of_the_faculty:`${logged.faculty_name}`
+      }))
+      
+      
+      setecontent((prev)=>({
+        ...prev,
+        emp_id:`${logged.faculty_id}`
+      }))
+
+   },[])
+  
+  const callEcontent=async()=>{
+      try{
+          await axios.post(`http://localhost:1234/setaf/econtentnewrecord`,econtent)
+          navi('/econtent')
+          }
+          catch(err){
+            console.log(err)
+          }
+         setecontent(()=>{
+          return{
+            "academic_year":"",   
+            "semester":"",
+            "name_of_the_faculty":"",
+            "name_of_the_module_developed":"",
+            "module_of_platform":"",
+            "date_of_launching_e_content":"",
+            "link_to_the_module_developed":""
+                }  
+      })
+      }
+
+      useEffect(()=>{
+        Acad()
+      },[])
+      
+      
+      
+      const [acd,setAcd] = useState([])
+      
+      const Acad=async()=>{
+        const temp = await axios.get(`http://localhost:1234/setaf/getAcdyr`)
+        // console.log(temp.data.row)
+        setAcd(temp.data.row)
+      }
+
+      useEffect(()=>{
+        Sems()
+      },[])
+      const [sem,setsem] = useState([])
+      
+      const Sems=async()=>{
+        const temp = await axios.get(`http://localhost:1234/setaf/getsem`)
+        // console.log(temp.data.row)
+        setsem(temp.data.row)
+      }
+      
+
+  return(
+      <>
+      <div className='overallcontent'  style={{maxWidth:"50%",marginLeft:"25%"}}>
+      <div className="style" style={{justifyContent:'center',marginLeft:"120px"}}>
+      <div class="head"><h1 class="recent-Articles" style={{color:'purple',marginLeft:"150px"}}>E- Content</h1></div>
+      <div className="row justify-content-center"style={{justifyContent:'center'}}>
+      <div className="ej">
+      
+
+      <label>Academic Year</label>
+            <select name="academic_year" onChange={infoCollect} value={econtent.academic_year}>
+            <option>Select The Academic Year</option>
+            {
+               acd.map((val,key)=>{
+                return (<option key={val.acd_yr_id}  value={val.acd_yr_id}>{val.acd_yr}</option>)
+            })
+            }
+            </select>
+
+            <label>Semester</label>
+            <select value={setecontent.semester} name='semester' onClick={infoCollect}>
+                <option >Select the Semester</option>
+                {
+                                sem.map((val,key)=>{
+                                    return (<option key={val.sem_id}  value={val.sem_id}>{val.sem}</option>)
+                                })
+                            }  
+            </select>
+
+          
+          <label>Name of the Module Developed</label>
+          <input type="text" placeholder="Enter the Name of the Module" value={econtent.name_of_the_module_developed} name='name_of_the_module_developed' onChange={infoCollect}/>
+
+          <label>Module of Platform</label>
+          <input type="text" placeholder="Enter the Module of Platform" value={econtent.module_of_platform} name='module_of_platform' onChange={infoCollect}/>
+
+          <label>Date of launching e-Content</label>
+          <input type="date" placeholder="Enter the Launching Date" value={econtent.date_of_launching_e_content} name='date_of_launching_e_content' onChange={infoCollect}/>
+     
+
+          <label>Link to the Module Developed</label>
+          <input type="text" placeholder="Enter the Link" value={econtent.link_to_the_module_developed} name='link_to_the_module_developed' onChange={infoCollect}/>
+
+
+      </div>
+     
+      <div className='row mt-5 justify-content-around' style={{marginRight:"100px"}}>
+        <input type='button' onClick={callEcontent} value="Submit" className='col-3 btn btn-primary' />
+        <input type='button' onClick={()=>{}} value="Clear" className='col-3 btn btn-danger' />
+      </div> 
+      </div>
+      </div>
+      </div>
+      </>
+  )
 }
 
 //////////////////////////////proposal submission for grants////////////////////////////////////////////////////////
@@ -2224,11 +2509,22 @@ try {
   setLoading(false);
 }
 }
+useEffect(()=>{
+  Sems()
+},[])
+const [sem,setsem] = useState([])
+
+const Sems=async()=>{
+  const temp = await axios.get(`http://localhost:1234/setaf/getsem`)
+  // console.log(temp.data.row)
+  setsem(temp.data.row)
+}
+
 
   return(
       <>
       <div className='overallcontent'  style={{maxWidth:"50%",marginLeft:"25%"}}>
-      <div className="style" style={{justifyContent:'center'}}>
+      <div className="style" style={{justifyContent:'center',marginLeft:"100px"}}>
       <div class="head"><h1 class="recent-Articles" style={{color:'purple'}}>PROPOSAL SUBMISSION FOR GRANTS</h1></div>
       <div className="row justify-content-center"style={{justifyContent:'center'}}>
       <div className="ej">
@@ -2244,11 +2540,14 @@ try {
           </select>
 
           <label>Semester</label>
-          <select name='semester' onChange={infoCollect} value={proposal.semester}>
-              <option >Select the Semester</option>
-              <option >Odd Sem</option>
-              <option >Even Sem</option>
-          </select>
+            <select value={proposal.semester} name='semester' onChange={infoCollect}>
+                <option >Select the Semester</option>
+                {
+                                sem.map((val,key)=>{
+                                    return (<option key={val.sem_id}  value={val.sem_id}>{val.sem}</option>)
+                                })
+                            }  
+            </select>
           
          <label>Name of the Funding Agency</label>
           <input type="text" placeholder="Enter the Name of Funding Agency" value={proposal.name_of_the_funding_agency} name='name_of_the_funding_agency' onChange={infoCollect}/>
@@ -2305,7 +2604,7 @@ try {
     )}
       </div>
      
-      <div className='row mt-5 justify-content-around'>
+      <div  style={{marginRight:"100px"}} className='row mt-5 justify-content-around'>
         <input type='button' onClick={callPropose} value="Submit" className='col-3 btn btn-primary' />
         <input type='button' onClick={()=>{}} value="Clear" className='col-3 btn btn-danger' />
       </div> 
@@ -2327,8 +2626,9 @@ export const VisittoIndustryfront=()=>{
     const [industry,setindustry]=useState({
       "dept_id":`${logged.dept_id}`,
       "faculty_name":`${logged.faculty_name}`,
-      "date_of_visit":"", 
       "academic_year":"",
+      "semester":"",
+      "date_of_visit":"", 
       "name_of_industry":"",  
       "location_of_industry":"",  
       "website_link_of_industry":"",  
@@ -2559,6 +2859,30 @@ const pdfUpload = async () => {
           ...prev,
           [e.target.name]:e.target.value
         }))
+      
+        const{name,value}=e.target
+        setindustry((old)=>{
+          if(name==="academic_year"||name==="semester"||name==="date_of_visit"||name==="name_of_industry"||name==="location_of_industry"||name==="website_link_of_industry"||name==="name_of_insdustry_instution_person_interacted"||name==="designation_of_industry_instution_person_interacted"||name==="purpose_of_the_visite"||name==="outcome_of_the_activity"||name==="report_of_visit_pdf"||name==="photo_jpg"||name==="geotagged_photos_jpg"){
+              return{
+                  ...old,
+                  [name]:value
+              }
+          }
+          else if(name==="s_no"){
+              // fillPorposals(value)
+              return{
+                  ...old,
+                  [name]:parseInt(value)
+              }
+          }
+          else{
+              return{
+                  ...old,
+                  [name]:parseInt(value),
+                 
+              }
+          }
+      })  
     }
     const handleclick=async(e)=>{
       //e.preventDefault()
@@ -2571,6 +2895,17 @@ const pdfUpload = async () => {
         console.log(err)
       } 
     }
+    useEffect(()=>{
+      Sems()
+    },[])
+    const [sem,setsem] = useState([])
+    
+    const Sems=async()=>{
+      const temp = await axios.get(`http://localhost:1234/setaf/getsem`)
+      // console.log(temp.data.row)
+      setsem(temp.data.row)
+    }
+    
     return (
     <>
      <div className='overallcontent'  style={{maxWidth:"50%",marginLeft:"25%"}}>
@@ -2580,10 +2915,6 @@ const pdfUpload = async () => {
           <div className="ej">
   
             
-                  <label>Date Of Visit </label>
-                  <input type='date' name='date_of_visit'  value={industry.date_of_visit} placeholder='Enter the Date of visiting'onChange={handlechange}  />
-
-                
                     <label>Academic Year</label>
                       <select name="academic_year" value={industry.academic_year} onChange={handlechange}>
                         <option value="">Select The Academic Year</option>
@@ -2593,6 +2924,19 @@ const pdfUpload = async () => {
                                 })
                             }          
             </select>
+
+            <label>Semester</label>
+            <select value={industry.semester} name='semester' onChange={handlechange}>
+                <option >Select the Semester</option>
+                {
+                                sem.map((val,key)=>{
+                                    return (<option key={val.sem_id}  value={val.sem_id}>{val.sem}</option>)
+                                })
+                            }  
+            </select>
+            <label>Date Of Visit </label>
+            <input type='date' name='date_of_visit'  value={industry.date_of_visit} placeholder='Enter the Date of visit'onChange={handlechange}  />
+
   
                     <label>Name Of Industry/Insitution Visited</label>
                     <input type='text' name='name_of_industry'  value={industry.name_of_industry} placeholder='Enter the Industry_Name'onChange={handlechange}  />
@@ -2605,10 +2949,10 @@ const pdfUpload = async () => {
                     <input type='text' name='website_link_of_industry'  value={industry.website_link_of_industry} placeholder='Enter the website link'onChange={handlechange}  />
                                
                   
-                    <label>Name Of Industry/Insitution person Interacted</label>
+                    <label>Name Of Insitution person Interacted</label>
                     <input type='text' name='name_of_insdustry_instution_person_interacted' value={industry.name_of_insdustry_instution_person_interacted} placeholder='Enter the Score'onChange={handlechange}  />
                         
-                    <label>Designation Of Industry/Insitution person Interacted</label>
+                    <label>Designation Of Insitution person Interacted</label>
                     <input type='text' name='designation_of_industry_instution_person_interacted' value={industry.designation_of_industry_instution_person_interacted} placeholder='Enter the Score'onChange={handlechange}  />
                   
                     <label>Purpose Of the Visite</label>
@@ -2828,6 +3172,18 @@ const log=JSON.parse(sessionStorage.getItem('person'));
     }
     const [file, setFile] = useState(true);
 
+    useEffect(()=>{
+      Sems()
+    },[])
+    const [sem,setsem] = useState([])
+    
+    const Sems=async()=>{
+      const temp = await axios.get(`http://localhost:1234/setaf/getsem`)
+      // console.log(temp.data.row)
+      setsem(temp.data.row)
+    }
+    
+
     return (
       <>
        <div class="overallcontent"  style={{maxWidth:"50%",marginLeft:"25%"}} >
@@ -2847,19 +3203,14 @@ const log=JSON.parse(sessionStorage.getItem('person'));
               </select>
   
               <label>Semester</label>
-              <select name="semester" value={Seed.semester} onChange={infocollect}>
-              <option >Select The Semester</option>
-              <option >ODD</option>
-              <option >EVEN</option>
-              </select>
-                
-              {/* <label>Name of the Faculty</label>
-              <select name="name_of_the_faculty" value={Seed.name_of_the_faculty} onChange={infocollect}>
-              <option value="">--</option>
-              <option >ODD</option>
-              <option >kavitha mam</option>
-              </select> */}
-  
+            <select value={Seed.semester} name='semester' onChange={infocollect}>
+                <option >Select the Semester</option>
+                {
+                                sem.map((val,key)=>{
+                                    return (<option key={val.sem_id}  value={val.sem_id}>{val.sem}</option>)
+                                })
+                            }  
+            </select>
           </div>
                   
   <div className="ej">
@@ -3064,6 +3415,17 @@ const call=async()=>{
 const [loading, setLoading] = useState(false);
 const [file, setFile] = useState(true);
 
+useEffect(()=>{
+  Sems()
+},[])
+const [sem,setsem] = useState([])
+
+const Sems=async()=>{
+  const temp = await axios.get(`http://localhost:1234/setaf/getsem`)
+  // console.log(temp.data.row)
+  setsem(temp.data.row)
+}
+
     return(
         <>
         <div className='overallcontent' style={{maxWidth:"50%",marginLeft:"25%"}}>
@@ -3088,13 +3450,16 @@ const [file, setFile] = useState(true);
 
             <label>Semester</label>
             <select value={consultancy.semester} name='semester' onChange={handlechange}>
-                <option value="">Select the Semester</option>
-                <option>Odd Sem</option>
-                <option>Even Sem</option>
+                <option >Select the Semester</option>
+                {
+                                sem.map((val,key)=>{
+                                    return (<option key={val.sem_id}  value={val.sem_id}>{val.sem}</option>)
+                                })
+                            }  
             </select>
 
             <label> Name of Consultancy Project</label>
-            <input type="text" placeholder="name_of_consultancy_project" value={consultancy.name_of_consultancy_project} name='name_of_consultancy_project' onChange={handlechange}/>
+            <input type="text" placeholder="Name of Consultancy Project" value={consultancy.name_of_consultancy_project} name='name_of_consultancy_project' onChange={handlechange}/>
 
 
             <label> sponsoring agency details</label>
@@ -3148,12 +3513,13 @@ const [file, setFile] = useState(true);
 
 export const Patentfilledfront=()=>{
 
+const logged = JSON.parse(sessionStorage.getItem("person"))
   const[patent,setpatent]=useState({
       "emp_id":"",
-      "dept_id":"",
+      "dept_id":`${logged.dept_id}`,
       "academic_year":"", 
       "semester":"",
-      "name_of_the_faculty":"", 
+      "name_of_the_faculty":`${logged.faculty_name}`, 
       "title_of_the_patent":"",
       "application_no":"",
       "date_of_application":"",
@@ -3183,8 +3549,6 @@ export const Patentfilledfront=()=>{
         }
     }
 
-
-  const logged = JSON.parse(sessionStorage.getItem("person"))
 
   useEffect(()=>{
     setpatent((prev)=>({
@@ -3301,12 +3665,21 @@ else{
 }
 const [loading, setLoading] = useState(false);
 const [file, setFile] = useState(true);
+useEffect(()=>{
+  Sems()
+},[])
+const [sem,setsem] = useState([])
 
+const Sems=async()=>{
+  const temp = await axios.get(`http://localhost:1234/setaf/getsem`)
+  // console.log(temp.data.row)
+  setsem(temp.data.row)
+}
 
   return(
       <>
       <div className='overallcontent' style={{maxWidth:"50%",marginLeft:"25%"}}>
-      <div className="style" style={{justifyContent:'center'}}>
+      <div className="style" style={{justifyContent:'center',marginLeft:"120px"}}>
       <div class="head"><h1 class="recent-Articles" style={{color:'purple'}}>PATENTS FILLED,PUBLISHED,GRANTED</h1></div>
       <div className="row justify-content-center"style={{justifyContent:'center'}}>
       <div className="ej">
@@ -3325,15 +3698,15 @@ const [file, setFile] = useState(true);
 
             </select>
 
-          <label>Semester</label>
-          <select value={patent.semester} name='semester' onChange={handlechange}>
-              <option>Select the Semester</option>
-              <option >Odd Sem</option>
-              <option>Even Sem</option>
-          </select>
-
-          <label> Name of the Facult</label>
-          <input type="text" placeholder=" Enter the Name of the Faculty" value={patent.name_of_the_faculty} name='name_of_the_faculty' onChange={handlechange}/>
+            <label>Semester</label>
+            <select value={patent.semester} name='semester' onChange={handlechange}>
+                <option >Select the Semester</option>
+                {
+                                sem.map((val,key)=>{
+                                    return (<option key={val.sem_id}  value={val.sem_id}>{val.sem}</option>)
+                                })
+                            }  
+            </select>
 
           <label>Title of the patent</label>
           <input type="text" placeholder="Enter the title of the patent" value={patent.title_of_the_patent} name='title_of_the_patent' onChange={handlechange}/>
@@ -3363,7 +3736,7 @@ const [file, setFile] = useState(true);
          
       </div>
       
-      <div className='row mt-5 justify-content-around'>
+      <div style={{marginRight:"120px"}} className='row mt-5 justify-content-around'>
         <input type='button' onClick={callPropose} value="Submit" className='col-3 btn btn-primary' />
         <input type='button' onClick={()=>{}} value="Clear" className='col-3 btn btn-danger' />
       </div> 
@@ -3377,11 +3750,13 @@ const [file, setFile] = useState(true);
 ////////////////////////////////////////////Collabrative///////////////////////////////////////////////////////////
 
 export const Collabrativefront=()=> {
+  const logged = JSON.parse(sessionStorage.getItem("person"))
   const [collabrative,setcollabrative]=useState({
        "emp_id":"",
-       "dept_id":"",
+       "dept_id":`${logged.dept_id}`,
        "academic_year":"",
        "semester":"",
+       "name_of_the_faculty":`${logged.faculty_name}`,
         "name_of_the_faculty_coordinator":"",  
         "nature_of_the_activity":"", 
         "name_of_MoU_signed_industry_or_institution":"",
@@ -3414,7 +3789,6 @@ export const Collabrativefront=()=> {
            alert("Error in axios")
          }
      }
-   const logged = JSON.parse(sessionStorage.getItem("person"))
 
    useEffect(()=>{
      setcollabrative((prev)=>({
@@ -3530,7 +3904,16 @@ alert("Error")
 const [loading, setLoading] = useState(false);
 const [file, setFile] = useState(true);
 
+useEffect(()=>{
+  Sems()
+},[])
+const [sem,setsem] = useState([])
 
+const Sems=async()=>{
+  const temp = await axios.get(`http://localhost:1234/setaf/getsem`)
+  // console.log(temp.data.row)
+  setsem(temp.data.row)
+}
 
 return (
  <>
@@ -3555,12 +3938,15 @@ return (
          </select>
 
 
-    <label>Semester</label>
-    <select name='semester' value={collabrative.semester} onChange={handlechange}>
-        <option value="">Select the Semester</option>
-        <option>Odd Sem</option>
-        <option>Even Sem</option>
-    </select>
+         <label>Semester</label>
+            <select value={collabrative.semester} name='semester' onChange={handlechange}>
+                <option >Select the Semester</option>
+                {
+                                sem.map((val,key)=>{
+                                    return (<option key={val.sem_id}  value={val.sem_id}>{val.sem}</option>)
+                                })
+                            }  
+            </select>
 
     <label>Name of the Faculty Coordinator</label>
     <input type="text" placeholder="Enter the Name" value={collabrative.name_of_the_faculty_coordinator} name='name_of_the_faculty_coordinator' onChange={handlechange}/>
@@ -3633,159 +4019,15 @@ return (
 )
 }
 
-////////////////////////////e-content///////////////////////////////////////////////////////////
-
-export const Econtentfront=()=>{
- 
-  const[econtent,setecontent]=useState({
-      "dept_id":"",
-      "emp_id":"",
-      "name_of_the_faculty":"",
-      "name_of_the_module_developed":"",
-      "module_of_platform":"",
-      "date_of_launching_e_content":"",
-      "link_to_the_module_developed":""
-     
-    })
-  
-    console.log(econtent)
-    const navi=useNavigate()
-
-  
-    const infoCollect=(eve)=>{
-      const{name,value}=eve.target
-      setecontent((old)=>{
-     
-      if(name==="name_of_the_faculty"||name==="name_of_the_module_developed"||name==="module_of_platform"||name==="date_of_launching_e_content"||name==="link_to_the_module_developed"){
-              return{
-                  ...old,
-                  [name]:value
-              }
-          }
-          else if(name==="s_no"){
-                 // fillPorposals(value)
-              return{
-                  ...old,
-                  [name]:parseInt(value)
-              }
-          }
-          else{
-              return{
-                  ...old,
-                  [name]:parseInt(value)
-              }
-          }
-      })
-    }
-
-    const logged = JSON.parse(sessionStorage.getItem("person"))
-    useEffect(()=>{
-      setecontent((prev)=>({
-        ...prev,
-        dept_id:`${logged.dept_id}`
-      }))
-
-      setecontent((prev)=>({
-        ...prev,
-        name_of_the_faculty:`${logged.faculty_name}`
-      }))
-      
-      
-      setecontent((prev)=>({
-        ...prev,
-        emp_id:`${logged.faculty_id}`
-      }))
-
-   },[])
-  
-  const callEcontent=async()=>{
-      try{
-          await axios.post(`http://localhost:1234/setaf/econtentnewrecord`,econtent)
-          navi('/econtent')
-          }
-          catch(err){
-            console.log(err)
-          }
-         setecontent(()=>{
-          return{
-            "academic_year":"",   
-            "name_of_the_faculty":"",
-            "name_of_the_module_developed":"",
-            "module_of_platform":"",
-            "date_of_launching_e_content":"",
-            "link_to_the_module_developed":""
-                }  
-      })
-      }
-
-      useEffect(()=>{
-        Acad()
-      },[])
-      
-      
-      
-      const [acd,setAcd] = useState([])
-      
-      const Acad=async()=>{
-        const temp = await axios.get(`http://localhost:1234/setaf/getAcdyr`)
-        // console.log(temp.data.row)
-        setAcd(temp.data.row)
-      }
-
-  return(
-      <>
-      <div className='overallcontent'  style={{maxWidth:"50%",marginLeft:"25%"}}>
-      <div className="style" style={{justifyContent:'center',marginLeft:"120px"}}>
-      <div class="head"><h1 class="recent-Articles" style={{color:'purple',marginLeft:"150px"}}>E- Content</h1></div>
-      <div className="row justify-content-center"style={{justifyContent:'center'}}>
-      <div className="ej">
-      
-
-      <label>Academic Year</label>
-            <select name="academic_year" onChange={infoCollect} value={econtent.academic_year}>
-            <option>Select The Academic Year</option>
-            {
-               acd.map((val,key)=>{
-                return (<option key={val.acd_yr_id}  value={val.acd_yr_id}>{val.acd_yr}</option>)
-            })
-            }
-            </select>
-          
-          <label>Name of the Module Developed</label>
-          <input type="text" placeholder="Enter the Name of the Module" value={econtent.name_of_the_module_developed} name='name_of_the_module_developed' onChange={infoCollect}/>
-
-          <label>Module of Platform</label>
-          <input type="text" placeholder="Enter the Module of Platform" value={econtent.module_of_platform} name='module_of_platform' onChange={infoCollect}/>
-
-          <label>Date of launching e-Content</label>
-          <input type="date" placeholder="Enter the Launching Date" value={econtent.date_of_launching_e_content} name='date_of_launching_e_content' onChange={infoCollect}/>
-     
-
-          <label>Link to the Module Developed</label>
-          <input type="text" placeholder="Enter the Link" value={econtent.link_to_the_module_developed} name='link_to_the_module_developed' onChange={infoCollect}/>
-
-
-      </div>
-     
-      <div className='row mt-5 justify-content-around' style={{marginRight:"100px"}}>
-        <input type='button' onClick={callEcontent} value="Submit" className='col-3 btn btn-primary' />
-        <input type='button' onClick={()=>{}} value="Clear" className='col-3 btn btn-danger' />
-      </div> 
-      </div>
-      </div>
-      </div>
-      </>
-  )
-}
 //////////////////////Visit to library//////////////////////////
 
 export const VisittoLibraryfront=()=>{
- 
+  const logged = JSON.parse(sessionStorage.getItem("person"))
   const[visittolibrary,setvisittolibrary]=useState({
-      "dept_id":"",
+      "dept_id":`${logged.dept_id}`,
       "emp_id":"",
       "academic_year":"",
-      "name_of_the_faculty":"",
+      "name_of_the_faculty":`${logged.faculty_name}`,
       "date":"",
       "purpose_of_visit":""
      
@@ -3799,7 +4041,7 @@ export const VisittoLibraryfront=()=>{
       const{name,value}=eve.target
       setvisittolibrary((old)=>{
      
-      if(name==="academic_year"||name==="name_of_the_faculty"||name==="date"||name==="purpose_of_visit"){
+      if(name==="academic_year"||name==="semester"||name==="name_of_the_faculty"||name==="date"||name==="purpose_of_visit"){
               return{
                   ...old,
                   [name]:value
@@ -3821,7 +4063,6 @@ export const VisittoLibraryfront=()=>{
       })
     }
 
-    const logged = JSON.parse(sessionStorage.getItem("person"))
     useEffect(()=>{
       setvisittolibrary((prev)=>({
         ...prev,
@@ -3852,6 +4093,7 @@ export const VisittoLibraryfront=()=>{
          setvisittolibrary(()=>{
           return{
             "academic_year":"",   
+            "semester":"",
             "name_of_the_faculty":"",
             "date":"",
             "purpose_of_visit":""
@@ -3873,6 +4115,17 @@ export const VisittoLibraryfront=()=>{
         setAcd(temp.data.row)
       }
 
+      useEffect(()=>{
+        Sems()
+      },[])
+      const [sem,setsem] = useState([])
+      
+      const Sems=async()=>{
+        const temp = await axios.get(`http://localhost:1234/setaf/getsem`)
+        // console.log(temp.data.row)
+        setsem(temp.data.row)
+      }
+
   return(
       <>
       <div className='overallcontent'  style={{maxWidth:"50%",marginLeft:"25%"}}>
@@ -3889,6 +4142,15 @@ export const VisittoLibraryfront=()=>{
                 return (<option key={val.acd_yr_id}  value={val.acd_yr_id}>{val.acd_yr}</option>)
             })
             }
+            </select>
+            <label>Semester</label>
+            <select value={visittolibrary.semester} name='semester' onChange={infoCollect}>
+                <option >Select the Semester</option>
+                {
+                                sem.map((val,key)=>{
+                                    return (<option key={val.sem_id}  value={val.sem_id}>{val.sem}</option>)
+                                })
+                            }  
             </select>
 
             <label>Date of Publication</label>
@@ -4095,6 +4357,17 @@ const handlechange=(eve)=>{
             }
      
          }
+         useEffect(()=>{
+          Sems()
+        },[])
+        const [sem,setsem] = useState([])
+        
+        const Sems=async()=>{
+          const temp = await axios.get(`http://localhost:1234/setaf/getsem`)
+          // console.log(temp.data.row)
+          setsem(temp.data.row)
+        }
+        
 
     return(
         <>
@@ -4114,12 +4387,15 @@ const handlechange=(eve)=>{
             </select>
 
             <label>Semester</label>
-            <select value={award.semester} onChange={handlechange}  name='semester'>
-                <option value="">Select the Semester</option>
-                <option>Odd</option>
-                <option>Even</option>
+            <select value={award.semester} name='semester' onChange={handlechange}>
+                <option >Select the Semester</option>
+                {
+                                sem.map((val,key)=>{
+                                    return (<option key={val.sem_id}  value={val.sem_id}>{val.sem}</option>)
+                                })
+                            }  
             </select>
-         
+
             <label>Name of the Award</label>
             <input type="text" placeholder="Enter the Title" value={award.name_of_the_award} name='name_of_the_award' onChange={handlechange}/>
 
@@ -4354,6 +4630,17 @@ const handlechange=(eve)=>{
             }
      
          }
+         useEffect(()=>{
+          Sems()
+        },[])
+        const [sem,setsem] = useState([])
+        
+        const Sems=async()=>{
+          const temp = await axios.get(`http://localhost:1234/setaf/getsem`)
+          // console.log(temp.data.row)
+          setsem(temp.data.row)
+        }
+        
 
     return(
         <>
@@ -4373,10 +4660,13 @@ const handlechange=(eve)=>{
             </select>
 
             <label>Semester</label>
-            <select value={books.semester} onChange={handlechange}  name='semester'>
-                <option value="">Select the Semester</option>
-                <option>Odd</option>
-                <option>Even</option>
+            <select value={books.semester} name='semester' onChange={handlechange}>
+                <option >Select the Semester</option>
+                {
+                                sem.map((val,key)=>{
+                                    return (<option key={val.sem_id}  value={val.sem_id}>{val.sem}</option>)
+                                })
+                            }  
             </select>
          
             <label>Name of the Author</label>
@@ -4462,6 +4752,17 @@ const handlechange=(eve)=>{
           const temp = await axios.get(`http://localhost:1234/setaf/getAcdyr`)
           // console.log(temp.data.row)
           setAcd(temp.data.row)
+        }
+
+        useEffect(()=>{
+          Sems()
+        },[])
+        const [sem,setsem] = useState([])
+  
+        const Sems=async()=>{
+          const temp = await axios.get(`http://localhost:1234/setaf/getsem`)
+          // console.log(temp.data.row)
+          setsem(temp.data.row)
         }
         
         console.log(Motivation)
@@ -4599,7 +4900,7 @@ const handlechange=(eve)=>{
         try{
               
           // const log=JSON.parse(sessionStorage.getItem('person'));
-          await axios.post(`http://localhost:1234/setaf/motivationnewrecord/${log.emp_id}`,Motivation)
+          await axios.post(`http://localhost:1234/setaf/motivationnewrecord/${log.faculty_id}`,Motivation)
           navigate("/setaf/studentsmotivation")
           }
       catch(err){
@@ -4622,19 +4923,23 @@ const handlechange=(eve)=>{
               <select name="academic_year" value={Motivation.academic_year} onChange={infoCollect}>
                 <option value="">Select The Academic Year</option>
                 {
-      // let t=0;
                                   acd.map((val,key)=>{
                                       return (<option key={val.acd_yr_id}  value={val.acd_yr_id}>{val.acd_yr}</option>)
                                   })
                               }          
               </select>
     
-              <label>Semester</label>
-              <select name='semester' onChange={infoCollect} value={Motivation.semester}>
-                  <option >Select the Semester</option>
-                  <option >Odd</option>
-                  <option >Even</option>
-              </select>
+             
+                <label>Semester</label>
+            <select name='semester' onChange={infoCollect} value={Motivation.semester}>
+            <option >Select the Semester</option>
+            {
+                                sem.map((val,key)=>{
+                                    return (<option key={val.sem_id}  value={val.sem_id}>{val.sem}</option>)
+                                })
+                            }  
+            </select>
+
     
               <label>Name of the Student</label>
               <input type='text' placeholder='Enter the student name' name='name_of_the_student' onChange={infoCollect} value={Motivation.name_of_the_student}/>
@@ -4676,3 +4981,907 @@ const handlechange=(eve)=>{
       )
     }
       
+    
+///////////////////////Professional////////////////////////////
+
+
+export const Professionalfront=()=>{
+
+
+  const logged = JSON.parse(sessionStorage.getItem("person"))
+    const[Professional,setProfessional]=useState({
+        "dept_id":`${logged.dept_id}`,
+        "academic_year":"",
+        "semester":"",
+        "name_of_the_faculty":`${logged.faculty_name}`,
+        "membership_id":"",
+        "date_of_membership":"",
+        "professional_society_membership":"",
+        "membership_certificate_PDF":"",
+        })
+
+
+      useEffect(()=>{
+        Acad()
+      },[])
+
+      const [acd,setAcd] = useState([])
+
+      const Acad=async()=>{
+        const temp = await axios.get(`http://localhost:1234/setaf/getAcdyr`)
+        // console.log(temp.data.row)
+        setAcd(temp.data.row)
+      }
+      
+      console.log(Professional)
+      const navigate = useNavigate()
+
+     ////image and pdf upload 
+const [selectedFile1, setSelectedFile1] = useState(null);
+const[newFileName,setNewFileName]=useState('');
+const handleFileChange1 = (e) => {
+
+setNewFileName(Professional.membership_id);
+ const file = e.target.files[0];
+ if (file && file.size > 500 * 1024) {
+ alert("Please choose an image with a size below 500kb.");
+ e.target.value = null; // Reset the file input
+ return;
+ }
+ else{
+ 
+   // alert("handle upload working")
+ const currentDate = new Date();
+ const dd = String(currentDate.getDate()).padStart(2, '0');
+ const mm = String(currentDate.getMonth() + 1).padStart(2, '0'); // Months are zero-based, so we add 1
+ const yyyy = currentDate.getFullYear();
+ 
+ const hh = String(currentDate.getHours()).padStart(2, '0');
+ const min = String(currentDate.getMinutes()).padStart(2, '0');
+ const ss = String(currentDate.getSeconds()).padStart(2, '0');
+ 
+ const dateTimeString = `${dd}-${mm}-${yyyy}_${hh}-${min}-${ss}`;
+  // Maximum value for the random number
+ let random =Math.random()*Math.random()*1;
+ const name1=Professional.membership_id+'_professional_'+dateTimeString+'_'+random+'.pdf';
+
+ setProfessional((old)=>{
+ return{
+ ...old,
+ membership_certificate_PDF:name1
+ }
+ });
+ 
+ }
+ setSelectedFile1(e.target.files[0]);
+ // call();
+}
+
+
+const call=async()=>{
+if(selectedFile1){
+// setLoading(true);
+const formData6 = new FormData();
+formData6.append('file', selectedFile1, Professional.membership_certificate_PDF);
+fetch('http://localhost:1234/setaf/uploadPdf', {
+method: 'POST',
+body: formData6,
+})
+.then((response) => {
+if (!response.ok) {
+ // Check if the response status is 400
+ if (response.status === 400) {
+   // You can parse the response JSON to get more details about the error
+   return response.json().then((errorData) => {
+     throw new Error(`Bad Request: ${JSON.stringify(errorData)}`);
+   });
+ } else {
+   // For other errors, throw a general error
+   throw new Error(`HTTP error! Status: ${response.status}`);
+ }
+}
+return response.text();
+})
+.then((data) => {
+// alert(formData.pdf)
+alert(data);
+setFile(false)
+
+})
+.catch((error) => {
+console.error('Error uploading the PDF:', error);
+alert('Error uploading the PDF: ' + error.message);
+});
+// setLoading(false)
+}
+else{
+alert("Error")
+}
+// window.location.reload(false);
+}
+const [loading, setLoading] = useState(false);
+const [file, setFile] = useState(true);
+
+
+
+    
+ ////////
+      const log=JSON.parse(sessionStorage.getItem('person'));
+      
+      const infoCollect=(eve)=>{
+        setProfessional((old)=>{
+          return {
+            ...old,
+            dept_id:log.dept_id
+          }
+        })
+        setProfessional((old)=>{
+          return {
+            ...old,
+            name_of_the_faculty:log.faculty_name
+          }
+        })
+        const{name,value}=eve.target
+        setProfessional((old)=>{
+          if(name==="dept_id"||name==="academic_year"||name==="semester"||name==="name_of_the_faculty"||name==="membership_id"||name==="date_of_membership"||name==="professional_society_membership"||name==="membership_certificate_PDF"){
+            return{ 
+                    ...old,
+                    [name]:value
+                }
+            }
+            else if(name==="s_no"){
+                // fillPorposals(value)
+                return{
+                    ...old,
+                    [name]:parseInt(value)
+                }
+            }
+            else{
+                return{
+                    ...old,
+                    [name]:parseInt(value),
+                   
+                }
+            }
+        })  
+       
+    }
+    const Submit=async()=>{
+      try{
+            
+        // const log=JSON.parse(sessionStorage.getItem('person'));
+        await axios.post(`http://localhost:1234/setaf/professionalrecord/${log.faculty_id}`,Professional)
+        navigate("/setaf/professionalpublication")
+        }
+    catch(err){
+          alert(err)
+        }
+        
+    }
+  
+    useEffect(()=>{
+      Sems()
+    },[])
+    const [sem,setsem] = useState([])
+
+    const Sems=async()=>{
+      const temp = await axios.get(`http://localhost:1234/setaf/getsem`)
+      // console.log(temp.data.row)
+      setsem(temp.data.row)
+    }
+   
+    return(
+        <>
+        <div className='overallcontent' style={{maxWidth:"50%",marginLeft:"25%"}}>
+        <div className="style" style={{justifyContent:"center",marginLeft:"100px"}}>
+        <div class="head"><h1 class="recent-Articles" style={{color:'purple',marginRight:"110px"}}>PROFESSIONAL SOCIETY MEMBERSHIP</h1></div>
+        <div className="row justify-content-center"style={{justifyContent:'center'}}>
+        <div className="ej">
+            <label>Academic Year</label>
+            <select name="academic_year" value={Professional.academic_year} onChange={infoCollect}>
+              <option value="">Select The Academic Year</option>
+              {
+    // let t=0;
+                                acd.map((val,key)=>{
+                                    return (<option key={val.acd_yr_id}  value={val.acd_yr_id}>{val.acd_yr}</option>)
+                                })
+                            }          
+            </select>
+
+            <label>Semester</label>
+            <select name='semester' onChange={infoCollect} value={Professional.semester}>
+            <option >Select the Semester</option>
+            {
+                                sem.map((val,key)=>{
+                                    return (<option key={val.sem_id}  value={val.sem_id}>{val.sem}</option>)
+                                })
+                            }  
+            </select>
+
+            <label>Membership ID</label>
+            <input type='text' placeholder='Membership id' name='membership_id' onChange={infoCollect} value={Professional.membership_id}/>
+
+            {/* <label>Name of Journal</label>
+            <input type="text" placeholder="Enter the Journal Name" name='name_of_journal' onChange={infoCollect} value={journal.name_of_journal}/>
+ */}
+            <label>Date of Membership</label>
+            <input type="date" placeholder="Enter the Date" name='date_of_membership' onChange={infoCollect} value={Professional.date_of_membership}/>
+
+            <label>Professional Society Membership</label>
+            <select name='professional_society_membership' onChange={infoCollect} value={Professional.professional_society_membership}>
+                <option value="">Select the society</option>
+                <option>IEEE</option>
+                <option>ISTE</option>
+                <option>IE(I)</option>
+                <option>IETE</option>
+                <option>CSI</option>
+                <option>SAE</option>
+            </select>
+
+              {file&&(<div>
+                <label>Membership cerificate - PDF</label>
+          <input type="file" onChange={handleFileChange1}  id="event" name="pdf" accept = "application/pdf"/>
+          <button onClick={call}>Upload</button>
+              </div>)}
+         
+           {loading && (
+        <div className="loading-overlay">
+          <div className="loading-spinner"></div>
+          <div>Loading...</div>
+        </div>
+      )}
+            <br />
+        </div>
+        
+        <div style={{marginRight:"100px"}} className='row mt-5 justify-content-around'>
+          <input type='button' onClick={Submit} value="Submit"  className='col-3 btn btn-primary' />
+          
+          <input type='button' onClick={()=>{}} value="Clear" className='col-3 btn btn-danger' />
+        
+        </div>  
+        </div>
+        </div>
+        </div>
+        </>
+    )
+}
+
+////////////////////////fieldwork//////////////////////////
+
+
+export const StudentFieldwork=()=>{
+  const logged = JSON.parse(sessionStorage.getItem("person"))
+
+    const [Fieldwork,setFieldwork]=useState({
+      "emp_id":"",
+      "dept_id":`${logged.dept_id}`,
+      "academic_year":"",
+      "semester":"",
+      "name_of_the_faculty":`${logged.faculty_name}`,
+      "nature_of_guidance":"",
+      "duration_from":"",
+      "duration_to":"",
+      "number_of_students_undertaking_the_fieldwork_internship":"",
+      "student_name":"",
+      "certificate_report_pdf":""
+      })
+
+      
+      useEffect(()=>{
+        Acad()
+      },[])
+
+      const [acd,setAcd] = useState([])
+
+      const Acad=async()=>{
+        const temp = await axios.get(`http://localhost:1234/setaf/getAcdyr`)
+        // console.log(temp.data.row)
+        setAcd(temp.data.row)
+      }
+      
+      console.log(Fieldwork)
+      const navigate = useNavigate()
+      const [newFileName, setNewFileName] = useState('');
+
+
+       ////image and pdf upload 
+       const [selectedFile1, setSelectedFile1] = useState(null);
+    const handleFileChange1 = (e) => {
+ 
+    setNewFileName(Fieldwork.nature_of_guidance);
+        const file = e.target.files[0];
+        if (file && file.size > 500 * 1024) {
+        alert("Please choose an image with a size below 500kb.");
+        e.target.value = null; // Reset the file input
+        return;
+        }
+        else{
+        
+          // alert("handle upload working")
+        const currentDate = new Date();
+        const dd = String(currentDate.getDate()).padStart(2, '0');
+        const mm = String(currentDate.getMonth() + 1).padStart(2, '0'); // Months are zero-based, so we add 1
+        const yyyy = currentDate.getFullYear();
+        
+        const hh = String(currentDate.getHours()).padStart(2, '0');
+        const min = String(currentDate.getMinutes()).padStart(2, '0');
+        const ss = String(currentDate.getSeconds()).padStart(2, '0');
+        
+        const dateTimeString = `${dd}-${mm}-${yyyy}_${hh}-${min}-${ss}`;
+         // Maximum value for the random number
+        let random =Math.random()*Math.random()*1;
+        const name1=Fieldwork.nature_of_guidance+'_fieldwork_'+dateTimeString+'_'+random+'.pdf';
+       
+        setFieldwork((old)=>{
+        return{
+        ...old,
+        certificate_report_pdf:name1
+        }
+        });
+        
+        }
+        setSelectedFile1(e.target.files[0]);
+
+        
+        // call();
+      }
+
+
+ const Upload=async()=>{
+  if(selectedFile1){
+    // setLoading(true);
+    const formData6 = new FormData();
+  formData6.append('file', selectedFile1, Fieldwork.certificate_report_pdf);
+  fetch('http://localhost:1234/setaf/uploadPdf', {
+    method: 'POST',
+    body: formData6,
+  })
+    .then((response) => {
+      if (!response.ok) {
+        // Check if the response status is 400
+        if (response.status === 400) {
+          // You can parse the response JSON to get more details about the error
+          return response.json().then((errorData) => {
+            throw new Error(`Bad Request: ${JSON.stringify(errorData)}`);
+          });
+        } else {
+          // For other errors, throw a general error
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+      }
+      return response.text();
+    })
+    .then((data) => {
+      // alert(formData.pdf)
+      alert(data);
+      setFile(false)
+      
+    })
+    .catch((error) => {
+      console.error('Error uploading the PDF:', error);
+      alert('Error uploading the PDF: ' + error.message);
+    });
+  }
+  else{
+    alert("Error")
+  }
+}
+    
+
+  const infoCollect=(eve)=>{
+        const{name,value}=eve.target
+        setFieldwork((old)=>{
+          
+
+            if(name==="academic_year"||name==="semester"||name==="name_of_the_faculty"||name==="nature_of_guidance"||name==="duration_from" ||name==="duration_to" ||name==="number_of_students_undertaking_the_fieldwork_internship" ||name==="student_name"||name==="certificate_report_pdf"){
+                return{
+                    ...old,
+                    [name]:value
+                }
+            }
+            else if(name==="s_no"){
+                // fillPorposals(value)
+                return{
+                    ...old,
+                    [name]:parseInt(value)
+                }
+            }
+            else{
+                return{
+                    ...old,
+                    [name]:parseInt(value)
+                }
+            }
+          })
+      }  
+       
+useEffect(()=>{
+  setFieldwork((prev)=>({
+    ...prev,
+    dept_id:`${logged.dept_id}`
+  }))
+
+  setFieldwork((prev)=>({
+    ...prev,
+    name_of_the_faculty:`${logged.faculty_name}`
+  }))
+
+  setFieldwork((prev)=>({
+    ...prev,
+    emp_id:`${logged.faculty_id}`
+  }))
+  
+},[])
+    
+   
+    const [loading, setLoading] = useState(false);
+    const [file, setFile] = useState(true);
+  
+  
+      console.log(Fieldwork)
+      
+     
+      const callPropose=async()=>{
+        try{
+        await axios.post(`http://localhost:1234/setaf/fieldwork/${logged.faculty_id}`,Fieldwork)
+        navigate('/setaf/studentfieldwork')
+        }
+        catch(err){
+          alert("Error in axios")
+        }
+        // setInformation(temp.message)
+      }
+
+        
+      useEffect(()=>{
+        Sems()
+      },[])
+      const [sem,setsem] = useState([])
+
+      const Sems=async()=>{
+        const temp = await axios.get(`http://localhost:1234/setaf/getsem`)
+        // console.log(temp.data.row)
+        setsem(temp.data.row)
+      }
+
+    return(
+      <>
+       <div class="overallcontent"  style={{maxWidth:"50%",marginLeft:"25%"}} >
+          <div className="style" style={{justifyContent:'center',marginLeft:"100px"}}>
+          <div class="head"><h1 class="recent-Articles" style={{color:'purple',marginLeft:"10px"}}>Student Fieldwork and Internship</h1></div>
+          <div className="row justify-content-center"style={{justifyContent:'center'}}>
+          <div className="ej">
+
+          <label>Academic Year</label>
+              <select name="academic_year" value={Fieldwork.academic_year} onChange={infoCollect}>
+                <option value="">Select The Academic Year</option>
+                {
+                                  acd.map((val,key)=>{
+                                      return (<option key={val.acd_yr_id}  value={val.acd_yr_id}>{val.acd_yr}</option>)
+                                  })
+                              }          
+              </select>            
+  
+              <label>Semester</label>
+            <select name='semester' onChange={infoCollect} value={Fieldwork.semester}>
+            <option >Select the Semester</option>
+            {
+                                sem.map((val,key)=>{
+                                    return (<option key={val.sem_id}  value={val.sem_id}>{val.sem}</option>)
+                                })
+                            }  
+            </select>
+              </div>
+
+  <div className="ej">
+       <label >Nature of Guidance</label>
+       <select name="nature_of_guidance" value={Fieldwork.nature_of_guidance} onChange={infoCollect}>
+              <option>Select Guidance</option>
+              <option>Field Work</option>
+              <option>Internship</option>
+              <option>Student Projects</option>
+              <option>Research projects</option>
+              </select>
+
+
+       </div>   
+  
+       <div className="ej">
+       <label >Duration From</label>
+       <input  type="date" name="duration_from" placeholder="Duration_From" className="form-control" value={Fieldwork.duration_From} onChange={infoCollect}/>
+       </div>
+  
+       <div className="ej">
+       <label >Duration To</label>
+       <input  type="date" name="duration_to" placeholder="Duration_To" className="form-control" value={Fieldwork.duration_To} onChange={infoCollect}/>
+       </div>
+       
+       <div className="ej">
+       <label >Number of students undertaking the Field Projects/Internships/Research Projects,etc..,</label>
+       <input  type="text" name='number_of_students_undertaking_the_fieldwork_internship' value={Fieldwork.number_of_students_undertaking_the_fieldwork_internship} onChange={infoCollect}/>
+       </div>
+
+       <div className="ej">
+       <label >Student Name</label>
+       <input  type="text" name='student_name'  placeholder="Student name"alue={Fieldwork.student_Name} onChange={infoCollect}/>
+       </div>
+
+       {file&&(<div>
+                <label>Certificate and photos uploaded - PDF</label>
+          <input type="file" onChange={handleFileChange1}  id="event" name="pdf" accept = "application/pdf"/>
+          <button onClick={Upload}>Upload</button>
+              </div>)}
+         
+           {loading && (
+        <div className="loading-overlay">
+          <div className="loading-spinner"></div>
+          <div>Loading...</div>
+        </div>
+      )}
+            <br />
+        </div>
+        
+   </div>
+      <h1 style={{color:'red',}}></h1>
+        <div className='row mt-5 justify-content-around'>
+          <input type='button' onClick={callPropose} value="Submit" className='col-3 btn btn-primary' />
+          <input type='button' onClick={()=>{}} value="Clear" className='col-3 btn btn-danger' />
+        </div>   
+      
+   </div>
+
+      </>
+    )
+  
+  }
+    
+
+////////////////workshop///////////////////
+export const FdpSdpFront=()=>{
+
+  const logged = JSON.parse(sessionStorage.getItem("person"))
+  console.log(logged)
+    const [fdpsdp,setFdpSdp]=useState({
+      "dept_id":`${logged.dept_id}`,
+      "name_of_the_faculty": `${logged.faculty_name}`,
+      "academic_year":"",
+      "semester":"",
+      "designation":"",
+      "nature_of_the_program":"",
+      "title_of_the_program":"",
+      "duration_from":"",
+      "duration_to":"",
+      "participation":"",
+      "name_of_the_organization_and_place":""	,
+      "location_of_organization":"",
+      "amount_provided_by_the_HEI":"",
+      "certificates_pdf":""	
+      
+      })
+   
+  console.log(fdpsdp)
+  const log=JSON.parse(sessionStorage.getItem('person'));
+  const navi=useNavigate()
+  
+  const [newFileName, setNewFileName] = useState('');
+        const [loading, setLoading] = useState(false);
+        const [file, setFile] = useState(true);
+  
+         ////image and pdf upload 
+         const [selectedFile1, setSelectedFile1] = useState(null);
+      const handleFileChange1 = (e) => {
+   
+      setNewFileName(fdpsdp.title_of_the_program);
+          const file = e.target.files[0];
+          if (file && file.size > 500 * 1024) {
+          alert("Please choose an image with a size below 500kb.");
+          e.target.value = null; // Reset the file input
+          return;
+          }
+          else{
+          
+            // alert("handle upload working")
+          const currentDate = new Date();
+         
+          const dd = String(currentDate.getDate()).padStart(2, '0');
+          const mm = String(currentDate.getMonth() + 1).padStart(2, '0'); // Months are zero-based, so we add 1
+          const yyyy = currentDate.getFullYear();
+          
+          const hh = String(currentDate.getHours()).padStart(2, '0');
+          const min = String(currentDate.getMinutes()).padStart(2, '0');
+          const ss = String(currentDate.getSeconds()).padStart(2, '0');
+          
+          const dateTimeString = `${dd}-${mm}-${yyyy}_${hh}-${min}-${ss}`;
+           // Maximum value for the random number
+          let random =Math.random()*Math.random()*1;
+          const name1=fdpsdp.title_of_the_program+'_fdpsdp_'+dateTimeString+'_'+random+'.pdf';
+         
+          setFdpSdp((old)=>{
+          return{
+          ...old,
+          certificates_pdf:name1
+          }
+          });
+          
+          }
+          setSelectedFile1(e.target.files[0]);
+  
+          
+          // call();
+        }
+  
+  
+  const call=async()=>{
+    if(selectedFile1){
+      // setLoading(true);
+      const formData6 = new FormData();
+    formData6.append('file', selectedFile1, fdpsdp.certificates_pdf);
+    fetch('http://localhost:1234/setaf/uploadPdf', {
+      method: 'POST',
+      body: formData6,
+    })
+      .then((response) => {
+        if (!response.ok) {
+          // Check if the response status is 400
+          if (response.status === 400) {
+            // You can parse the response JSON to get more details about the error
+            return response.json().then((errorData) => {
+              throw new Error(`Bad Request: ${JSON.stringify(errorData)}`);
+            });
+          } else {
+            // For other errors, throw a general error
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+        }
+        return response.text();
+      })
+      .then((data) => {
+        // alert(formData.pdf)
+        alert(data);
+        setFile(false)
+        
+      })
+      .catch((error) => {
+        console.error('Error uploading the PDF:', error);
+        alert('Error uploading the PDF: ' + error.message);
+      });
+      // setLoading(false)
+    }
+    else{
+      alert("Error")
+    }
+    // window.location.reload(false);
+  }
+  ///faculty name fetch
+  
+      useEffect(()=>{
+        axios.get('http://localhost:1234/seminar/find')
+        .then((response) => {
+        //   console.log(response);
+          setOptions(response.data.rows);
+        })
+        .catch((error) => {
+          console.error('Error fetching options:', error);
+        });
+      },[])
+  const [selectedOptions, setSelectedOptions] = useState([]);  
+  const[facid,setFacid]=useState([])
+  const [option, setOptions] = useState([]);
+  
+  const options = option.map((val, key) => ({
+    value: val.faculty_id+'-'+val.faculty_name,
+    label: val.faculty_id+'-'+val.faculty_name+'-'+val.dept,
+  }));
+  const handleFacchange=(eve)=>{
+    let updatedFacidString = facid;
+    for (var i = 0; i < eve.length; i++) {
+      const valueToAdd = eve[i].value;
+  
+      if (!updatedFacidString.includes(valueToAdd)) {
+        if (updatedFacidString && updatedFacidString.length>1) {
+  
+          updatedFacidString += ','; // Add a comma as a separator
+        }
+        updatedFacidString += valueToAdd;
+        // alert("setFacid works");
+      }
+    }
+    setFacid(updatedFacidString);
+    setSelectedOptions(eve);
+  
+    setFdpSdp((old) => {
+      return {
+        ...old,
+        name_of_the_faculty: updatedFacidString
+      }
+    })
+  
+  }
+  const handlechange=(eve)=>{
+    setFdpSdp((old)=>{
+      return {
+        ...old,
+        dept_id:log.dept_id
+      }
+    })
+    setFdpSdp((old)=>{
+      return {
+        ...old,
+        name_of_the_faculty:logged.faculty_name
+      }
+    })
+    const{name,value}=eve.target
+    setFdpSdp((old)=>{
+        if(name==="dept_id"||name==="name_of_the_faculty"||name==="academic_year"||name==="semester"||name==="designation"||name==="nature_of_the_program"||name==="title_of_the_program"||name==="duration_from"||name==="duration_to"||name==="participation"||name==="name_of_the_organization_and_place"||name==="location_of_organization"||name==="amount_provided_by_the_HEI"||name==="certificates_pdf"){
+            return{
+                ...old,
+                [name]:value
+            }
+        }
+        else if(name==="s_no"){
+            // fillPorposals(value)
+            return{
+                ...old,
+                [name]:parseInt(value)
+            }
+        }
+        else{
+            return{
+                ...old,
+                [name]:parseInt(value),
+               
+            }
+        }
+    })   
+  
+  }
+  
+      
+    const handleclick=async(e)=>{
+      e.preventDefault()
+       try{
+        //alert(fdpsdp)
+        const log=JSON.parse(sessionStorage.getItem('person'));
+        await axios.post(`http://localhost:1234/setaf/fdpsdp/newrecord/${log.faculty_id}`,fdpsdp)
+        navi('/fdpsdp')
+      }
+    
+        catch(err){
+        console.log(err)
+      } 
+  
+    }
+  
+    ////academic year
+    useEffect(()=>{
+      Acad()
+    },[])
+    const [acd,setAcd] = useState([])
+      
+    const Acad=async()=>{
+      const temp = await axios.get(`http://localhost:1234/setaf/getAcdyr`)
+      // console.log(temp.data.row)
+      setAcd(temp.data.row)
+    }
+  
+    useEffect(()=>{
+      Sems()
+    },[])
+    const [sem,setsem] = useState([])
+  
+    const Sems=async()=>{
+      const temp = await axios.get(`http://localhost:1234/setaf/getsem`)
+      // console.log(temp.data.row)
+      setsem(temp.data.row)
+    }
+  
+  
+    return (
+    <>
+    <div className='overallcontent' style={{maxWidth:"50%",marginLeft:"25%"}}>
+          <div className="style" style={{justifyContent:'center',marginLeft:"100px"}}>
+          <div class="head"><h1 class="recent-Articles" style={{color:'purple',marginLeft:"60px"}}>FDPs and SDPs CERTIFICATE</h1></div>
+          <div className="row justify-content-center"style={{justifyContent:'center'}}>
+          <div className="ej">
+                
+                    <label>Academic Year</label>
+                     <select  value={setFdpSdp.academic_year} onChange={handlechange}  name='academic_year' >
+                   <option value="">Select The Academic Year</option>
+                {
+                                  acd.map((val,key)=>{
+                                      return (<option key={val.acd_yr_id}  value={val.acd_yr_id}>{val.acd_yr}</option>)
+                                  })
+                } 
+              </select>
+  
+              <label>Semester</label>
+              <select name='semester' onChange={handlechange} value={setFdpSdp.semester}>
+                <option>Select the Semester</option>
+              {
+                                  sem.map((val,key)=>{
+                                      return (<option key={val.sem_id}  value={val.sem_id}>{val.sem}</option>)
+                                  })
+                              }  
+              </select>
+                 
+                    <label>Designation </label>
+                    <input type='text' name='designation'  value={setFdpSdp.ndesignation} placeholder='Enter Designation'  onChange={handlechange}/>
+                   
+                 
+                    <label> Nature of the program</label>
+                    <select name="nature_of_the_program" onClick={handlechange} value={setFdpSdp.nature_of_the_program}>
+                    <option>Select the Nature of the Program...</option>
+                    <option >Workshop</option>
+                    <option >Seminar</option>
+                    <option>FDP</option>
+                    <option>SDP</option>
+                    <option>STTP</option>
+                    <option>Webinar</option>
+                    </select>
+                 
+          
+                    <label> Title of the program</label>
+                    <input type='text' name='title_of_the_program'  value={setFdpSdp.title_of_the_program} placeholder='Enter Title of the Program' onChange={handlechange}  />
+                 
+                 
+                    <label> Duration From</label>
+                    <input type='date' name='duration_from'  value={setFdpSdp.duration_from} placeholder='' onChange={handlechange}  />
+  
+  
+                    <label> Duration TO</label>
+                    <input type='date' name='duration_to'  value={setFdpSdp.duration_to} placeholder='' onChange={handlechange}  />
+             
+                  
+                 
+                    
+                    <label>Participation</label>
+                    <select name="participation" onClick={handlechange} value={setFdpSdp.participation}>
+                    <option>Select the Participation type...</option>
+                    <option >Internal</option>
+                    <option >External</option>
+                    </select>
+                 
+                    <label>Name of the organization and place</label>
+                    <input type='text' name='name_of_the_organization_and_place' value={setFdpSdp.name_of_the_organization_and_place} placeholder='Enter name of the Organization and Place' onChange={handlechange}  />
+           
+                  
+                 
+                    <label>Location of organization</label>
+                    <input type='text' name='location_of_organization' value={setFdpSdp.location_of_organization} placeholder='Enter the Location of organization' onChange={handlechange}  />
+                   
+                 
+                  
+                    <label>Amount provided by the HEI</label>
+                    <input type='text' name='amount_provided_by_the_HEI' value={setFdpSdp.amount_provided_by_the_HEI} placeholder='Enter the Amount' onChange={handlechange}  />
+  
+  
+                    {file&&(<div>
+                  <label>Certificate PDF</label>
+            <input type="file" onChange={handleFileChange1}   id="event" name="pdf" accept = "application/pdf"/>
+            <button onClick={call}>Upload</button>
+                </div>)}
+           
+             {loading && (
+          <div className="loading-overlay">
+            <div className="loading-spinner"></div>
+            <div>Loading...</div>
+          </div>
+        )}
+              <br />
+                    </div>
+          
+          <div style={{marginRight:"100px"}}  className='row mt-5 justify-content-around'>
+            <input type='button' onClick={handleclick} value="Submit" className='col-3 btn btn-primary' />
+            <input type='button' onClick={()=>{}} value="Clear" className='col-3 btn btn-danger' />
+          
+          </div> 
+          </div>
+          </div>
+          </div>
+  
+    
+    </>
+  
+    )
+  }
+  

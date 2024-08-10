@@ -14,6 +14,7 @@ const SetafConsolidation = () => {
 //////////////pdf generator//////////////////
 const logged=JSON.parse(sessionStorage.getItem("person"))
 const empName=logged.faculty_name;
+const empDesig=logged.designation
 
 const generatePDF = async ()=> {
   try{
@@ -45,8 +46,8 @@ doc.rect(50,60,65,8).stroke.apply()
 doc.text(`${empName}`,66,66)
 doc.rect(115,60,35,8).stroke.apply()
 doc.text('Designation',118,66)
-doc.rect(115,60,35,8).stroke.apply()
 doc.rect(150,60,48,8).stroke.apply()
+doc.text(`${empDesig}`,156,66)
 
 doc.rect(10,68,10,9).stroke.apply()
 doc.text('S.no',11,75)
@@ -157,6 +158,7 @@ doc.text("FDPs/SDPS Certificates ",23,147)
 doc.rect(153,141,23,8).stroke.apply()
 doc.rect(176,141,22,8).stroke.apply()
 doc.text('2',162,146)
+doc.text(`${fdpsdp}`,185,146)
 
 
 doc.rect(10,149,10,8).stroke.apply()
@@ -167,6 +169,7 @@ doc.text("e-Content/(Video Lecture)",23,155)
 doc.rect(153,149,23,8).stroke.apply()
 doc.rect(176,149,22,8).stroke.apply()
 doc.text('4',162,154)
+doc.text(`${econtent}`,185,154)
 
 
 doc.rect(10,157,10,8).stroke.apply()
@@ -177,6 +180,7 @@ doc.text("Visit to Industries/Institution",23,163)
 doc.rect(153,157,23,8).stroke.apply()
 doc.rect(176,157,22,8).stroke.apply()
 doc.text('1',162,162)
+doc.text(`${visittoindustry}`,185,162)
 
 
 doc.rect(10,165,10,8).stroke.apply()
@@ -198,6 +202,7 @@ doc.text("Awards at National /International Level ",23,179)
 doc.rect(153,173,23,8).stroke.apply()
 doc.rect(176,173,22,8).stroke.apply()
 doc.text('1',162,178)
+doc.text(`${award}`,185,178)
 
 
 doc.rect(10,181,10,8).stroke.apply()
@@ -208,6 +213,7 @@ doc.text("Proposals Submission for Grants",23,187)
 doc.rect(153,181,23,8).stroke.apply()
 doc.rect(176,181,22,8).stroke.apply()
 doc.text('2',162,186)
+doc.text(`${proposal}`,185,186)
 
 
 doc.rect(10,189,10,8).stroke.apply()
@@ -218,6 +224,7 @@ doc.text("Books/ Chapters Authorship",23,195)
 doc.rect(153,189,23,8).stroke.apply()
 doc.rect(176,189,22,8).stroke.apply()
 doc.text('1',162,194)
+doc.text(`${books}`,185,194)
 
 
 doc.rect(10,197,10,8).stroke.apply()
@@ -250,6 +257,8 @@ doc.text("Collaborative Activities with MoU Signed Industries/Institutions",23,2
 doc.rect(153,213,23,8).stroke.apply()
 doc.rect(176,213,22,8).stroke.apply()
 doc.text('1',162,218)
+doc.text(`${collabrative}`,185,218)
+
 
 doc.rect(10,221,10,8).stroke.apply()
 doc.setFont("times","")
@@ -269,6 +278,8 @@ doc.text("Visits to the Library",23,235)
 doc.rect(176,229,22,8).stroke.apply()
 doc.rect(153,229,23,8).stroke.apply()
 doc.text('40 days',157,234)
+doc.text(`${visittolibrary}`,185,234)
+
 
 doc.rect(10,237,10,8).stroke.apply()
 doc.setFont("times","")
@@ -279,6 +290,7 @@ doc.rect(153,237,23,8).stroke.apply()
 doc.rect(176,237,22,8).stroke.apply()
 doc.text('1',162,242)
 
+
 doc.rect(10,245,10,8).stroke.apply()
 doc.setFont("times","")
 doc.text('22',12,251)
@@ -287,6 +299,7 @@ doc.text("Students Motivation for Paper Presentation/Project Submission/Other Co
 doc.rect(153,245,23,8).stroke.apply()
 doc.rect(176,245,22,8).stroke.apply()
 doc.text('5',162,250)
+doc.text(`${studentmotivation}`,185,250)
 
 
 doc.rect(10,253,10,8).stroke.apply()
@@ -297,6 +310,7 @@ doc.text("Professional Society Membership",23,259)
 doc.rect(153,253,23,8).stroke.apply()
 doc.rect(176,253,22,8).stroke.apply()
 doc.text('1',162,258)
+doc.text(`${professional}`,185,258)
 
 
 doc.rect(10,261,10,8).stroke.apply()
@@ -307,6 +321,7 @@ doc.text("Students Field Work/Internship Guidance",23,267)
 doc.rect(153,261,23,8).stroke.apply()
 doc.rect(176,261,22,8).stroke.apply()
 doc.text('5',162,266)
+doc.text(`${studentfieldwork}`,185,266)
 
 
 doc.rect(10,269,10,8).stroke.apply()
@@ -559,255 +574,424 @@ catch(e){
 })
 
 
+///////////////////////////////////////////////patent
+const [fdpsdp,setfdpsdp]=useState("")
+
+let fdpres;
+useEffect(() => {
+  const demo=async()=>{
+    const url="http://localhost:1234"
+const logged=JSON.parse(sessionStorage.getItem("person"))
+const empId=logged.faculty_id;
+try{
+  fdpres=await axios.get(`${url}/setaf/fdpsdplist/${empId}`)
+  // alert(JSON.stringify(reswork.data.length))
+  setfdpsdp(JSON.stringify(fdpres.data.length))
+  console.log(fdpres.data)
+}
+catch(e){
+  console.log(e);
+}
+  }
+  demo();
+})
+
+///////////////////////////////////////////////econtent
+const [econtent,setecontent]=useState("")
+
+let eres;
+useEffect(() => {
+  const demo=async()=>{
+    const url="http://localhost:1234"
+const logged=JSON.parse(sessionStorage.getItem("person"))
+const empId=logged.faculty_id;
+try{
+  eres=await axios.get(`${url}/setaf/econtentlist/${empId}`)
+  // alert(JSON.stringify(reswork.data.length))
+  setecontent(JSON.stringify(eres.data.length))
+  console.log(eres.data)
+}
+catch(e){
+  console.log(e);
+}
+  }
+  demo();
+})
+
+///////////////////////////////////////////////visit to industry
+const [visittoindustry,setvisittoindustry]=useState("")
+
+let vres;
+useEffect(() => {
+  const demo=async()=>{
+    const url="http://localhost:1234"
+const logged=JSON.parse(sessionStorage.getItem("person"))
+const empId=logged.faculty_id;
+try{
+  eres=await axios.get(`${url}/setaf/industrylist/${empId}`)
+  setvisittoindustry(JSON.stringify(eres.data.length))
+  console.log(eres.data)
+}
+catch(e){
+  console.log(e);
+}
+  }
+  demo();
+})
+
+///////////////////////////////////////////////award
+const [award,setaward]=useState("")
+
+let ares;
+useEffect(() => {
+  const demo=async()=>{
+    const url="http://localhost:1234"
+const logged=JSON.parse(sessionStorage.getItem("person"))
+const empId=logged.faculty_id;
+try{
+  ares=await axios.get(`${url}/setaf/awardatnationallist/${empId}`)
+  // alert(JSON.stringify(reswork.data.length))
+  setaward(JSON.stringify(ares.data.length))
+  console.log(ares.data)
+}
+catch(e){
+  console.log(e);
+}
+  }
+  demo();
+})
+
+
+
+///////////////////////////////////////////////proposal
+const [proposal,setproposal]=useState("")
+
+let pres;
+useEffect(() => {
+  const demo=async()=>{
+    const url="http://localhost:1234"
+const logged=JSON.parse(sessionStorage.getItem("person"))
+const empId=logged.faculty_id;
+try{
+  pres=await axios.get(`${url}/setaf/proposallist/${empId}`)
+  // alert(JSON.stringify(reswork.data.length))
+  setproposal(JSON.stringify(pres.data.length))
+  console.log(pres.data)
+}
+catch(e){
+  console.log(e);
+}
+  }
+  demo();
+})
+
+
+///books
+const [books,setbooks]=useState("")
+
+let bres;
+useEffect(() => {
+  const demo=async()=>{
+    const url="http://localhost:1234"
+const logged=JSON.parse(sessionStorage.getItem("person"))
+const empId=logged.faculty_id;
+try{
+  bres=await axios.get(`${url}/setaf/bookslist/${empId}`)
+  // alert(JSON.stringify(reswork.data.length))
+  setbooks(JSON.stringify(bres.data.length))
+  console.log(bres.data)
+}
+catch(e){
+  console.log(e);
+}
+  }
+  demo();
+})
+
+///collabrative
+const [collabrative,setcollabrative]=useState("")
+
+let colres;
+useEffect(() => {
+  const demo=async()=>{
+    const url="http://localhost:1234"
+const logged=JSON.parse(sessionStorage.getItem("person"))
+const empId=logged.faculty_id;
+try{
+  colres=await axios.get(`${url}/setaf/collabrativelist/${empId}`)
+  // alert(JSON.stringify(olreswork.data.length))
+  setcollabrative(JSON.stringify(colres.data.length))
+  console.log(colres.data)
+}
+catch(e){
+  console.log(e);
+}
+  }
+  demo();
+})
+
+///visittolibrary
+const [visittolibrary,setvisittolibrary]=useState("")
+
+let vlres;
+useEffect(() => {
+  const demo=async()=>{
+    const url="http://localhost:1234"
+const logged=JSON.parse(sessionStorage.getItem("person"))
+const empId=logged.faculty_id;
+try{
+  vlres=await axios.get(`${url}/setaf/visittolibrarylist/${empId}`)
+  // alert(JSON.stringify(reswork.data.length))
+  setvisittolibrary(JSON.stringify(vlres.data.length))
+  console.log(vlres.data)
+}
+catch(e){
+  console.log(e);
+}
+  }
+  demo();
+})
+
+///motivation
+const [studentmotivation,setstudentmotivation]=useState("")
+
+let smres;
+useEffect(() => {
+  const demo=async()=>{
+    const url="http://localhost:1234"
+const logged=JSON.parse(sessionStorage.getItem("person"))
+const empId=logged.faculty_id;
+try{
+  smres=await axios.get(`${url}/setaf/Motivationlist/${empId}`)
+  // alert(JSON.stringify(reswork.data.length))
+  setstudentmotivation(JSON.stringify(smres.data.length))
+  console.log(smres.data)
+}
+catch(e){
+  console.log(e);
+}
+  }
+  demo();
+})
+
+///professional
+const [professional,setprofessional]=useState("")
+
+let psres;
+useEffect(() => {
+  const demo=async()=>{
+    const url="http://localhost:1234"
+const logged=JSON.parse(sessionStorage.getItem("person"))
+const empId=logged.faculty_id;
+try{
+  psres=await axios.get(`${url}/setaf/professionallist/${empId}`)
+  // alert(JSON.stringify(reswork.data.length))
+  setprofessional(JSON.stringify(psres.data.length))
+  console.log(psres.data)
+}
+catch(e){
+  console.log(e);
+}
+  }
+  demo();
+})
+
+///professional
+const [studentfieldwork,setstudentfieldwork]=useState("")
+
+let sfres;
+useEffect(() => {
+  const demo=async()=>{
+    const url="http://localhost:1234"
+const logged=JSON.parse(sessionStorage.getItem("person"))
+const empId=logged.faculty_id;
+try{
+  sfres=await axios.get(`${url}/setaf/Fieldworklist/${empId}`)
+  // alert(JSON.stringify(reswork.data.length))
+  setstudentfieldwork(JSON.stringify(sfres.data.length))
+  console.log(sfres.data)
+}
+catch(e){
+  console.log(e);
+}
+  }
+  demo();
+})
+
+
 ////////////////
   return (
-    <div className=" container-fluid"  >
-     
-     <div>
-        <p>&nbsp;</p>
-        <p>&nbsp;</p>
-        {/* <p>&nbsp;
-        </p> */}
-        <p>&nbsp;</p>
-      </div>
-     <div >
-      <div className="" style={{color: "#5500cb"}}><h1>SETAF CONSOLIDATION</h1></div>
-     
-     <table  className="table table-striped " >
+<div className="overallcontent"  style={{maxWidth:"85%",marginLeft:"120px",maxHeight:"50%"}}>
+ <div className="container">
 
-{/* <thead  className="table table-bordered mt-9">
-    <tr>
-      <th scope="col" >Name of the Faculty</th>
-      <th></th>
-      <th scope="col">Designation</th>
-      <th scope="col"></th>
-    </tr>
-  </thead> */}
+<p>&nbsp;</p>
 
-
+<h2 style={{marginLeft:"33%"}}>Faculty Contributions Table</h2>
+<table className="table table-bordered" style={{border:"1px solid black"}}>
   <thead>
     <tr>
-      <th scope="col" >S. No.</th>
-      <th scope="col"> Contributions</th>
-      <th scope="col">(Score Points Allotted)</th>
-      <th scope="col"> Target Number</th>
-      <th scope="col"> Score</th>
-      
+      <th>S. No.</th>
+      <th>Contributions (Score Points Allotted)</th>
+      <th>Target Number</th>
+      <th>Target Completed</th>
     </tr>
   </thead>
   <tbody>
-    
     <tr>
       <td>1</td>
-      <td>Journal Publications</td>
-      <td>(International - 25, National - 20)</td>
+      <td>Journal Publications (International-25, National -20)</td>
       <td>1</td>
       <td>{journ}</td>
     </tr>
-
     <tr>
       <td>2</td>
-      <td>Conference Publications and Presentations</td>
-      <td>(International - 20, National - 10)</td>
+      <td>Conference Publications and Presentations (International-20, National -10)</td>
       <td>1</td>
       <td>{conf}</td>
     </tr>
-
     <tr>
       <td>3</td>
-      <td>WorkShop/Seminar Participation</td>
-      <td>(Internal - 5 perday, External- 10 perday)</td>
+      <td>Workshop/Seminar Participation (Internal - 5 per Day, External -10 per Day)</td>
       <td>2</td>
       <td>{work}</td>
     </tr>
-
     <tr>
       <td>4</td>
-      <td>WorkShop/Seminar organized as a Coordinator</td>
-      <td>(10 per day)</td>
+      <td>Workshop/Seminar organized as a Coordinator (10 per Day)</td>
       <td>1</td>
       <td></td>
     </tr>
-
     <tr>
       <td>5</td>
-      <td>TechTalks to be delivered Multidisciplinary Lectures </td>
-      <td>(5 per Lecture)</td>
+      <td>TechTalks to be delivered Multidisciplinary Lectures (MuDIL) (5 per Lecture)</td>
       <td>2</td>
       <td>{techtalk}</td>
     </tr>
-
     <tr>
       <td>6</td>
-      <td>Faculty Guest Talk in other Institutions </td>
-      <td> (15 per Lecture)</td>
+      <td>Faculty Guest Talk in other Institutions (15 per Lecture)</td>
       <td>1</td>
       <td>{faculty}</td>
     </tr>
-
     <tr>
       <td>7</td>
-      <td>NPTEL Certification</td>
-      <td> (Max. 25 per Certificate; Gold/Topper 25, Silver 20, Elite 15, Pass 10)</td>
-      <td>1</td>
+      <td>NPTEL Certification (Max. 25 per Certificate; Gold/Topper 25, Silver 20, Elite 15, Pass 10)</td>
+      <td>2</td>
       <td>{nptel}</td>
     </tr>
-
     <tr>
       <td>8</td>
-      <td>Participation in TASTE</td>
-      <td>(2 for each TASTE; Caped to Max. 30)</td>
+      <td>Participation in TASTE (2 for each TASTE; Capped to Max. 30)</td>
       <td>10</td>
       <td>{taste}</td>
     </tr>
-
     <tr>
       <td>9</td>
-      <td> FDPs/SDPS  Certificates </td>
-      <td>(5 per Day) </td>
+      <td>FDPs/SDPs Certificates (5 per Day)</td>
       <td>2</td>
-      <td></td>
+      <td>{fdpsdp}</td>
     </tr>
-
     <tr>
       <td>10</td>
-      <td>e-Content/(Video Lecture)</td>
-      <td> (5 per Lecture, Lecture Materials-(20 per Material)) </td>
+      <td>e-Content/Video Lecture (5 per Lecture, Lecture Materials-2 (per Material))</td>
       <td>4</td>
-      <td></td>
+      <td>{econtent}</td>
     </tr>
-
     <tr>
       <td>11</td>
-      <td>Visit to Industries/Institution</td>
-      <td>  (10 per Day) </td>
+      <td>Visit to Industries/Institution (10 per Day)</td>
       <td>1</td>
-      <td></td>
+      <td>{visittoindustry}</td>
     </tr>
-
     <tr>
       <td>12</td>
-      <td>Seed Money Proposal for Research</td>
-      <td>  (15 per Proposal) </td>
+      <td>Seed Money Proposal for Research (15 per Proposal)</td>
       <td>1</td>
       <td>{seed}</td>
     </tr>
-
     <tr>
       <td>13</td>
-      <td>Awards at National /International Level  </td>
-      <td>  (International-15, National -10) </td>
-      <td>1</td>
-      <td></td>
+      <td>Awards at National/International Level (International-15, National -10)</td>
+      <td>2</td>
+      <td>{award}</td>
     </tr>
-
     <tr>
       <td>14</td>
-      <td>Proposals  Submission for Grants </td>
-      <td> (100 per Proposal if Sanctioned otherwise 25 per Proposal; 10 per Seminar Proposal if Sanctioned) </td>
-      <td>2</td>
-      <td></td>
+      <td>Proposals Submission for Grants (100 per Proposal if Sanctioned otherwise 25 per Proposal; 10 per Seminar Proposal if Sanctioned)</td>
+      <td>1</td>
+      <td>{proposal}</td>
     </tr>
-
     <tr>
       <td>15</td>
-      <td>Books/ Chapters Authorship  </td>
-      <td>    (International-15, National -10) </td>
+      <td>Books/Chapters Authorship (International-15, National -10)</td>
       <td>1</td>
-      <td></td>
+      <td>{books}</td>
     </tr>
-
     <tr>
       <td>16</td>
-      <td>Consultancy and Corporate Training done for Revenue Generation</td>
-      <td>  (15 per Consultancy)  </td>
+      <td>Consultancy and Corporate Training done for Revenue Generation (15 per Consultancy)</td>
       <td>1</td>
       <td>{consultancy}</td>
     </tr>
-
     <tr>
       <td>17</td>
-      <td> Patents Filed/Published/Granted     </td>
-      <td> (Published - 5 Points, Granted - 25 Points) </td>
+      <td>Patents Filed/Published/Granted (Published - 5 Points, Granted - 25 Points)</td>
       <td>1</td>
       <td>{patent}</td>
     </tr>
-
     <tr>
       <td>18</td>
-      <td>Collaborative Activities with MoU Signed Industries/Institutions</td>
-      <td>   (25 per Industry/ Insti.) </td>
-      <td>1</td>
-      <td></td>
+      <td>Collaborative Activities with MoU Signed Industries/Institutions (25 per Industry/Insti.)</td>
+      <td>2</td>
+      <td>{collabrative}</td>
     </tr>
-
     <tr>
       <td>19</td>
-      <td>PSDeG / LSDeG Activities Organized  </td>
-      <td>   (10 per Day)  </td>
+      <td>PSDeG / LSDeG Activities Organized (10 per Day)</td>
       <td>2</td>
       <td></td>
     </tr>
-
     <tr>
       <td>20</td>
-      <td>Visits to the Library </td>
-      <td>   ( 0.5 per Day)  </td>
+      <td>Visits to the Library (.5 per Day)</td>
       <td>40 Days</td>
-      <td></td>
+      <td>{visittolibrary}</td>
     </tr>
-
     <tr>
       <td>21</td>
-      <td>Alumni Interaction arranged     </td>
-      <td>   (10 per Alumni Interaction)</td>
+      <td>Alumni Interaction arranged (10 per Alumni Interaction)</td>
       <td>1</td>
       <td></td>
     </tr>
-
     <tr>
       <td>22</td>
-      <td>Students  Motivation for Paper Presentation/Project Submission/Other Contests  </td>
-      <td>  (for every Participation by individual Student 2Points) </td>
+      <td>Students Motivation for Paper Presentation/Project Submission/Other Contests (for every Participation by individual Student 2Points)</td>
       <td>5</td>
-      <td></td>
+      <td>{studentmotivation}</td>
     </tr>
-
     <tr>
       <td>23</td>
-      <td>Professional Society Membership </td>
-      <td>    (10 Per Membership)</td>
+      <td>Professional Society Membership (10 Per Membership)</td>
       <td>1</td>
-      <td></td>
+      <td>{professional}</td>
     </tr>
-
     <tr>
       <td>24</td>
-      <td>Students Field Work/Internship Guidance </td>
-      <td>  (10 Points per Student) </td>
+      <td>Students Field Work/Internship Guidance (10 Points per Student)</td>
       <td>5</td>
-      <td></td>
+      <td>{studentfieldwork}</td>
     </tr>
-
     <tr>
       <td>25</td>
-      <td>Extension and Outreach Activities Organized  </td>
-      <td>    (10 Points) </td>
+      <td>Extension and Outreach Activities Organized (10 Points)</td>
       <td>1</td>
-      <td>   </td>
+      <td>10</td>
     </tr>
   </tbody>
 </table>
-     </div>
-        {/* <div>
-        <h3 className='col-md-6 col-sm-12 ' style={{marginLeft:'100px',marginTop:"150px"}}>SIGNATURE</h3>
-        <h3 className='col-md-6 col-sm-12 '   style={{marginLeft:'450px',marginTop:"-40px"}}>HOD</h3>
-        </div> */}
-
-        <button style={{right:"100px"}} onClick={generatePDF}>Download Pdf</button>
-    </div>
-
-    
+<button style={{marginLeft:"85%",marginBottom:"20px"}} onClick={generatePDF}>Download Pdf</button>
+</div> 
+</div>
   );
 };
 

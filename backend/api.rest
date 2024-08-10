@@ -432,7 +432,7 @@ POST http://localhost:1234/setaf/Motivationnewrecord/60EE18
 Content-Type: application/json
 
 {
-        "report_id":6,
+        "report_id":9,
         "emp_id":"",
         "dept_id":4,
         "academic_year":"2023-24",
@@ -444,3 +444,36 @@ Content-Type: application/json
         "no_of_beneficiaries":"10",
         "certificate_PDF":""
 }
+
+###
+GET http://localhost:1234/setaf/professionallist/hoddashboard/1
+
+###
+GET http://localhost:1234/setaf/fieldworkrecs
+
+////fdpsdp
+###
+POST http://localhost:1234/setaf/fdpsdp/newrecord/60EE18
+Content-Type: application/json
+
+{
+        "report_id":2,
+        "emp_id":"60EE18",
+        "dept_id":4,
+        "name_of_the_faculty":"Anand",
+        "academic_year":"2",
+        "semester":"2",
+        "designation":"Asst Professor",
+        "nature_of_the_program":"Workshop",
+        "title_of_the_program":"ML",
+        "duration_from":"2023-02-01",
+        "duration_to":"2024-02-01",
+        "participation":"Internal",
+        "name_of_the_organization_and_place":"Muthayammal Engineering College",
+        "location_of_organization":"Rasipuram",
+        "amount_provided_by_the_HEI":"25000",
+        "certificates_pdf":""
+}
+
+###
+GET http://localhost:1234/setaf/fdpsdplist/60EE18

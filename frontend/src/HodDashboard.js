@@ -6,9 +6,9 @@ import { HodECRPage } from "./HodECRPage"
 import Setafbutton from "./Setaf/Setafbuttons"
 import SetafConsolidation from "./Setaf/SetafConsolidate"
 import SetafConsolidationHod from "./Setaf/SetafConsolidateHod"
-import { JournalPublication } from "./Setaf/SetafFAcultyView"
-import { AwardAtNational, Books, Collabrativefront, Conferencefront, Consultancyfront, Econtentfront, Facultyfront, Journalfront, Nptelfront, Patentfilledfront, Proposalfront, Seedfront, Tastefront, Techtalks, VisittoIndustryfront, VisittoLibraryfront, Workshopfront } from "./Setaf/SetafForms"
-import { AwardHod, BooksHod, CollabrativeHod, ConferencePublicationHodDashboard, ConsultancyHodDashboard, Econtent, FacultyGuestTalkHodDashboard, IndustryHodDashboard, JournalPublicationHodDashboard, NptelhodDashboard, PatentsfilledHod, Proposal, ProposalHodView, SeedHodDashboard, TastehodDashboard, TechtalkHodView, VisitToLibrary, VisitToLibraryHod, WorkshopHodDashboard } from "./Setaf/SetafHodView"
+import { JournalPublication, StudentFieldworkFaculty } from "./Setaf/SetafFAcultyView"
+import { AwardAtNational, Books, Collabrativefront, Conferencefront, Consultancyfront, Econtentfront, Facultyfront, FdpSdpFront, Journalfront, Motivationfront, Nptelfront, Patentfilledfront, Professionalfront, Proposalfront, Seedfront, StudentFieldwork, Tastefront, Techtalks, VisittoIndustryfront, VisittoLibraryfront, Workshopfront } from "./Setaf/SetafForms"
+import { AwardHod, BooksHod, CollabrativeHod, ConferencePublicationHodDashboard, ConsultancyHodDashboard, Econtent, FacultyGuestTalkHodDashboard, FdpSdpHod, FieldworkHodDashboard, IndustryHodDashboard, JournalPublicationHodDashboard, MotivationPublicationHodDashboard, NptelhodDashboard, PatentsfilledHod, ProfessionalHodDashboard, ProfessionalpublicationHodDashboard, Proposal, ProposalHodView, SeedHodDashboard, TastehodDashboard, TechtalkHodView, VisitToLibrary, VisitToLibraryHod, WorkshopHodDashboard } from "./Setaf/SetafHodView"
 
 export const HodDashboard=()=>{
     return(
@@ -60,6 +60,14 @@ export const HodDashboard=()=>{
                 <Route path="/Setaf/SetafForms/award" element={<AwardAtNational/>}/>
                 <Route path="/books" element={<BooksHod/>}/>
                 <Route path="/Setaf/SetafForms/books" element={<Books/>}/>
+                <Route path="/motivationfront" element={<Motivationfront/>}/>
+                <Route path="/setaf/studentsmotivation" element={<MotivationPublicationHodDashboard/>}/>
+                <Route path="/professionalfront" element={<Professionalfront/>}/>
+                <Route path="/setaf/professionalpublication" element={<ProfessionalHodDashboard/>}/>
+                <Route path="/studentfieldwork" element={<StudentFieldwork/>}/>
+                <Route path="/setaf/studentfieldwork" element={<FieldworkHodDashboard/>}/>
+                <Route path="/fdpsdp" element={<FdpSdpHod/>}/>
+                <Route path="/fdpsdp/front" element={<FdpSdpFront/>}/>
 
                 </Routes>
             </BrowserRouter>

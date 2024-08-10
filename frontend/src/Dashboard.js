@@ -16,8 +16,8 @@ import Iv from "./Iv/Iv"
 import Ivadd from "./Iv/Ivadd"
 import IvInput from "./Iv/IvInput"
 import Setafbutton from "./Setaf/Setafbuttons"
-import { ConferencePublication, JournalPublication, Techtalk, Workshop,Nptel, FacultyGuestTalk, Proposal, Taste, Industry, Seed, Consultancy, Patentsfilled, Collabrative, Econtent, VisitToLibrary, Award, BooksFaculty, StudentsMotivation } from "./Setaf/SetafFAcultyView"
-import { Facultyfront, Conferencefront, Journalfront, Nptelfront, Techtalks, Workshopfront, Proposalfront, Tastefront, Industryfront, Seedfront, Consultancyfront, Patentfilledfront, Collabrativefront, VisittoIndustryfront, Econtentfront, VisittoLibraryfront, AwardAtNational, Books, Motivationfront} from "./Setaf/SetafForms"
+import { ConferencePublication, JournalPublication, Techtalk, Workshop,Nptel, FacultyGuestTalk, Proposal, Taste, Industry, Seed, Consultancy, Patentsfilled, Collabrative, Econtent, VisitToLibrary, Award, BooksFaculty, StudentsMotivation, Professionalpublication, StudentFieldworkFaculty, FdpSdpFaculty } from "./Setaf/SetafFAcultyView"
+import { Facultyfront, Conferencefront, Journalfront, Nptelfront, Techtalks, Workshopfront, Proposalfront, Tastefront, Industryfront, Seedfront, Consultancyfront, Patentfilledfront, Collabrativefront, VisittoIndustryfront, Econtentfront, VisittoLibraryfront, AwardAtNational, Books, Motivationfront, Professionalfront, StudentFieldwork, FdpSdpFront} from "./Setaf/SetafForms"
 import SetafConsolidation from "./Setaf/SetafConsolidate"
 
 
@@ -68,13 +68,13 @@ export const Dashboard=()=>{
                             {/* setaf */}
                             <Route path="/Setaf" element={<Setafbutton/>}/>  
                             <Route path="/setaf/journalpublication" element={<JournalPublication/>}/>
-                                <Route path="/Setaf/SetafForms/Journalfront" element={<Journalfront/>}/>
+                            <Route path="/Setaf/SetafForms/Journalfront" element={<Journalfront/>}/>
                             <Route path="/conferencepublication" element={<ConferencePublication/>}/>
-                                <Route path="/Setaf/SetafForms/Conferencefront" element={<Conferencefront/>}/>
+                            <Route path="/Setaf/SetafForms/Conferencefront" element={<Conferencefront/>}/>
                             <Route path="/workshop" element={<Workshop/>}/>
-                                <Route path="/Setaf/SetafForms/Workshopfront" element={<Workshopfront/>}/>
+                            <Route path="/Setaf/SetafForms/Workshopfront" element={<Workshopfront/>}/>
                             <Route path="/techtalk" element={<Techtalk/>}/>
-                                <Route path="/Setaf/SetafForms/techtalks" element={<Techtalks/>}/>
+                            <Route path="/Setaf/SetafForms/techtalks" element={<Techtalks/>}/>
                             <Route path="/facultly" element={<FacultyGuestTalk/>}/>
                             <Route path="/Setaf/SetafForms/facultyfront" element={<Facultyfront/>}/>
                             <Route path="/nptelcertification" element={<Nptel/>}/>
@@ -103,6 +103,12 @@ export const Dashboard=()=>{
                             <Route path="/Setaf/SetafForms/books" element={<Books/>}/>
                             <Route path="/motivationfront" element={<Motivationfront/>}/>
                             <Route path="/setaf/studentsmotivation" element={<StudentsMotivation/>}/>
+                            <Route path="/professionalfront" element={<Professionalfront/>}/>
+                            <Route path="/setaf/professionalpublication" element={<Professionalpublication/>}/>
+                            <Route path="/studentfieldwork" element={<StudentFieldwork/>}/>
+                            <Route path="/setaf/studentfieldwork" element={<StudentFieldworkFaculty/>}/>
+                            <Route path="/fdpsdp" element={<FdpSdpFaculty/>}/>
+                            <Route path="/fdpsdp/front" element={<FdpSdpFront/>}/>
 
                         {/* SeSTA routers */}
                             <Route path="/consolidation" element={<SetafConsolidation/>}/>  

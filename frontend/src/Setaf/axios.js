@@ -76,9 +76,14 @@ catch(e){
 
 ///workshop////
 export const workshopRecords=async(empId)=>{
-    const res=await axios.get(`${url}/setaf/workshoplist/${empId}`)
+    try{
+        const res=await axios.get(`${url}/setaf/workshoplist/${empId}`)
     console.log(res.data.rows)
     return res
+    }
+    catch(e){
+        console.log(e);
+    }
 }
 
 
@@ -184,8 +189,6 @@ try{
 catch(e){
     console.log(e);
 }
-    
-    // console.log(res.data.rows)
     return res
 }
 
@@ -284,9 +287,7 @@ try{
 }
 catch(e){
     console.log(e);
-}
-    
-    // console.log(res.data.rows)
+}    
     return res
 }
 //////////////////seed money//////////
@@ -331,9 +332,14 @@ export const SeedRecords=async(empId)=>{
 ///////////////////////////consultancy//////////////////////////
 
 export const consultancyRecords=async(empId)=>{
+   try{
     const res=await axios.get(`${url}/setaf/consultancylist/${empId}`)
     console.log(res.data.rows)
     return res
+   }
+   catch(e){
+    console.log(e);
+   }
 }
 
 /////hod///
@@ -345,9 +351,7 @@ try{
 }
 catch(e){
     console.log(e);
-}
-
-   
+} 
 }
 
 ///principal view
@@ -405,9 +409,14 @@ export const patentRecords=async(empId)=>{
  ////////////////////////////Collabrative/////////////////////////////////////
 
 export const collaborativeRecords=async(empId)=>{
+   try{
     const res=await axios.get(`${url}/setaf/collabrativelist/${empId}`)
     console.log(res.data.rows)
     return res
+   }
+   catch(e){
+    console.log(e);
+   }
 }
 
 /////hod///
@@ -439,11 +448,17 @@ catch(e){
 /////////////////////////////////econtent/////////////////
 
 export const econtentRecords=async(empId)=>{
-    const res=await axios.get(`${url}/setaf/econtentlist/${empId}`)
-    console.log(res.data.rows)
+    let res;
+try{
+    res=await axios.get(`${url}/setaf/econtentlist/${empId}`)
+}
+catch(e){
+    console.log(e);
+}
     return res
 }
 
+//
 export const EcontentRecordsDept=async(deptID)=>{
     let res;
 try{
@@ -503,9 +518,14 @@ catch(e){
 
 ////////////visit to library ////////////////
 export const visittolibraryRecords=async(empId)=>{
-    const res=await axios.get(`${url}/setaf/visittolibrarylist/${empId}`)
+    try{
+        const res=await axios.get(`${url}/setaf/visittolibrarylist/${empId}`)
     console.log(res.data.rows)
     return res
+    }
+    catch(e){
+        console.log(e);
+    }
 }
 
 /////hod///
@@ -611,10 +631,17 @@ export const Filters=async(empId)=>{
 //////Student Motivation for paper presentation 
 
 export const MotivationViewRecs=async(empId)=>{
-    const res=await axios.get(`${url}/setaf/Motivationlist/${empId}`)
+    try{
+        const res=await axios.get(`${url}/setaf/Motivationlist/${empId}`)
     console.log(res.data.rows)
     return res
+    }
+    catch(e){
+        console.log(e);
+    }
 }
+
+//principal
 export const MotivationPrincipalView=async()=>{
     let res;
 try{
@@ -628,6 +655,7 @@ catch(e){
     return res
 }
 
+//hod
 export const MotivationRecordsDept=async(deptID)=>{
     let res;
 try{
@@ -641,3 +669,120 @@ catch(e){
     return res
 }
 
+////////ptofessional////
+
+export const professionalRecords=async(empId)=>{
+    let res;
+try{
+    res=await axios.get(`${url}/setaf/professionallist/${empId}`)
+}
+catch(e){
+    console.log(e);
+}
+    
+    // console.log(res.data.rows)
+    return res
+}
+///hod view
+export const professionalRecordsDept=async(deptID)=>{
+    let res;
+try{
+    res=await axios.get(`${url}/setaf/professionallist/hoddashboard/${deptID}`)
+}
+catch(e){
+    console.log(e);
+}
+    
+    // console.log(res.data.rows)
+    return res
+}
+///principal view
+export const professionalPrincipalView=async()=>{
+    let res;
+try{
+    res=await axios.get(`${url}/setaf/professionalrecs`)
+}
+catch(e){
+    console.log(e);
+}
+    
+return res
+}
+
+/////student field work
+
+export const StudentFieldworkRecords=async(empId)=>{
+    try{
+        const res=await axios.get(`${url}/setaf/Fieldworklist/${empId}`)
+    console.log(res.data.rows)
+    return res
+    }
+    catch(e){
+        console.log(e);
+    }
+}
+
+///principal view
+export const StudentFieldworkPrincipal=async()=>{
+    let res;
+try{
+    res=await axios.get(`${url}/setaf/fieldworkrecs`)
+}
+catch(e){
+    console.log(e);
+}
+    
+return res
+}
+
+
+export const FieldworkRecordsDept=async(deptID)=>{
+    let res;
+try{
+    res=await axios.get(`${url}/setaf/Fieldwork/hoddashboard/${deptID}`)
+}
+catch(e){
+    console.log(e);
+}
+    
+    // console.log(res.data.rows)
+    return res
+}
+
+
+///fdpsdp////
+export const fdpSdpRecords=async(empId)=>{
+    try{
+        const res=await axios.get(`${url}/setaf/fdpsdplist/${empId}`)
+    console.log(res.data.rows)
+    return res
+    }
+    catch(e){
+        console.log(e);
+    }
+}
+
+
+////hod view////
+export const fdpSdpRecordsDept=async(deptID)=>{
+    let res;
+try{
+    res=await axios.get(`${url}/setaf/fdpsdplist/hoddashboard/${deptID}`)
+}
+catch(e){
+    console.log(e);
+}
+    return res
+}
+
+/////principal////
+export const fdpSdpRecordsPrincipal=async()=>{
+    let res;
+try{
+    res=await axios.get(`${url}/setaf/fdpsdp/principalrecs`)
+}
+catch(e){
+    console.log(e);
+}
+    return res
+}
